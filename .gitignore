@@ -1,0 +1,13 @@
+hs_err_pid17180.dmp
+*.dmp
+*.log
+*.jou
+*.zip
+*.str
+*.xpr
+proj.cache/** 
+proj.hw/** 
+prj/xilinx/template.cache/** 
+prj/xilinx/template.hw/** 
+prj/xilinx/template.runs/** 
+prj/xilinx/template.sim/sim_1/behav/xsim/

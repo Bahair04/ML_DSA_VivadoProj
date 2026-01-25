@@ -1,0 +1,2 @@
+keccakf_st.v,verilog,xil_defaultlib,../../../../../../../template.gen/sources_1/ip/keccakf_st/sim/keccakf_st.v,
+glbl.v,Verilog,xil_defaultlib,glbl.v
