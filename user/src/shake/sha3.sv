@@ -136,6 +136,8 @@ always_ff @(posedge clk or negedge rstn) begin
             rd_en <= 1'b1;                  // 那么就开始读取
         else if (data_count_d == 'd2 && data_count == 'd1)
             rd_en <= 1'b0;
+        else if (curr_pt + 1 >= ctx.rsiz)
+            rd_en <= 1'b0;
         else 
             rd_en <= rd_en;
         if (rd_en) begin // 更新8-bit在展开的64-bit中的位置
@@ -357,7 +359,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_XOF_PAD;
                     ctx.pt <= curr_pt + 1;
                 end
-                else if (curr_pt >= ctx.rsiz)
+                else if (curr_pt + 1 >= ctx.rsiz)
                     state <= S_KACCAK;
                 else
                     state <= S_UPDATE;
