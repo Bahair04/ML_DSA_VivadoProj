@@ -1,5 +1,5 @@
 verilog xil_defaultlib  \
-"../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
+"../../../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
 
 verilog xil_defaultlib "glbl.v"
 

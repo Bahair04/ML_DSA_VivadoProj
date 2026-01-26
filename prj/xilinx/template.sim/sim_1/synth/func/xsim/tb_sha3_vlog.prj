@@ -1,0 +1,11 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"tb_sha3_func_synth.v" \
+
+sv xil_defaultlib  \
+"../../../../../../../user/src/shake/keccak.sv" \
+"../../../../../../../user/src/shake/sha3.sv" \
+"../../../../../../../user/src/shake/tb_sha3.sv" \
+
+# Do not sort compile order
+nosort

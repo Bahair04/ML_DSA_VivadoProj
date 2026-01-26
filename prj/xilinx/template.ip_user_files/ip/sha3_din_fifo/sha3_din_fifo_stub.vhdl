@@ -1,10 +1,10 @@
 -- Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2021.1 (win64) Build 3247384 Thu Jun 10 19:36:33 MDT 2021
--- Date        : Mon Jan 26 11:42:32 2026
+-- Date        : Mon Jan 26 17:30:38 2026
 -- Host        : LAPTOP-EUGMKLPQ running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
---               d:/University/ML_DSA/vivado_proj/proj/prj/xilinx/template.gen/sources_1/ip/sha3_din_fifo/sha3_din_fifo_stub.vhdl
+--               d:/University/ML_DSA/vivado_proj/template.gen/sources_1/ip/sha3_din_fifo/sha3_din_fifo_stub.vhdl
 -- Design      : sha3_din_fifo
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7a200tfbg484-2
@@ -21,7 +21,8 @@ entity sha3_din_fifo is
     rd_en : in STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 7 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC
+    empty : out STD_LOGIC;
+    data_count : out STD_LOGIC_VECTOR ( 8 downto 0 )
   );
 
 end sha3_din_fifo;
@@ -30,7 +31,7 @@ architecture stub of sha3_din_fifo is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk,srst,din[7:0],wr_en,rd_en,dout[7:0],full,empty";
+attribute black_box_pad_pin of stub : architecture is "clk,srst,din[7:0],wr_en,rd_en,dout[7:0],full,empty,data_count[8:0]";
 attribute x_core_info : string;
 attribute x_core_info of stub : architecture is "fifo_generator_v13_2_5,Vivado 2021.1";
 begin

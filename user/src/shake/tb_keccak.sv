@@ -89,6 +89,51 @@ initial begin
     din <= 64'hCCCCDDDDEEEEFFFF; din_row <= 3'd4; din_col <= 3'd3; @(posedge clk);
     din <= 64'h0000111122223333; din_row <= 3'd4; din_col <= 3'd4; @(posedge clk);
 
+    // // -----------------------------------------------------------
+    // // Row 0 (第 0 行)
+    // // -----------------------------------------------------------
+    // din <= 64'd5931055232364332360; din_row <= 3'd0; din_col <= 3'd0; @(posedge clk);
+    // din <= 64'd2049100; din_row <= 3'd0; din_col <= 3'd1; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd0; din_col <= 3'd2; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd0; din_col <= 3'd3; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd0; din_col <= 3'd4; @(posedge clk);
+
+    // // -----------------------------------------------------------
+    // // Row 1 (第 1 行) - 补全这里
+    // // -----------------------------------------------------------
+    // din <= 64'h0; din_row <= 3'd1; din_col <= 3'd0; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd1; din_col <= 3'd1; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd1; din_col <= 3'd2; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd1; din_col <= 3'd3; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd1; din_col <= 3'd4; @(posedge clk);
+
+    // // -----------------------------------------------------------
+    // // Row 2 (第 2 行) - 补全这里
+    // // -----------------------------------------------------------
+    // din <= 64'h0; din_row <= 3'd2; din_col <= 3'd0; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd2; din_col <= 3'd1; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd2; din_col <= 3'd2; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd2; din_col <= 3'd3; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd2; din_col <= 3'd4; @(posedge clk);
+
+    // // -----------------------------------------------------------
+    // // Row 3 (第 3 行) - 补全这里
+    // // -----------------------------------------------------------
+    // din <= 64'h0; din_row <= 3'd3; din_col <= 3'd0; @(posedge clk);
+    // din <= 64'd9223372036854775808; din_row <= 3'd3; din_col <= 3'd1; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd3; din_col <= 3'd2; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd3; din_col <= 3'd3; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd3; din_col <= 3'd4; @(posedge clk);
+
+    // // -----------------------------------------------------------
+    // // Row 4 (第 4 行) - 补全这里
+    // // -----------------------------------------------------------
+    // din <= 64'h0; din_row <= 3'd4; din_col <= 3'd0; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd4; din_col <= 3'd1; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd4; din_col <= 3'd2; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd4; din_col <= 3'd3; @(posedge clk);
+    // din <= 64'h0; din_row <= 3'd4; din_col <= 3'd4; @(posedge clk);
+
     // 3. 停止写入
     din_valid <= 0;
     din <= '0;

@@ -78,6 +78,8 @@ logic                               rd_en;
 logic       [7 : 0]                 dout;
 logic                               empty;
 logic                               full;
+logic       [8 : 0]                 data_count;
+logic       [8 : 0]                 data_count_d;
 
 // --- 串行输出8 - bit信号 ---
 logic       [7 : 0]                 st_8bit_cnt;
@@ -132,7 +134,7 @@ always_ff @(posedge clk or negedge rstn) begin
     else if (state == S_UPDATE) begin
         if (empty == 1'b0 && rd_en == 1'b0) // FIFO非空并且读信号未使能
             rd_en <= 1'b1;                  // 那么就开始读取
-        else if (empty)
+        else if (data_count_d == 'd2 && data_count == 'd1)
             rd_en <= 1'b0;
         else 
             rd_en <= rd_en;
@@ -150,7 +152,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     din_col <= din_col + 1'b1;
             end
             else 
-                din_pos <= 'd0;
+                din_pos <= din_pos + 1'b1;
         end
     end
     else if (state == S_KACCAK || state == S_OUT_KACCAK) begin
@@ -173,7 +175,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     din_col <= din_col + 1'b1;
             end
             else 
-                din_pos <= 'd0;
+                din_pos <= din_pos + 1'b1;
         end
     end
 end
@@ -215,53 +217,43 @@ end
 // --------------------------------
 // 填充具体数据
 // --------------------------------
-always_ff @(posedge clk or negedge rstn) begin
-    if (!rstn) begin
-        pad_din <= 'd0;
-        pad_din_valid <= 1'b0;
-        pad_din_col <= 'd0;
-        pad_din_row <= 'd0;
-        pad_din_pos <= 'd0;
-    end
-    else if (state == S_XOF_PAD) begin
+always_comb begin
+    if (state == S_XOF_PAD) begin
         case (pad_cnt)
             1'b0 : begin
-                pad_din <= 8'h1F; // 填充数据的第一个字节
-                pad_din_valid <= 1'b1;
-                pad_din_pos <= din_pos;
-                pad_din_col <= din_col;
-                pad_din_row <= din_row;
+                pad_din = 8'h1F; // 填充数据的第一个字节
+                pad_din_valid = 1'b1;
+                pad_din_pos = ctx.pt[2 : 0]; // pt % 8
+                pad_din_col = ctx.pt[7 : 3] % 5; // pt / 8 % 5
+                pad_din_row = ctx.pt[7 : 3] / 5; // pt / 8 / 5
             end
             1'b1 : begin
-                pad_din <= 8'h80; // 填充数据的第二个字节
-                pad_din_valid <= 1'b1;
+                pad_din = 8'h80; // 填充数据的第二个字节
+                pad_din_valid = 1'b1;
                 case (mdlen)
                     'd16 : begin
-                        pad_din_pos <= 'd0;
-                        pad_din_row <= 'd4;
-                        pad_din_col <= 'd1;
+                        pad_din_pos = 'd7;
+                        pad_din_row = 'd4;
+                        pad_din_col = 'd0;
                     end 
                     'd32 : begin
-                        pad_din_pos <= 'd7;
-                        pad_din_row <= 'd3;
-                        pad_din_col <= 'd1;
+                        pad_din_pos = 'd7;
+                        pad_din_row = 'd3;
+                        pad_din_col = 'd1;
                     end
                     default: begin
-                        pad_din_pos <= 'd0;
-                        pad_din_row <= 'd0;
-                        pad_din_col <= 'd0;
+                        pad_din_pos = 'd0;
+                        pad_din_row = 'd0;
+                        pad_din_col = 'd0;
                     end
                 endcase
-                pad_din_pos <= 'd7;
-                pad_din_col <= 4; 
-                pad_din_row <= 4; 
             end
             default : begin
-                pad_din <= 'd0;
-                pad_din_valid <= 1'b0;
-                pad_din_pos <= 'd0;
-                pad_din_col <= 'd0;
-                pad_din_row <= 'd0;
+                pad_din = 'd0;
+                pad_din_valid = 1'b0;
+                pad_din_pos = 'd0;
+                pad_din_col = 'd0;
+                pad_din_row = 'd0;
             end
         endcase
     end
@@ -326,6 +318,8 @@ always_ff @(posedge clk or negedge rstn) begin
             st_8bit_valid <= 1'b1;
         end
     end
+    else 
+        st_8bit_valid <= 1'b0;
 end
 
 
@@ -361,7 +355,7 @@ always_ff @(posedge clk or negedge rstn) begin
             S_UPDATE : begin
                 if (cnt == din_len - 1 && rd_en) begin
                     state <= S_XOF_PAD;
-                    ctx.pt <= curr_pt;
+                    ctx.pt <= curr_pt + 1;
                 end
                 else if (curr_pt >= ctx.rsiz)
                     state <= S_KACCAK;
@@ -395,7 +389,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_OUT_KACCAK;
                 else if (st_8bit_cnt == out_len - 1) begin
                     state <= S_IDLE;
-                    ctx.pt <= curr_pt;
+                    ctx.pt <= curr_pt + 1;
                 end
                 else 
                     state <= S_OUT;
@@ -435,8 +429,15 @@ sha3_din_fifo u_sha3_din_fifo (
   .rd_en            (rd_en),    // input wire rd_en
   .dout             (dout),     // output wire [7 : 0] dout
   .full             (full),     // output wire full
-  .empty            (empty)     // output wire empty
+  .empty            (empty),    // output wire empty
+  .data_count       (data_count)// output wire [8 : 0] data_count
 );
 
+always_ff @(posedge clk or negedge rstn) begin
+    if (!rstn)
+        data_count_d <= 'd0;
+    else 
+        data_count_d <= data_count;
+end
 
 endmodule

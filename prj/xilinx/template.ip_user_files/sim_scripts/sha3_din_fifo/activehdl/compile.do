@@ -26,7 +26,7 @@ vlog -work fifo_generator_v13_2_5  -v2k5 \
 "../../../ipstatic/hdl/fifo_generator_v13_2_rfs.v" \
 
 vlog -work xil_defaultlib  -v2k5 \
-"../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
+"../../../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
 
 vlog -work xil_defaultlib \
 "glbl.v"
