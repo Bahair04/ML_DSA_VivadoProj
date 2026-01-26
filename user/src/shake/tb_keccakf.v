@@ -35,7 +35,7 @@ initial begin
     @(posedge clk);
     st_s_valid <= 1'b1;
 
-    st_s <= 64'hFFFFFFFFFFFFFFFF;
+    st_s <= 64'h0000111122223333;
     @(posedge clk);
     st_s <= 64'h4444555566667777;
     @(posedge clk);

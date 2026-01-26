@@ -5,7 +5,7 @@ module sha3(
     output      reg                 ack,
     input       wire    [7 : 0]     mdlen,      // 哈希输出字节数
     input       wire    [7 : 0]     q_s,        // 单字节数据
-    input       wire                q_s_valid   // 单字节数据有效标志
+    input       wire                q_s_valid,  // 单字节数据有效标志
     input       wire    [7 : 0]     q_s_len     // 输入单字节数
 
 
