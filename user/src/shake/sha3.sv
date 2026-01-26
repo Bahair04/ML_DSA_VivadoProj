@@ -6,7 +6,7 @@ module sha3(
     // --- 数据输入接口 ---
     input       logic   [7 : 0]     din,            // 8 - bit 串行输入数据
     input       logic               din_valid,      // 8 - bit 数据有效信号
-    input       logic   [7 : 0]     din_len,        // 8 - bit 输入数据长度
+    input       logic   [31 : 0]    din_len,        // 8 - bit 输入数据长度
 
     // --- SHA3 相关参数 ---
     input       logic   [7 : 0]     mdlen,          // 8 - bit 输出哈希值长度
@@ -14,7 +14,8 @@ module sha3(
     input       logic               start,          // 开始数据信号  
     output      logic               done,           // update和xof完成信号 表示可以进行out了
     input       logic               start_out,      // 指示开始输出的信号
-    input       logic   [7 : 0]     out_len,        // 8 - bit 输出数据长度
+    input       logic   [31 : 0]    out_len,        // 8 - bit 输出数据长度
+    output      logic               done_out,       // 8 - bit 数据输出完成信号
 
     // --- 数据输出接口 ---
     output      logic   [7 : 0]                 st_8bit,            // 8 - bit 串行输出数据                
@@ -65,7 +66,7 @@ logic       [2 : 0]                 pad_din_pos;
 logic                               pad_cnt;        // 用于记录填充阶段的计数器
 
 // --- 展开位置记录计数器 ---
-logic       [7 : 0]                 cnt;            // 原始8 - bit数据计数器
+logic       [31 : 0]                cnt;            // 原始8 - bit数据计数器
 logic       [2 : 0]                 din_row;        // 数据输入行
 logic       [2 : 0]                 din_col;        // 数据输入列
 logic       [2 : 0]                 din_pos;        // 数据输入位置(即当前8 - bit在展开的64 - bit中的位置)
@@ -82,7 +83,7 @@ logic       [8 : 0]                 data_count;
 logic       [8 : 0]                 data_count_d;
 
 // --- 串行输出8 - bit信号 ---
-logic       [7 : 0]                 st_8bit_cnt;
+logic       [31 : 0]                st_8bit_cnt;
 
 // ==========================================================
 // 具体逻辑实现
@@ -220,6 +221,11 @@ end
 // 填充具体数据
 // --------------------------------
 always_comb begin
+    pad_din       = 'd0;
+    pad_din_valid = 1'b0;
+    pad_din_pos   = 'd0;
+    pad_din_col   = 'd0;
+    pad_din_row   = 'd0;
     if (state == S_XOF_PAD) begin
         case (pad_cnt)
             1'b0 : begin
@@ -262,7 +268,7 @@ always_comb begin
 end
 
 // ==========================================================
-// 输出update & xof 结束信号
+// 输出update & xof 结束信号 | 8 - bit 数据输出完成信号
 // ==========================================================
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
@@ -271,6 +277,14 @@ always_ff @(posedge clk or negedge rstn) begin
         done <= 1'b1;
     else 
         done <= 1'b0;
+end
+always_ff @(posedge clk or negedge rstn) begin
+    if (!rstn)
+        done_out <= 1'b0;
+    else if (state_d == S_OUT && state == S_IDLE)
+        done_out <= 1'b1;
+    else 
+        done_out <= 1'b0;
 end
 
 // ==========================================================
@@ -293,8 +307,10 @@ always_ff @(posedge clk or negedge rstn) begin
         else 
             st_8bit_cnt <= st_8bit_cnt;
     end
-    else 
+    else if (state == S_IDLE)
         st_8bit_cnt <= 'd0;
+    else 
+        st_8bit_cnt <= st_8bit_cnt;
 end
 
 // --------------------------------
@@ -387,7 +403,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_XOF_KACCAK;
             end
             S_OUT : begin
-                if (curr_pt >= ctx.rsiz)
+                if (curr_pt + 1 >= ctx.rsiz)
                     state <= S_OUT_KACCAK;
                 else if (st_8bit_cnt == out_len - 1) begin
                     state <= S_IDLE;
