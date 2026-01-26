@@ -18,8 +18,8 @@ module sha3(
     output      logic               done_out,       // 8 - bit 数据输出完成信号
 
     // --- 数据输出接口 ---
-    output      logic   [7 : 0]                 st_8bit,            // 8 - bit 串行输出数据                
-    output      logic                           st_8bit_valid       // 8 - bit 串行输出有效信号 
+    output      logic   [7 : 0]     st_8bit,        // 8 - bit 串行输出数据                
+    output      logic               st_8bit_valid   // 8 - bit 串行输出有效信号 
 
 );
 
