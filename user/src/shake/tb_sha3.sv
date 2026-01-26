@@ -36,10 +36,10 @@ end
 
 initial begin
     repeat (60) @(posedge clk);
-    // mdlen <= 'd16; // shake128
-    mdlen <= 'd32; // shake256
+    mdlen <= 'd16; // shake128
+    // mdlen <= 'd32; // shake256
     din_len <= 'd400;
-    out_len <= 'd500;
+    out_len <= 'd2000;
     init <= 1'b1;
     @(posedge clk);
     init <= 1'b0;
