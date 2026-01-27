@@ -13,8 +13,8 @@ module shake256(
     output      wire                done_out,       // 挤出数据结束信号
 
     // --- 串行数据输出接口 ---
-    output      wire    [7 : 0]     st_8bit,
-    output      wire                st_8bit_valid
+    output      wire    [63 : 0]    st_64bit,
+    output      wire                st_64bit_valid
     
 
 );
@@ -55,20 +55,20 @@ end
 // shake256 例化
 // ==========================================================
 sha3 u_shake256(
-	.clk           	( clk            ),
-	.rstn          	( rstn           ),
+	.clk           	( clk                   ),
+	.rstn          	( rstn                  ),
 	.din           	( din                   ),
 	.din_valid     	( din_valid             ),
 	.din_len       	( 'd34                  ),
-	.mdlen         	( 'd32           ),
+	.mdlen         	( 'd32                  ),
 	.init          	( init                  ),
 	.start         	( start                 ),
 	.done          	( done                  ),
 	.start_out     	( start_out             ),
 	.out_len       	( 'd128                 ),
 	.done_out      	( done_out              ),
-	.st_8bit       	( st_8bit               ),
-	.st_8bit_valid 	( st_8bit_valid         )
+	.st_64bit       ( st_64bit                     ),
+	.st_64bit_valid ( st_64bit_valid               )
 );
 
 

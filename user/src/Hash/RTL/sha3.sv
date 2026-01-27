@@ -18,8 +18,8 @@ module sha3(
     output      logic               done_out,       // 8 - bit 数据输出完成信号
 
     // --- 数据输出接口 ---
-    output      logic   [7 : 0]     st_8bit,        // 8 - bit 串行输出数据                
-    output      logic               st_8bit_valid   // 8 - bit 串行输出有效信号 
+    output      logic   [63 : 0]    st_64bit,        // 64 - bit 串行输出数据                
+    output      logic               st_64bit_valid   // 64 - bit 串行输出有效信号 
 
 );
 
@@ -83,7 +83,7 @@ logic       [8 : 0]                 data_count;
 logic       [8 : 0]                 data_count_d;
 
 // --- 串行输出8 - bit信号 ---
-logic       [31 : 0]                st_8bit_cnt;
+logic       [31 : 0]                st_64bit_cnt;
 
 // ==========================================================
 // 具体逻辑实现
@@ -165,20 +165,16 @@ always_ff @(posedge clk or negedge rstn) begin
     end
     else if (state == S_OUT) begin
         if (curr_pt < ctx.rsiz) begin // 更新读取的位置
-            if (din_pos == 'd7) begin
-                din_pos <= 'd0;
-                if (din_col == 'd4) begin
-                    din_col <= 'd0;
-                    if (din_row == 'd4)
-                        din_row <= 'd0;
-                    else 
-                        din_row <= din_row + 1'b1;
-                end
+            din_pos <= 'd0;
+            if (din_col == 'd4) begin
+                din_col <= 'd0;
+                if (din_row == 'd4)
+                    din_row <= 'd0;
                 else 
-                    din_col <= din_col + 1'b1;
+                    din_row <= din_row + 1'b1;
             end
             else 
-                din_pos <= din_pos + 1'b1;
+                din_col <= din_col + 1'b1;
         end
     end
 end
@@ -296,21 +292,21 @@ end
 // --------------------------------
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
-        st_8bit_cnt <= 'd0;
+        st_64bit_cnt <= 'd0;
     else if (state == S_OUT) begin
         if (curr_pt < ctx.rsiz) begin
-            if (st_8bit_cnt == out_len - 1)
-                st_8bit_cnt <= 'd0;
+            if (st_64bit_cnt >= out_len - 8)
+                st_64bit_cnt <= 'd0;
             else 
-                st_8bit_cnt <= st_8bit_cnt + 1'b1;
+                st_64bit_cnt <= st_64bit_cnt + 'd8;
         end
         else 
-            st_8bit_cnt <= st_8bit_cnt;
+            st_64bit_cnt <= st_64bit_cnt;
     end
     else if (state == S_IDLE)
-        st_8bit_cnt <= 'd0;
+        st_64bit_cnt <= 'd0;
     else 
-        st_8bit_cnt <= st_8bit_cnt;
+        st_64bit_cnt <= st_64bit_cnt;
 end
 
 // --------------------------------
@@ -318,26 +314,26 @@ end
 // --------------------------------
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-        st_8bit <= 'd0;
-        st_8bit_valid <= 1'b0;
+        st_64bit <= 'd0;
+        st_64bit_valid <= 1'b0;
     end
     else if (state == S_OUT) begin
         if (curr_pt < ctx.rsiz) begin
-            case (din_pos)
-                'd0 : st_8bit <= ctx.st[din_row][din_col][7  : 0];
-                'd1 : st_8bit <= ctx.st[din_row][din_col][15 : 8];
-                'd2 : st_8bit <= ctx.st[din_row][din_col][23 : 16];
-                'd3 : st_8bit <= ctx.st[din_row][din_col][31 : 24];
-                'd4 : st_8bit <= ctx.st[din_row][din_col][39 : 32];
-                'd5 : st_8bit <= ctx.st[din_row][din_col][47 : 40];
-                'd6 : st_8bit <= ctx.st[din_row][din_col][55 : 48];
-                'd7 : st_8bit <= ctx.st[din_row][din_col][63 : 56];
-            endcase
-            st_8bit_valid <= 1'b1;
+            st_64bit <= {
+                ctx.st[din_row][din_col][ 7: 0],
+                ctx.st[din_row][din_col][15: 8],
+                ctx.st[din_row][din_col][23:16],
+                ctx.st[din_row][din_col][31:24],
+                ctx.st[din_row][din_col][39:32],
+                ctx.st[din_row][din_col][47:40],
+                ctx.st[din_row][din_col][55:48],
+                ctx.st[din_row][din_col][63:56]
+            };
+            st_64bit_valid <= 1'b1;
         end
     end
     else 
-        st_8bit_valid <= 1'b0;
+        st_64bit_valid <= 1'b0;
 end
 
 
@@ -403,9 +399,9 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_XOF_KACCAK;
             end
             S_OUT : begin
-                if (curr_pt + 1 >= ctx.rsiz)
+                if (curr_pt + 8 >= ctx.rsiz)
                     state <= S_OUT_KACCAK;
-                else if (st_8bit_cnt == out_len - 1) begin
+                else if (st_64bit_cnt >= out_len - 8) begin
                     state <= S_IDLE;
                     ctx.pt <= curr_pt + 1;
                 end

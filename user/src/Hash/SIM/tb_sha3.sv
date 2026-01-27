@@ -20,8 +20,8 @@ logic   [31 : 0]    out_len          = 0 ;
 
 // sha3 Outputs
 logic               done             ;
-logic   [7 : 0]                 st_8bit ;
-logic                           st_8bit_valid ;
+logic   [63 : 0]                st_64bit ;
+logic                           st_64bit_valid ;
 logic               done_out;
 
 initial
@@ -36,10 +36,10 @@ end
 
 initial begin
     repeat (60) @(posedge clk);
-    mdlen <= 'd16; // shake128
-    // mdlen <= 'd32; // shake256
+    // mdlen <= 'd16; // shake128
+    mdlen <= 'd32; // shake256
     din_len <= 'd400;
-    out_len <= 'd2000;
+    out_len <= 'd5000;
     init <= 1'b1;
     @(posedge clk);
     init <= 1'b0;
@@ -463,8 +463,8 @@ initial begin
     fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Hash/output/tb_sha3_output.txt", "w");
 end
 always @(posedge clk) begin
-    if (st_8bit_valid) begin
-        $fwrite(fid, "%x", st_8bit);
+    if (st_64bit_valid) begin
+        $fwrite(fid, "%x", st_64bit);
     end
 end
 
@@ -481,8 +481,8 @@ sha3  u_sha3 (
     .out_len                    (out_len         ),
     .done                       (done            ),
     .done_out                   (done_out        ),
-    .st_8bit                    (st_8bit         ),
-    .st_8bit_valid              (st_8bit_valid   )
+    .st_64bit                    (st_64bit         ),
+    .st_64bit_valid              (st_64bit_valid   )
 );
 
 endmodule

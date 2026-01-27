@@ -16,8 +16,8 @@ reg   start                                = 0 ;
 
 // _h Outputs
 wire  done_out                             ;
-wire  [7 : 0]  st_8bit                     ;
-wire  st_8bit_valid                        ;
+wire  [63 : 0]  st_64bit                     ;
+wire  st_64bit_valid                        ;
 
 
 initial
@@ -62,8 +62,8 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if (st_8bit_valid)
-        $fwrite(fid, "%x", st_8bit);
+    if (st_64bit_valid)
+        $fwrite(fid, "%x", st_64bit);
 end
 
 shake256  u_shake256 (
@@ -75,8 +75,8 @@ shake256  u_shake256 (
     .start                   ( start                  ),
 
     .done_out                ( done_out               ),
-    .st_8bit                 ( st_8bit        [7 : 0] ),
-    .st_8bit_valid           ( st_8bit_valid          )
+    .st_64bit                 ( st_64bit        [63 : 0] ),
+    .st_64bit_valid           ( st_64bit_valid          )
 );
 
 endmodule
