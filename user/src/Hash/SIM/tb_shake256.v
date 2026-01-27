@@ -1,6 +1,6 @@
 `timescale  1ns / 1ps
 
-module tb__h;
+module tb_shake256;
 
 // _h Parameters
 parameter PERIOD  = 10;
@@ -58,7 +58,7 @@ end
 
 integer fid;
 initial begin
-    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/tb_h_output.txt", "w");
+    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Hash/output/tb_shake256_output.txt", "w");
 end
 
 always @(posedge clk) begin
@@ -66,7 +66,7 @@ always @(posedge clk) begin
         $fwrite(fid, "%x", st_8bit);
 end
 
-_h  u__h (
+shake256  u_shake256 (
     .clk                     ( clk                    ),
     .rstn                    ( rstn                   ),
     .din                     ( din            [7 : 0] ),

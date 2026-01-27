@@ -1,4 +1,4 @@
-module _h(
+module shake256(
     // --- 时钟与复位信号 ---
     input       wire                clk,
     input       wire                rstn,

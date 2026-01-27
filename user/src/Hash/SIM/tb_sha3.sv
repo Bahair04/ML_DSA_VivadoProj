@@ -460,7 +460,7 @@ end
 
 integer fid;
 initial begin
-    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/shake/hashout.txt", "w");
+    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Hash/output/tb_sha3_output.txt", "w");
 end
 always @(posedge clk) begin
     if (st_8bit_valid) begin
