@@ -4,8 +4,8 @@ module sha3(
     input       logic               rstn,
 
     // --- 数据输入接口 ---
-    input       logic   [7 : 0]     din,            // 8 - bit 串行输入数据
-    input       logic               din_valid,      // 8 - bit 数据有效信号
+    input       logic   [63 : 0]    din,            // 64 - bit 串行输入数据
+    input       logic               din_valid,      // 64 - bit 数据有效信号
     input       logic   [31 : 0]    din_len,        // 8 - bit 输入数据长度
 
     // --- SHA3 相关参数 ---
@@ -58,7 +58,7 @@ sha3_ctx_t ctx;
 // --- KACCAK控制信号 ---
 logic                               start_perm;
 logic                               perm_done;
-logic       [7 : 0]                 pad_din;
+logic       [63 : 0]                pad_din;
 logic                               pad_din_valid;
 logic       [2 : 0]                 pad_din_row;
 logic       [2 : 0]                 pad_din_col;
@@ -73,14 +73,19 @@ logic       [2 : 0]                 din_pos;        // 数据输入位置(即当前8 - bi
 logic       [7 : 0]                 curr_pt;
 assign curr_pt = din_pos + ((din_row * 5 + din_col) << 3);
 
+// --- 数据拼接信号 ---
+logic       [2 : 0]                 comb_cnt;
+logic       [63 : 0]                comb_data;
+logic                               comb_valid;
+
 // --- FIFO 相关信号 ---
 logic                               wr_en;
 logic                               rd_en;
-logic       [7 : 0]                 dout;
+logic       [63 : 0]                dout;
 logic                               empty;
 logic                               full;
-logic       [8 : 0]                 data_count;
-logic       [8 : 0]                 data_count_d;
+logic       [7 : 0]                 data_count;
+logic       [7 : 0]                 data_count_d;
 
 // --- 串行输出8 - bit信号 ---
 logic       [31 : 0]                st_64bit_cnt;
@@ -98,10 +103,10 @@ always_ff @(posedge clk or negedge rstn) begin
         cnt <= 'd0;
     else if (state == S_UPDATE) begin
         if (rd_en) begin
-            if (cnt == din_len - 1)
+            if (cnt[31 : 3] == din_len[31 : 3])
                 cnt <= 'd0;
             else 
-                cnt <= cnt + 1'b1;
+                cnt <= cnt + 'd8;
         end
         else 
             cnt <= cnt;
@@ -137,25 +142,23 @@ always_ff @(posedge clk or negedge rstn) begin
             rd_en <= 1'b1;                  // 那么就开始读取
         else if (data_count_d == 'd2 && data_count == 'd1)
             rd_en <= 1'b0;
-        else if (curr_pt + 1 >= ctx.rsiz)
+        else if (cnt[31 : 3] == din_len[31 : 3] && curr_pt + (din_len[2 : 0] ? din_len[2 : 0] : 'd8) >= ctx.rsiz)
+            rd_en <= 1'b0;
+        else if (cnt[31 : 3] != din_len[31 : 3] && curr_pt + 'd8 >= ctx.rsiz)
             rd_en <= 1'b0;
         else 
             rd_en <= rd_en;
         if (rd_en) begin // 更新8-bit在展开的64-bit中的位置
-            if (din_pos == 'd7) begin
-                din_pos <= 'd0;
-                if (din_col == 'd4) begin
-                    din_col <= 'd0;
-                    if (din_row == 'd4)
-                        din_row <= 'd0;
-                    else 
-                        din_row <= din_row + 1'b1;
-                end
+            din_pos <= 'd0;
+            if (din_col == 'd4) begin
+                din_col <= 'd0;
+                if (din_row == 'd4)
+                    din_row <= 'd0;
                 else 
-                    din_col <= din_col + 1'b1;
+                    din_row <= din_row + 1'b1;
             end
             else 
-                din_pos <= din_pos + 1'b1;
+                din_col <= din_col + 1'b1;
         end
     end
     else if (state == S_KACCAK || state == S_OUT_KACCAK) begin
@@ -230,9 +233,20 @@ always_comb begin
                 pad_din_pos = ctx.pt[2 : 0]; // pt % 8
                 pad_din_col = ctx.pt[7 : 3] % 5; // pt / 8 % 5
                 pad_din_row = ctx.pt[7 : 3] / 5; // pt / 8 / 5
+                case (pad_din_pos)
+                    'd0 : pad_din = 64'h000000000000001F; 
+                    'd1 : pad_din = 64'h0000000000001F00; 
+                    'd2 : pad_din = 64'h00000000001F0000; 
+                    'd3 : pad_din = 64'h000000001F000000;
+                    'd4 : pad_din = 64'h0000001F00000000; 
+                    'd5 : pad_din = 64'h00001F0000000000;
+                    'd6 : pad_din = 64'h001F000000000000; 
+                    'd7 : pad_din = 64'h1F00000000000000;
+                    default : pad_din <= 64'h0000000000000000; 
+                endcase
             end
             1'b1 : begin
-                pad_din = 8'h80; // 填充数据的第二个字节
+                pad_din = 64'h8000000000000000; // 填充数据的第二个字节
                 pad_din_valid = 1'b1;
                 case (mdlen)
                     'd16 : begin
@@ -367,11 +381,13 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_IDLE;
             end
             S_UPDATE : begin
-                if (cnt == din_len - 1 && rd_en) begin
+                if (cnt[31 : 3] == din_len[31 : 3] && (rd_en || curr_pt == 'd0)) begin
                     state <= S_XOF_PAD;
-                    ctx.pt <= curr_pt + 1;
+                    ctx.pt <= curr_pt + (din_len[2 : 0] ? din_len[2 : 0] : 'd8);
                 end
-                else if (curr_pt + 1 >= ctx.rsiz)
+                else if (cnt[31 : 3] == din_len[31 : 3] && curr_pt + (din_len[2 : 0] ? din_len[2 : 0] : 'd8) >= ctx.rsiz)
+                    state <= S_KACCAK;
+                else if (cnt[31 : 3] != din_len[31 : 3] && curr_pt + 'd8 >= ctx.rsiz)
                     state <= S_KACCAK;
                 else
                     state <= S_UPDATE;
@@ -438,13 +454,13 @@ keccak u_keccak(
 sha3_din_fifo u_sha3_din_fifo (
   .clk              (clk),      // input wire clk
   .srst             (~rstn),    // input wire srst
-  .din              (din),      // input wire [7 : 0] din
+  .din              (din),      // input wire [63 : 0] din
   .wr_en            (din_valid),// input wire wr_en
   .rd_en            (rd_en),    // input wire rd_en
-  .dout             (dout),     // output wire [7 : 0] dout
+  .dout             (dout),     // output wire [63 : 0] dout
   .full             (full),     // output wire full
   .empty            (empty),    // output wire empty
-  .data_count       (data_count)// output wire [8 : 0] data_count
+  .data_count       (data_count)// output wire [7 : 0] data_count
 );
 
 always_ff @(posedge clk or negedge rstn) begin

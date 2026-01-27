@@ -10,7 +10,7 @@ module keccak(
 
     // --- 串行数据吸入接口  ---
     input   logic                   din_valid,  // 输入数据有效信号
-    input   logic   [7 : 0]         din,        // 8-bit 输入数据
+    input   logic   [63 : 0]        din,        // 63-bit 输入数据
     input   logic   [2 : 0]         din_row,    // 写入位置 row (行)
     input   logic   [2 : 0]         din_col,    // 写入位置 col (列)
     input   logic   [2 : 0]         din_pos,    // 写入位置 pos (位) 用于在将64-bit按8-bit展开
@@ -220,16 +220,17 @@ always_ff @(posedge clk or negedge rstn) begin
                 end
                 else if (din_valid) begin
                     // *** 核心：In-Place XOR Update ***
-                    case (din_pos)
-                        3'd0 : st[din_row][din_col][7:0]   <= st[din_row][din_col][7:0]   ^ din;
-                        3'd1 : st[din_row][din_col][15:8]  <= st[din_row][din_col][15:8]  ^ din;
-                        3'd2 : st[din_row][din_col][23:16] <= st[din_row][din_col][23:16] ^ din;
-                        3'd3 : st[din_row][din_col][31:24] <= st[din_row][din_col][31:24] ^ din;
-                        3'd4 : st[din_row][din_col][39:32] <= st[din_row][din_col][39:32] ^ din;
-                        3'd5 : st[din_row][din_col][47:40] <= st[din_row][din_col][47:40] ^ din;
-                        3'd6 : st[din_row][din_col][55:48] <= st[din_row][din_col][55:48] ^ din;
-                        3'd7 : st[din_row][din_col][63:56] <= st[din_row][din_col][63:56] ^ din;
-                    endcase
+                    st[din_row][din_col] <= din;
+                    // case (din_pos)
+                    //     3'd0 : st[din_row][din_col][7:0]   <= st[din_row][din_col][7:0]   ^ din;
+                    //     3'd1 : st[din_row][din_col][15:8]  <= st[din_row][din_col][15:8]  ^ din;
+                    //     3'd2 : st[din_row][din_col][23:16] <= st[din_row][din_col][23:16] ^ din;
+                    //     3'd3 : st[din_row][din_col][31:24] <= st[din_row][din_col][31:24] ^ din;
+                    //     3'd4 : st[din_row][din_col][39:32] <= st[din_row][din_col][39:32] ^ din;
+                    //     3'd5 : st[din_row][din_col][47:40] <= st[din_row][din_col][47:40] ^ din;
+                    //     3'd6 : st[din_row][din_col][55:48] <= st[din_row][din_col][55:48] ^ din;
+                    //     3'd7 : st[din_row][din_col][63:56] <= st[din_row][din_col][63:56] ^ din;
+                    // endcase
                     state <= S_IDLE;
                 end
             end
