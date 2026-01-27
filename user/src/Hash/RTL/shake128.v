@@ -1,4 +1,4 @@
-module shake256(
+module shake128(
     // --- 时钟与复位信号 ---
     input       wire                clk,
     input       wire                rstn,
@@ -54,15 +54,15 @@ always @(posedge clk or negedge rstn) begin
 end
 
 // ==========================================================
-// shake256 例化
+// shake128 例化
 // ==========================================================
-sha3 u_shake256(
+sha3 u_shake128(
 	.clk           	( clk                   ),
 	.rstn          	( rstn                  ),
 	.din           	( din                   ),
 	.din_valid     	( din_valid             ),
 	.din_len       	( din_len               ),
-	.mdlen         	( 'd32                  ),
+	.mdlen         	( 'd16                  ),
 	.init          	( init                  ),
 	.start         	( start                 ),
 	.done          	( done                  ),
