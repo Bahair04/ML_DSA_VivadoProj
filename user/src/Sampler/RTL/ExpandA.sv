@@ -54,7 +54,7 @@ logic       [2 : 0]         valid_coeff_cnt;
 logic       [4 : 0]         check;
 
 // --- 单个多项式系数计数信号 ---
-logic       [7 : 0]         single_poly_cnt;
+logic       [9 : 0]         single_poly_cnt;
 
 // --- 生成多项式计数信号 ---
 logic       [7 : 0]         poly_cnt;
@@ -64,7 +64,7 @@ logic                       rd_en;
 logic       [127 : 0]       fifo_dout;
 logic                       full;
 logic                       empty;
-logic       [4 : 0]         rd_data_count;
+logic       [8 : 0]         rd_data_count;
 
 // ==========================================================
 // 具体控制逻辑实现
@@ -80,8 +80,8 @@ always_ff @(posedge clk or negedge rstn) begin
 end
 
 assign dout_len = 'd34;
-assign out_len = 'd16;
-assign mdlen = 'd16;
+assign out_len = 'd1024;
+assign mdlen = 'd16;            // shake128
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         seed <= 'd0;
@@ -205,7 +205,7 @@ always_ff @(posedge clk or negedge rstn) begin
         single_poly_cnt <= 'd0;
     end
     else if (valid_coeff_cnt >= 'd4) begin
-        coeff <= pack_comb[91 : 0];
+        coeff <= valid_coeff_comb[91 : 0];
         coeff_valid <= 1'b1;
         single_poly_cnt <= single_poly_cnt + 1'b1;
     end
@@ -317,7 +317,7 @@ ExpandA_sipo u_ExpandA_sipo (
   .dout(fifo_dout),                    // output wire [127 : 0] dout
   .full(full),                    // output wire full
   .empty(empty),                  // output wire empty
-  .rd_data_count(rd_data_count)  // output wire [4 : 0] rd_data_count
+  .rd_data_count(rd_data_count)  // output wire [8 : 0] rd_data_count
 );
 
 endmodule
