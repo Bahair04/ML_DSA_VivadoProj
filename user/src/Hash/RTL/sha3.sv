@@ -403,7 +403,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_OUT_KACCAK;
                 else if (st_64bit_cnt >= out_len - 8) begin
                     state <= S_IDLE;
-                    ctx.pt <= curr_pt + 1;
+                    ctx.pt <= curr_pt + 8;
                 end
                 else 
                     state <= S_OUT;

@@ -39,7 +39,7 @@ initial begin
     // mdlen <= 'd16; // shake128
     mdlen <= 'd32; // shake256
     din_len <= 'd400;
-    out_len <= 'd5000;
+    out_len <= 'd32;
     init <= 1'b1;
     @(posedge clk);
     init <= 1'b0;

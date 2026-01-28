@@ -51,6 +51,16 @@ initial begin
     $finish;
 end
 
+integer fid;
+initial begin
+    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/output/tb_ExpandA_output.txt", "w");
+end
+
+always_ff @(posedge clk) begin
+    if (st_64bit_valid)
+        $fwrite(fid, "%x", st_64bit);
+end
+
 ExpandA  u_ExpandA (
     .clk             ( clk              ),
     .rstn            ( rstn             ),

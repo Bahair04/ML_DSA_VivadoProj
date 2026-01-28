@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="ExpandA_sipo_synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769565935">
   <File Type="PA-TCL" Name="ExpandA_sipo.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="ExpandA_sipo_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="ExpandA_sipo_reports.tcl"/>
   <File Type="RDS-RDS" Name="ExpandA_sipo.vds"/>
   <File Type="RDS-UTIL" Name="ExpandA_sipo_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="ExpandA_sipo_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="ExpandA_sipo.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="ExpandA_sipo_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="ExpandA_sipo_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="BlockSrcs" RelSrcDir="$PSRCDIR/ExpandA_sipo">
     <File Path="$PSRCDIR/sources_1/ip/ExpandA_sipo/ExpandA_sipo.xci">
       <FileInfo>
@@ -42,9 +39,7 @@
     </Config>
   </FileSet>
   <Strategy Version="1" Minor="2">
-    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021">
-      <Desc>Vivado Synthesis Defaults</Desc>
-    </StratHandle>
+    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
 </GenRun>
