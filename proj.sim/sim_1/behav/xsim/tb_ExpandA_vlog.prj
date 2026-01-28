@@ -1,0 +1,20 @@
+# compile verilog/system verilog design source files
+verilog fifo_generator_v13_2_5  \
+"../../../../proj.ip_user_files/ipstatic/simulation/fifo_generator_vlog_beh.v" \
+"../../../../proj.ip_user_files/ipstatic/hdl/fifo_generator_v13_2_rfs.v" \
+
+verilog xil_defaultlib  \
+"../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
+"../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
+
+sv xil_defaultlib  \
+"../../../../user/src/Sampler/RTL/ExpandA.sv" \
+"../../../../user/src/Hash/RTL/keccak.sv" \
+"../../../../user/src/Hash/RTL/sha3.sv" \
+"../../../../user/src/Sampler/SIM/tb_ExpandA.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
