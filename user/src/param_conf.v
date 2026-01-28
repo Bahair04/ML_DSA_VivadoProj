@@ -12,6 +12,8 @@
     `define l               8'd4
     `define eta             2
     `define omega           80
+    `define bit_count       18
+    `define total_bits      4608        // 576 * 8
     `define c_tilde_bytes   32
 
 `endif
@@ -28,6 +30,8 @@
     `define l               8'd5
     `define eta             4
     `define omega           55
+    `define bit_count       20
+    `define total_bits      5120        // 640 * 8
     `define c_tilde_bytes   32
 
 `endif
@@ -44,6 +48,8 @@
     `define l               8'd7
     `define eta             2
     `define omega           75
+    `define bit_count       20
+    `define total_bits      5120        // 640 * 8
     `define c_tilde_bytes   32
 
 `endif

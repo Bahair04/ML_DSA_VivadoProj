@@ -1,15 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769565690">
-  <File Type="PA-TCL" Name="shake128.tcl"/>
-  <File Type="REPORTS-TCL" Name="shake128_reports.tcl"/>
-  <File Type="RDS-RDS" Name="shake128.vds"/>
-  <File Type="RDS-UTIL" Name="shake128_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="shake128_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="shake128.dcp"/>
+<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769613657">
+  <File Type="PA-TCL" Name="ExpandS.tcl"/>
+  <File Type="RDS-PROPCONSTRS" Name="ExpandS_drc_synth.rpt"/>
+  <File Type="REPORTS-TCL" Name="ExpandS_reports.tcl"/>
+  <File Type="RDS-RDS" Name="ExpandS.vds"/>
+  <File Type="RDS-UTIL" Name="ExpandS_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="ExpandS_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="ExpandS.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="ExpandS_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="ExpandS_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
+    <File Path="$PPRDIR/user/src/param_conf.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandS.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PPRDIR/user/ip/sha3_din_fifo/sha3_din_fifo.xci">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -17,6 +35,7 @@
     </File>
     <File Path="$PPRDIR/user/src/Hash/RTL/keccak.sv">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -24,19 +43,13 @@
     </File>
     <File Path="$PPRDIR/user/src/Hash/RTL/sha3.sv">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
     <File Path="$PPRDIR/user/src/Hash/RTL/shake128.v">
-      <FileInfo>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PPRDIR/user/src/param_conf.v">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -76,10 +89,41 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PPRDIR/user/src/Sampler/SIM/tb_ExpandA.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandA.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/ip/ExpandA_sipo/ExpandA_sipo.xci">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PSRCDIR/sources_1/ip/ExpandY_sipo/ExpandY_sipo.xci">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="shake128"/>
-      <Option Name="TopAutoSet" Val="TRUE"/>
+      <Option Name="TopModule" Val="ExpandS"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -98,4 +142,5 @@
     <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
+  <BlockFileSet Type="BlockSrcs" Name="ExpandS_sipo_1"/>
 </GenRun>
