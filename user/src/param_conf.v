@@ -2,6 +2,8 @@
 
 `ifdef ML_DSA_44
 
+    `define n               256
+    `define q               8380417
     `define d               13
     `define tau             39
     `define gamma_1         131072
@@ -12,4 +14,37 @@
     `define omega           80
     `define c_tilde_bytes   32
 
-`endif 
+`endif
+
+`ifdef ML_DSA_65
+
+    `define n               256
+    `define q               8380417
+    `define d               13
+    `define tau             49
+    `define gamma_1         524288
+    `define gamma_2         261888
+    `define k               8'd6
+    `define l               8'd5
+    `define eta             4
+    `define omega           55
+    `define c_tilde_bytes   32
+
+`endif
+
+`ifdef ML_DSA_87
+
+    `define n               256
+    `define q               8380417
+    `define d               13
+    `define tau             60
+    `define gamma_1         524288
+    `define gamma_2         261888
+    `define k               8'd8
+    `define l               8'd7
+    `define eta             2
+    `define omega           75
+    `define c_tilde_bytes   32
+
+`endif
+

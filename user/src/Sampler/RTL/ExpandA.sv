@@ -204,18 +204,22 @@ always_ff @(posedge clk or negedge rstn) begin
         coeff_valid <= 1'b0;
         single_poly_cnt <= 'd0;
     end
+    else if (state == S_UPDATE)
+        single_poly_cnt <= 'd0;
     else if (valid_coeff_cnt >= 'd4) begin
-        coeff <= valid_coeff_comb[91 : 0];
-        coeff_valid <= 1'b1;
-        single_poly_cnt <= single_poly_cnt + 1'b1;
+        if (single_poly_cnt <= 'd63) begin
+            coeff <= valid_coeff_comb[91 : 0];
+            coeff_valid <= 1'b1;
+        end
+        else begin
+            coeff <= 'd0;
+            coeff_valid <= 1'b0;
+        end
+            single_poly_cnt <= single_poly_cnt + 1'b1;
     end
     else begin
         coeff <= 'd0;
         coeff_valid <= 1'b0;
-        if (state == S_UPDATE)
-            single_poly_cnt <= 'd0;
-        else
-            single_poly_cnt <= single_poly_cnt;
     end
 end
 
@@ -285,7 +289,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_SQUEEZE;
             end
             S_UPDATE : begin
-                if (poly_cnt == 'd255) begin
+                if (poly_cnt == `k * `l - 1) begin
                     state <= S_IDLE;
                     expand_done <= 1'b1;
                     poly_cnt <= 'd0;
