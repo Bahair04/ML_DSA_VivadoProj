@@ -328,8 +328,8 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_INIT;
                 else 
                     state <= S_IDLE;  
-                // poly_cnt <= 'd0;
-                // expand_done <= 1'b0;  
+                poly_cnt <= 'd0;
+                expand_done <= 1'b0;  
             end
             S_INIT : begin
                 if (init)
