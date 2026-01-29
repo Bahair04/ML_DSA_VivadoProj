@@ -231,6 +231,7 @@ always_ff @(posedge clk or negedge rstn) begin
     else if (state == S_UPDATE) begin
         single_poly_cnt <= 'd0;
         shift_reg_valid_coeff_cnt <= 'd0;
+        coeff_valid <= 1'b0;
     end
     else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
         if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin

@@ -56,11 +56,23 @@ end
 integer fid;
 initial begin
     fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/output/tb_ExpandB_output.txt", "w");
+    $fwrite(fid, "[");
 end
 
+integer i = 0;
 always_ff @(posedge clk) begin
-    if (st_64bit_valid)
-        $fwrite(fid, "%x", st_64bit);
+    if (coeff_valid) begin
+        $fwrite(fid, "%0d, %0d, %0d, %0d", 
+                        $signed(coeff[22 : 0] > 1000 ? coeff[22 : 0] - `q : coeff[22 : 0]), 
+                        $signed(coeff[45: 23] > 1000 ? coeff[45: 23] - `q : coeff[45: 23]), 
+                        $signed(coeff[68 : 46] > 1000 ? coeff[68 : 46] - `q : coeff[68 : 46]), 
+                        $signed(coeff[91 : 69] > 1000 ? coeff[91 : 69] - `q : coeff[91 : 69]));
+        i = i + 1;
+        if (i % 64 == 0)
+            $fwrite(fid, "]\n\n[");
+        else 
+            $fwrite(fid, ", ");
+    end
 end
 
 ExpandS  u_ExpandS (

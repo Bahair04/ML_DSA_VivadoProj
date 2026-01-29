@@ -1,7 +1,7 @@
 -- Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2021.1 (win64) Build 3247384 Thu Jun 10 19:36:33 MDT 2021
--- Date        : Wed Jan 28 17:53:58 2026
+-- Date        : Thu Jan 29 18:52:52 2026
 -- Host        : LAPTOP-EUGMKLPQ running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub
 --               d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1_stub.vhdl
@@ -19,10 +19,10 @@ entity ExpandS_sipo_1 is
     din : in STD_LOGIC_VECTOR ( 63 downto 0 );
     wr_en : in STD_LOGIC;
     rd_en : in STD_LOGIC;
-    dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
+    dout : out STD_LOGIC_VECTOR ( 15 downto 0 );
     full : out STD_LOGIC;
     empty : out STD_LOGIC;
-    data_count : out STD_LOGIC_VECTOR ( 6 downto 0 )
+    rd_data_count : out STD_LOGIC_VECTOR ( 10 downto 0 )
   );
 
 end ExpandS_sipo_1;
@@ -31,7 +31,7 @@ architecture stub of ExpandS_sipo_1 is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk,srst,din[63:0],wr_en,rd_en,dout[63:0],full,empty,data_count[6:0]";
+attribute black_box_pad_pin of stub : architecture is "clk,srst,din[63:0],wr_en,rd_en,dout[15:0],full,empty,rd_data_count[10:0]";
 attribute x_core_info : string;
 attribute x_core_info of stub : architecture is "fifo_generator_v13_2_5,Vivado 2021.1";
 begin

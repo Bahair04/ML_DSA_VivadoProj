@@ -55,11 +55,10 @@ logic       [7 : 0]         poly_cnt;
 
 // --- FIFO ---
 logic                       rd_en;
-logic       [63 : 0]        fifo_dout;
+logic       [15 : 0]        fifo_dout;
 logic                       full;
 logic                       empty;
-logic       [6 : 0]         rd_data_count;
-logic       [6 : 0]         rd_data_count_d;
+logic       [10 : 0]        rd_data_count;
 
 // ==========================================================
 // 具体控制逻辑实现
@@ -71,7 +70,7 @@ logic       [6 : 0]         rd_data_count_d;
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         init <= 1'b0;
-    else if (state_d == S_IDLE && state == S_INIT)
+    else if (state_d != S_INIT && state == S_INIT)
         init <= 1'b1;
     else 
         init <= 1'b0;
@@ -81,7 +80,7 @@ end
 // 填充逻辑
 // --------------------------------
 assign dout_len = 'd66;             // 64字节随机种子 + 2字节 nouce
-assign out_len = 'd560;             // 512Byte = 8 Byte * 70 (8 Byte中的6个半字节取出4个有效的半字节归约后输出)
+assign out_len = 'd192;             // 128Byte = 0.5Byte * 256 留一定余量 设置为192Byte
 assign mdlen = 'd32;                // shake256
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
@@ -155,27 +154,29 @@ end
 // --------------------------------
 // 合法性判断与归约处理
 // --------------------------------
-logic           [7 : 0]             raw_data [0 : 5];
-logic           [5 : 0]             check;
-logic           [22 : 0]            raw_data_reduction [0 : 5];
-logic           [137 : 0]           valid_coeff_comb;               // 合法系数拼接寄存器
+logic           [3 : 0]             raw_data [0 : 3];
+logic           [3 : 0]             check;
+logic           [22 : 0]            raw_data_reduction [0 : 3];
+logic           [91 : 0]            valid_coeff_comb;               // 合法系数拼接寄存器
 logic           [2 : 0]             valid_coeff_cnt;                // 合法系数计数器
 logic                               sample_valid;
-logic                               sample_valid_d;
+logic           [2 : 0]             sample_valid_d;
+
+logic           [183 : 0]           shift_reg;
+logic           [183 : 0]           shift_reg_next;
+logic           [3 : 0]             shift_reg_valid_coeff_cnt;
 
 assign sample_valid =  (rd_en == 1'b1) && (empty == 1'b0);
-assign raw_data[0] = fifo_dout[3  : 0];
-assign raw_data[1] = fifo_dout[7  : 4];
-assign raw_data[2] = fifo_dout[11 : 8];
-assign raw_data[3] = fifo_dout[15 : 12];
-assign raw_data[4] = fifo_dout[19 : 16];
-assign raw_data[5] = fifo_dout[23 : 20];
+assign raw_data[0] = fifo_dout[11 : 8];    
+assign raw_data[1] = fifo_dout[15 : 12];   
+assign raw_data[2] = fifo_dout[3  : 0];    
+assign raw_data[3] = fifo_dout[7  : 4];    
 
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         sample_valid_d <= 1'b0;
     else 
-        sample_valid_d <= sample_valid;
+        sample_valid_d <= {sample_valid_d[1 : 0], sample_valid};
 end
 
 // --- 合法性判断 : eta=2时一定合法; eta=4时如果原始数据小于9则合法 ---
@@ -184,9 +185,9 @@ always_ff @(posedge clk or negedge rstn) begin : validate
     if (!rstn)
         check <= 'd0;
     else if (sample_valid) begin
-        for (i = 0 ; i < 6 ; i++) begin
+        for (i = 0 ; i < 4 ; i++) begin
             if (`eta == 2)
-                check[i] <= 1'b1;
+                check[i] <= raw_data[i] < 15;
             if (`eta == 4)
                 check[i] <= raw_data[i] < 9;
         end
@@ -221,12 +222,12 @@ endfunction
 always_ff @(posedge clk or negedge rstn) begin : reduction
     integer i;
     if (!rstn) begin
-        for (i = 0 ; i < 6 ; i++) begin
+        for (i = 0 ; i < 4 ; i++) begin
             raw_data_reduction[i] <= 'd0;
         end
     end
     else if (sample_valid) begin
-        for (i = 0 ; i < 6 ; i++) begin
+        for (i = 0 ; i < 4 ; i++) begin
             if (`eta == 2) begin
                 if (mod_5(raw_data[i]) <= 2)
                     raw_data_reduction[i] <= 2 - mod_5(raw_data[i]);
@@ -245,17 +246,17 @@ end
 
 // 合法数据拼接处理 (MUX)
 logic           [2 : 0]             pack_cnt;
-logic           [137 : 0]           pack_comb;          
+logic           [91 : 0]            pack_comb;          
 always_ff @(posedge clk or negedge rstn) begin : comb
     integer i;
     if (!rstn) begin
         valid_coeff_comb <= 'd0;
         valid_coeff_cnt <= 'd0;
     end
-    else if (sample_valid_d) begin
+    else if (sample_valid_d[0]) begin
         pack_comb = 'd0;
         pack_cnt = 'd0;
-        for (i = 0 ; i < 6 ; i++) begin
+        for (i = 0 ; i < 4 ; i++) begin
             if (check[i]) begin
                 pack_comb[pack_cnt * 23 +: 23] = raw_data_reduction[i];
                 pack_cnt = pack_cnt + 1'b1;
@@ -271,24 +272,64 @@ always_ff @(posedge clk or negedge rstn) begin : comb
     end
 end
 
+logic       [91 : 0]                low_bit;
+always_comb begin
+    shift_reg_next = shift_reg;
+    low_bit = 'd0;
+    if (!rstn || state == S_UPDATE) begin
+        shift_reg_next = 'd0;
+        low_bit <= 'd0;
+    end
+    else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
+        logic   [183 : 0]       tmp_reg;
+        case (shift_reg_valid_coeff_cnt)
+                'd0 : tmp_reg = shift_reg | (valid_coeff_comb << 0);
+                'd1 : tmp_reg = shift_reg | (valid_coeff_comb << 23);
+                'd2 : tmp_reg = shift_reg | (valid_coeff_comb << 46);
+                'd3 : tmp_reg = shift_reg | (valid_coeff_comb << 69);
+        endcase
+        if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin
+            low_bit = tmp_reg[91 : 0];
+            shift_reg_next = tmp_reg >> 92;
+        end
+        else 
+            shift_reg_next = tmp_reg;
+    end
+    else 
+        shift_reg_next = shift_reg_next;
+end
+
+always_ff @(posedge clk or negedge rstn) begin
+    if (!rstn)
+        shift_reg <= 'd0;
+    else 
+        shift_reg <= shift_reg_next;
+end
+
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         coeff <= 'd0;
         coeff_valid <= 1'b0;
         single_poly_cnt <= 'd0;
+        shift_reg_valid_coeff_cnt <= 'd0;
     end
-    else if (state == S_UPDATE)
+    else if (state == S_UPDATE) begin
         single_poly_cnt <= 'd0;
-    else if (valid_coeff_cnt >= 'd4) begin
-        if (single_poly_cnt <= 'd63) begin
-            coeff <= valid_coeff_comb[91 : 0];
+        shift_reg_valid_coeff_cnt <= 'd0;
+        coeff_valid <= 1'b0; 
+    end
+    else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
+        if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin
+            shift_reg_valid_coeff_cnt <= valid_coeff_cnt + shift_reg_valid_coeff_cnt - 'd4;
+            coeff <= low_bit;
             coeff_valid <= 1'b1;
+            single_poly_cnt <= single_poly_cnt + 'd1;
         end
         else begin
+            shift_reg_valid_coeff_cnt <= valid_coeff_cnt + shift_reg_valid_coeff_cnt;
             coeff <= 'd0;
             coeff_valid <= 1'b0;
         end
-        single_poly_cnt <= single_poly_cnt + 1'b1;
     end
     else begin
         coeff <= 'd0;
@@ -366,7 +407,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     poly_cnt <= 'd0;
                 end
                 else begin
-                    state <= S_NEW_SEED;
+                    state <= S_INIT;
                     expand_done <= 1'b0;
                     poly_cnt <= poly_cnt + 1'b1;
                 end
@@ -392,16 +433,10 @@ ExpandS_sipo_1 u_ExpandS_sipo (
   .din(st_64bit),                           // input wire [63 : 0] din
   .wr_en(st_64bit_valid),                   // input wire wr_en
   .rd_en(rd_en),                            // input wire rd_en
-  .dout(fifo_dout),                         // output wire [63 : 0] dout
+  .dout(fifo_dout),                         // output wire [15 : 0] dout
   .full(full),                              // output wire full
   .empty(empty),                            // output wire empty
-  .data_count(rd_data_count)                // output wire [6 : 0] data_count
+  .rd_data_count(rd_data_count)             // output wire [10 : 0] data_count
 );
-always_ff @(posedge clk or negedge rstn) begin
-    if (!rstn)
-        rd_data_count_d <= 'd0;
-    else 
-        rd_data_count_d <= rd_data_count;
-end
 
 endmodule

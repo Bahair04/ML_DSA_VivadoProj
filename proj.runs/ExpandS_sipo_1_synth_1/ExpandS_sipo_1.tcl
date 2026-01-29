@@ -88,7 +88,7 @@ set_property ip_output_repo d:/University/ML_DSA/vivado_proj/proj/proj.cache/ip 
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-read_ip -quiet d:/University/ML_DSA/vivado_proj/proj/proj.srcs/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1.xci
+read_ip -quiet D:/University/ML_DSA/vivado_proj/proj/proj.srcs/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1.xci
 set_property used_in_implementation false [get_files -all d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1.xdc]
 set_property used_in_implementation false [get_files -all d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1_ooc.xdc]
 
