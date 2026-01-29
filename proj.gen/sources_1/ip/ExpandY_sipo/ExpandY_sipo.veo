@@ -63,7 +63,7 @@ ExpandY_sipo your_instance_name (
   .dout(dout),                    // output wire [127 : 0] dout
   .full(full),                    // output wire full
   .empty(empty),                  // output wire empty
-  .rd_data_count(rd_data_count)  // output wire [5 : 0] rd_data_count
+  .rd_data_count(rd_data_count)  // output wire [4 : 0] rd_data_count
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
