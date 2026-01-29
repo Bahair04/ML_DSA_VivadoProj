@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769613657">
-  <File Type="PA-TCL" Name="ExpandS.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="ExpandS_drc_synth.rpt"/>
-  <File Type="REPORTS-TCL" Name="ExpandS_reports.tcl"/>
-  <File Type="RDS-RDS" Name="ExpandS.vds"/>
-  <File Type="RDS-UTIL" Name="ExpandS_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="ExpandS_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="ExpandS.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="ExpandS_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="ExpandS_timing_summary_synth.pb"/>
+<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769660678">
+  <File Type="PA-TCL" Name="ExpandA_sipo120.tcl"/>
+  <File Type="REPORTS-TCL" Name="ExpandA_sipo120_reports.tcl"/>
+  <File Type="RDS-RDS" Name="ExpandA_sipo120.vds"/>
+  <File Type="RDS-UTIL" Name="ExpandA_sipo120_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="ExpandA_sipo120_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="ExpandA_sipo120.dcp"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
+    <File Path="$PSRCDIR/sources_1/ip/ExpandA_sipo/ExpandA_sipo.xci">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandA_sipo120.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PPRDIR/user/src/param_conf.v">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -20,6 +32,7 @@
     </File>
     <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandS.sv">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -105,25 +118,9 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PSRCDIR/sources_1/ip/ExpandA_sipo/ExpandA_sipo.xci">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PSRCDIR/sources_1/ip/ExpandY_sipo/ExpandY_sipo.xci">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="ExpandS"/>
+      <Option Name="TopModule" Val="ExpandA_sipo120"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -142,5 +139,4 @@
     <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
-  <BlockFileSet Type="BlockSrcs" Name="ExpandS_sipo_1"/>
 </GenRun>

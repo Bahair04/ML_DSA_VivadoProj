@@ -1,10 +1,10 @@
 // Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2021.1 (win64) Build 3247384 Thu Jun 10 19:36:33 MDT 2021
-// Date        : Wed Jan 28 15:19:55 2026
+// Date        : Wed Jan 28 15:19:54 2026
 // Host        : LAPTOP-EUGMKLPQ running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode synth_stub
-//               d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandA_sipo/ExpandA_sipo_stub.v
+// Command     : write_verilog -force -mode synth_stub -rename_top ExpandA_sipo -prefix
+//               ExpandA_sipo_ ExpandA_sipo_stub.v
 // Design      : ExpandA_sipo
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7a200tfbg484-2L
