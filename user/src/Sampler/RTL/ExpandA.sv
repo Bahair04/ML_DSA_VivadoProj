@@ -41,8 +41,8 @@ typedef enum logic [2 : 0] {
 state_t state, state_d;
 
 // --- 伪随机信号 ---
-logic       [2 : 0]         row;
-logic       [2 : 0]         col;
+logic       [7 : 0]         row;
+logic       [7 : 0]         col;
 logic       [271 : 0]       seed;
 
 // --- 装载控制信号 ---

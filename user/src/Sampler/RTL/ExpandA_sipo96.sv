@@ -35,19 +35,45 @@ logic       [7 : 0]         shift_reg_len;
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         rd_en <= 1'b0;
+    else if (init)
+        rd_en <= 1'b0;
     else if (rd_data_count >= 'd1 && empty == 1'b0)
         rd_en <= 1'b1;
     else 
         rd_en <= 1'b0;
 end
 
-assign fifo_dout = {fifo_dout_raw[63 : 0], fifo_dout_raw[127 : 64]};
+// assign fifo_dout = {{<<8{fifo_dout_raw[63 : 0]}}, {<<8{fifo_dout_raw[127 : 64]}}};
+assign fifo_dout = {
+    fifo_dout_raw[ 7: 0],
+    fifo_dout_raw[15: 8],
+    fifo_dout_raw[23:16],
+    fifo_dout_raw[31:24],
+    fifo_dout_raw[39:32],
+    fifo_dout_raw[47:40],
+    fifo_dout_raw[55:48],
+    fifo_dout_raw[63:56],
+    fifo_dout_raw[71:64],
+    fifo_dout_raw[79:72],
+    fifo_dout_raw[87:80],
+    fifo_dout_raw[95:88],
+    fifo_dout_raw[103:96],
+    fifo_dout_raw[111:104],
+    fifo_dout_raw[119:112],
+    fifo_dout_raw[127:120]
+};
 assign sipo_o = shift_reg[95 : 0];
 
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         shift_reg_len <= 'd0;
         shift_reg <= 'd0;
+        sipo_o_valid <= 1'b0;
+    end
+    else if (init) begin
+        shift_reg_len <= 'd0;
+        shift_reg <= 'd0;
+        sipo_o_valid <= 1'b0;
     end
     else if (shift_reg_len == 'd96) begin
         shift_reg_len <= 'd0;

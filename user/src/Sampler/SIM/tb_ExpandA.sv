@@ -56,9 +56,12 @@ initial begin
     fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/output/tb_ExpandA_output.txt", "w");
 end
 
+integer i = 0;
 always_ff @(posedge clk) begin
-    if (st_64bit_valid)
-        $fwrite(fid, "%x", st_64bit);
+    if (coeff_valid) begin
+        $fwrite(fid, "%d : %d\t%d\t%d\t%d\t\n", i, coeff[22 : 0], coeff[45: 23], coeff[68 : 46], coeff[91 : 69]);
+        i = i + 1;
+    end
 end
 
 ExpandA  u_ExpandA (
