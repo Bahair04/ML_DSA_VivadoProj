@@ -49,9 +49,11 @@ logic       [271 : 0]       seed;
 logic       [7 : 0]         load_cnt;
 
 // --- 有效Hash值拼接、计数信号 ---
-logic       [114 : 0]       valid_coeff_comb;
+logic       [91 : 0]        valid_coeff_comb;
 logic       [2 : 0]         valid_coeff_cnt;
 logic       [4 : 0]         check;
+logic       [183 : 0]       shift_reg;
+logic       [3 : 0]         shift_reg_valid_coeff_cnt;
 
 // --- 单个多项式系数计数信号 ---
 logic       [9 : 0]         single_poly_cnt;
@@ -59,12 +61,9 @@ logic       [9 : 0]         single_poly_cnt;
 // --- 生成多项式计数信号 ---
 logic       [7 : 0]         poly_cnt;
 
-// --- FIFO ---
-logic                       rd_en;
-logic       [127 : 0]       fifo_dout;
-logic                       full;
-logic                       empty;
-logic       [8 : 0]         rd_data_count;
+// --- ExpandA_sipo96 ---
+logic       [95 : 0] 	    sipo_o;
+logic        	            sipo_o_valid;
 
 // ==========================================================
 // 具体控制逻辑实现
@@ -73,7 +72,7 @@ logic       [8 : 0]         rd_data_count;
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         init <= 1'b0;
-    else if (state_d == S_IDLE && state == S_INIT)
+    else if (state_d != S_INIT && state == S_INIT)
         init <= 1'b1;
     else 
         init <= 1'b0;
@@ -133,21 +132,11 @@ always_ff @(posedge clk or negedge rstn) begin
         start_out <= 1'b0;
 end
 
-always_ff @(posedge clk or negedge rstn) begin
-    if (!rstn)
-        rd_en <= 1'b0;
-    else if (rd_data_count >= 'd1 && empty == 1'b0) 
-        rd_en <= 1'b1;
-    else 
-        rd_en <= 1'b0;
-end
-
-logic [22:0] raw_data [0:4];
-assign raw_data[0] = fifo_dout[22 : 0];
-assign raw_data[1] = fifo_dout[46 : 24];
-assign raw_data[2] = fifo_dout[70 : 48];
-assign raw_data[3] = fifo_dout[94 : 72];
-assign raw_data[4] = fifo_dout[118 : 96];
+logic           [22 : 0]            raw_data [0 : 3];    // 24位为一段 每次只取低23位
+assign raw_data[0] = sipo_o[22 : 0];        
+assign raw_data[1] = sipo_o[46 : 24];
+assign raw_data[2] = sipo_o[70 : 48];
+assign raw_data[3] = sipo_o[94 : 72];
 
 always_comb begin
     check <= 'd0;
@@ -159,26 +148,24 @@ always_comb begin
     else check[2] <= 1'b0;
     if (raw_data[3] < 23'd8380417) check[3] <= 1'b1;
     else check[3] <= 1'b0;
-    if (raw_data[4] < 23'd8380417) check[4] <= 1'b1;
-    else check[4] <= 1'b0;
 end
 
 integer i;
-logic [2:0]   pack_cnt;  // 临时变量：记录当前包里装了几个
-logic [114:0] pack_comb; // 临时变量：暂存打包好的数据
+logic           [2 : 0]             pack_cnt;  // 临时变量：记录当前包里装了几个
+logic           [91 : 0]            pack_comb; // 临时变量：暂存打包好的数据
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         valid_coeff_comb <= 'd0;
         valid_coeff_cnt <= 'd0;
     end
-    else if (rd_en && empty == 1'b0) begin
+    else if (sipo_o_valid) begin
         // --- 初始化临时变量 ---
         pack_cnt  = 0;
         pack_comb = 'd0;
 
-        // --- 循环扫描 5 个输入通道 ---
+        // --- 循环扫描 4 个输入通道 ---
         // 综合器会将其展开为并行的多路选择逻辑 (Priority Encoder Mux)
-        for(i = 0; i < 5; i = i + 1) begin
+        for(i = 0; i < 4; i = i + 1) begin
             if (check[i]) begin
                 // 如果当前通道数据有效 (< Q)，则将其“推入”输出堆栈
                 // [base +: width] 是 SystemVerilog 的位切片语法
@@ -198,24 +185,48 @@ always_ff @(posedge clk or negedge rstn) begin
         valid_coeff_cnt  <= 'd0;
     end
 end
+
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         coeff <= 'd0;
         coeff_valid <= 1'b0;
         single_poly_cnt <= 'd0;
+        shift_reg = 'd0;
+        shift_reg_valid_coeff_cnt <= 'd0;
     end
-    else if (state == S_UPDATE)
+    else if (state == S_UPDATE) begin
         single_poly_cnt <= 'd0;
-    else if (valid_coeff_cnt >= 'd4) begin
-        if (single_poly_cnt <= 'd63) begin
-            coeff <= valid_coeff_comb[91 : 0];
+        shift_reg = 'd0;
+        shift_reg_valid_coeff_cnt <= 'd0;
+    end
+    else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
+        case (shift_reg_valid_coeff_cnt)
+                'd0 : shift_reg = shift_reg | (valid_coeff_comb << 0);
+                'd1 : shift_reg = shift_reg | (valid_coeff_comb << 23);
+                'd2 : shift_reg = shift_reg | (valid_coeff_comb << 46);
+                'd3 : shift_reg = shift_reg | (valid_coeff_comb << 69);
+        endcase
+        if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin
+            shift_reg_valid_coeff_cnt <= valid_coeff_cnt + shift_reg_valid_coeff_cnt - 'd4;
+            coeff <= shift_reg[91 : 0];
+            shift_reg = shift_reg >> 92;
             coeff_valid <= 1'b1;
+            single_poly_cnt <= single_poly_cnt + 'd1;
         end
         else begin
+            shift_reg_valid_coeff_cnt <= valid_coeff_cnt + shift_reg_valid_coeff_cnt;
             coeff <= 'd0;
             coeff_valid <= 1'b0;
         end
-            single_poly_cnt <= single_poly_cnt + 1'b1;
+        // if (single_poly_cnt <= 'd63) begin
+        //     coeff <= valid_coeff_comb[91 : 0];
+        //     coeff_valid <= 1'b1;
+        // end
+        // else begin
+        //     coeff <= 'd0;
+        //     coeff_valid <= 1'b0;
+        // end
+            // single_poly_cnt <= single_poly_cnt + 1'b1;
     end
     else begin
         coeff <= 'd0;
@@ -295,7 +306,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     poly_cnt <= 'd0;
                 end
                 else begin
-                    state <= S_NEW_SEED;
+                    state <= S_INIT;
                     poly_cnt <= poly_cnt + 1'b1;
                     expand_done <= 1'b0;
                 end
@@ -312,16 +323,15 @@ always_ff @(posedge clk or negedge rstn) begin
         state_d <= state;
 end
 
-ExpandA_sipo u_ExpandA_sipo (
-  .clk(clk),                      // input wire clk
-  .srst(~rstn | init),                    // input wire srst
-  .din(st_64bit),                      // input wire [63 : 0] din
-  .wr_en(st_64bit_valid),                  // input wire wr_en
-  .rd_en(rd_en),                  // input wire rd_en
-  .dout(fifo_dout),                    // output wire [127 : 0] dout
-  .full(full),                    // output wire full
-  .empty(empty),                  // output wire empty
-  .rd_data_count(rd_data_count)  // output wire [8 : 0] rd_data_count
+ExpandA_sipo96 u_ExpandA_sipo96(
+	.clk            	( clk             ),
+	.rstn           	( rstn            ),
+	.init           	( init            ),
+	.st_64bit       	( st_64bit        ),
+	.st_64bit_valid 	( st_64bit_valid  ),
+	.sipo_o         	( sipo_o          ),
+	.sipo_o_valid   	( sipo_o_valid    )
 );
+
 
 endmodule

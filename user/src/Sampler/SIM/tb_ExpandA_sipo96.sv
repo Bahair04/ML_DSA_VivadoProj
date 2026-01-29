@@ -1,6 +1,6 @@
 `timescale  1ns / 1ps
 
-module tb_ExpandA_sipo120;
+module tb_ExpandA_sipo96;
 
 // ExpandA_sipo Parameters
 parameter PERIOD  = 20;
@@ -14,7 +14,7 @@ logic   [63 : 0]    st_64bit         = 0 ;
 logic               st_64bit_valid   = 0 ;
 
 // ExpandA_sipo Outputs
-logic   [119 : 0]   sipo_o           ;
+logic   [95 : 0]    sipo_o           ;
 logic               sipo_o_valid     ;
 
 
@@ -90,7 +90,7 @@ initial begin
 end
 
 
-ExpandA_sipo120  u_ExpandA_sipo120 (
+ExpandA_sipo96  u_ExpandA_sipo96 (
     .clk             ( clk              ),
     .rstn            ( rstn             ),
     .init            ( init             ),
