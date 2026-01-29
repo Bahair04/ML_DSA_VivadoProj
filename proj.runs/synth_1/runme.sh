@@ -40,4 +40,4 @@ EAStep()
      fi
 }
 
-EAStep vivado -log ExpandA_sipo120.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source ExpandA_sipo120.tcl
+EAStep vivado -log ExpandA.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source ExpandA.tcl

@@ -53,6 +53,7 @@ logic       [91 : 0]        valid_coeff_comb;
 logic       [2 : 0]         valid_coeff_cnt;
 logic       [4 : 0]         check;
 logic       [183 : 0]       shift_reg;
+logic       [183 : 0]       shift_reg_next;
 logic       [3 : 0]         shift_reg_valid_coeff_cnt;
 
 // --- 单个多项式系数计数信号 ---
@@ -186,30 +187,55 @@ always_ff @(posedge clk or negedge rstn) begin
     end
 end
 
+logic       [91 : 0]                low_bit;
+always_comb begin
+    shift_reg_next = shift_reg;
+    low_bit = 'd0;
+    if (!rstn || state == S_UPDATE) begin
+        shift_reg_next = 'd0;
+        low_bit <= 'd0;
+    end
+    else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
+        logic   [183 : 0]       tmp_reg;
+        case (shift_reg_valid_coeff_cnt)
+                'd0 : tmp_reg = shift_reg | (valid_coeff_comb << 0);
+                'd1 : tmp_reg = shift_reg | (valid_coeff_comb << 23);
+                'd2 : tmp_reg = shift_reg | (valid_coeff_comb << 46);
+                'd3 : tmp_reg = shift_reg | (valid_coeff_comb << 69);
+        endcase
+        if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin
+            low_bit = tmp_reg[91 : 0];
+            shift_reg_next = tmp_reg >> 92;
+        end
+        else 
+            shift_reg_next = tmp_reg;
+    end
+    else 
+        shift_reg_next = shift_reg_next;
+end
+
+always_ff @(posedge clk or negedge rstn) begin
+    if (!rstn)
+        shift_reg <= 'd0;
+    else 
+        shift_reg <= shift_reg_next;
+end
+
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         coeff <= 'd0;
         coeff_valid <= 1'b0;
         single_poly_cnt <= 'd0;
-        shift_reg = 'd0;
         shift_reg_valid_coeff_cnt <= 'd0;
     end
     else if (state == S_UPDATE) begin
         single_poly_cnt <= 'd0;
-        shift_reg = 'd0;
         shift_reg_valid_coeff_cnt <= 'd0;
     end
     else if (state == S_SQUEEZE && valid_coeff_cnt > 'd0) begin
-        case (shift_reg_valid_coeff_cnt)
-                'd0 : shift_reg = shift_reg | (valid_coeff_comb << 0);
-                'd1 : shift_reg = shift_reg | (valid_coeff_comb << 23);
-                'd2 : shift_reg = shift_reg | (valid_coeff_comb << 46);
-                'd3 : shift_reg = shift_reg | (valid_coeff_comb << 69);
-        endcase
         if (valid_coeff_cnt + shift_reg_valid_coeff_cnt >= 'd4 && single_poly_cnt <= 'd63) begin
             shift_reg_valid_coeff_cnt <= valid_coeff_cnt + shift_reg_valid_coeff_cnt - 'd4;
-            coeff <= shift_reg[91 : 0];
-            shift_reg = shift_reg >> 92;
+            coeff <= low_bit;
             coeff_valid <= 1'b1;
             single_poly_cnt <= single_poly_cnt + 'd1;
         end
@@ -218,15 +244,6 @@ always_ff @(posedge clk or negedge rstn) begin
             coeff <= 'd0;
             coeff_valid <= 1'b0;
         end
-        // if (single_poly_cnt <= 'd63) begin
-        //     coeff <= valid_coeff_comb[91 : 0];
-        //     coeff_valid <= 1'b1;
-        // end
-        // else begin
-        //     coeff <= 'd0;
-        //     coeff_valid <= 1'b0;
-        // end
-            // single_poly_cnt <= single_poly_cnt + 1'b1;
     end
     else begin
         coeff <= 'd0;
