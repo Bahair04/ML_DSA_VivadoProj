@@ -115,7 +115,7 @@ end
 // ==========================================================
 // FIFO
 // ==========================================================
-ExpandA_sipo u_ExpandA_sipo (
+ExpandY_sipo u_ExpandY_sipo (
   .clk(clk),                                    // input wire clk
   .srst(~rstn | init),                          // input wire srst
   .din(st_64bit),                               // input wire [63 : 0] din

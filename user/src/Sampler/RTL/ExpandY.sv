@@ -57,12 +57,9 @@ logic       [9 : 0]         single_poly_cnt;
 // --- 生成多项式计数信号 ---
 logic       [7 : 0]         poly_cnt;
 
-// --- FIFO ---
-logic                       rd_en;
-logic       [127 : 0]       fifo_dout;
-logic                       full;
-logic                       empty;
-logic       [5 : 0]         rd_data_count;
+// --- 64bit -> 4*`bit_count ---
+logic       [4 * `bit_count-1:0] 	    sipo_o;
+logic                      	            sipo_o_valid;
 
 // ==========================================================
 // 具体控制逻辑实现
@@ -74,7 +71,7 @@ logic       [5 : 0]         rd_data_count;
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         init <= 1'b0;
-    else if (state_d == S_IDLE && state == S_INIT)
+    else if (state_d != S_INIT && state == S_INIT)
         init <= 1'b1;
     else 
         init <= 1'b0;
@@ -83,9 +80,9 @@ end
 // --------------------------------
 // 填充逻辑
 // --------------------------------
-assign dout_len = 'd66;             // 64字节随机种子 + 2字节 nouce
-assign out_len = 'd1024;            // 1024Byte = 16 Byte * 64 (16 Byte中的取出4个有效bit_count归约后输出)
-assign mdlen = 'd32;                // shake256
+assign dout_len = 'd66;                 // 64字节随机种子 + 2字节 nouce
+assign out_len = `total_bits >> 3;      // 非拒绝采样方式 因此输出值与预设值一致 无需留有余量
+assign mdlen = 'd32;                    // shake256
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
         seed <= 'd0;
@@ -143,20 +140,47 @@ always_ff @(posedge clk or negedge rstn) begin
 end
 
 // --------------------------------
-// 控制读使能信号 从FIFO中读出128bit数据
-// --------------------------------
-always_ff @(posedge clk or negedge rstn) begin
-    if (!rstn)
-        rd_en <= 1'b0;
-    else if (rd_data_count >= 'd1 && empty == 1'b0) 
-        rd_en <= 1'b1;
-    else 
-        rd_en <= 1'b0;
-end
-
-// --------------------------------
 // 归约处理
 // --------------------------------
+logic           [`bit_count - 1 : 0]        raw_data [0 : 3];
+assign raw_data[0] = sipo_o[`bit_count - 1 : 0];
+assign raw_data[1] = sipo_o[2 * `bit_count - 1 : `bit_count];
+assign raw_data[2] = sipo_o[3 * `bit_count - 1 : 2 * `bit_count];
+assign raw_data[3] = sipo_o[4 * `bit_count - 1 : 3 * `bit_count];
+
+always_ff @(posedge clk or negedge rstn) begin : reduction
+    integer i;
+    if (!rstn) begin
+        coeff <= 'd0;
+        coeff_valid <= 1'b0;
+        single_poly_cnt <= 'd0;
+    end
+    else if (state == S_UPDATE) begin
+        single_poly_cnt <= 'd0;
+        coeff_valid <= 1'b0;
+        coeff <= 'd0;
+    end
+    else if (sipo_o_valid) begin
+        if (single_poly_cnt <= 'd63) begin
+            for (i = 0 ; i < 4 ; i++) begin
+                if (`gamma_1 > raw_data[0])
+                    coeff[i * `bit_count +: `bit_count] <= `gamma_1 - raw_data[0];
+                else
+                    coeff[i * `bit_count +: `bit_count] <= `gamma_1 + `q - raw_data[0];
+            end
+            coeff_valid <= 1'b1;
+        end
+        else begin
+            coeff <= 'd0;
+            coeff_valid <= 1'b0;
+        end
+        single_poly_cnt <= single_poly_cnt + 'd1;
+    end
+    else begin
+        coeff <= 'd0;
+        coeff_valid <= 1'b0;
+    end
+end
 
 // --------------------------------
 // 伪随机数据更新逻辑
@@ -178,8 +202,11 @@ end
 // 状态机控制逻辑
 // ==========================================================
 always_ff @(posedge clk or negedge rstn) begin
-    if (!rstn)
+    if (!rstn) begin
         state <= S_IDLE;
+        expand_done <= 1'b0;
+        poly_cnt <= 'd0;
+    end
     else begin
         case (state)
             S_IDLE : begin
@@ -187,6 +214,8 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_INIT;
                 else 
                     state <= S_IDLE;
+                expand_done <= 1'b0;
+                poly_cnt <= 'd0;
             end
             S_INIT : begin
                 if (init)
@@ -223,7 +252,7 @@ always_ff @(posedge clk or negedge rstn) begin
                     poly_cnt <= 'd0;
                 end
                 else begin
-                    state <= S_NEW_SEED;
+                    state <= S_INIT;
                     expand_done <= 1'b0;
                     poly_cnt <= poly_cnt + 1'b1;
                 end
@@ -240,18 +269,16 @@ always_ff @(posedge clk or negedge rstn) begin
         state_d <= state;
 end
 
-// ==========================================================
-// FIFO
-// ==========================================================
-ExpandY_sipo u_ExpandY_sipo (
-  .clk(clk),                                // input wire clk
-  .srst(~rstn | init),                      // input wire srst
-  .din(st_64bit),                           // input wire [63 : 0] din
-  .wr_en(st_64bit_valid),                   // input wire wr_en
-  .rd_en(rd_en),                            // input wire rd_en
-  .dout(fifo_dout),                         // output wire [63 : 0] dout
-  .full(full),                              // output wire full
-  .empty(empty),                            // output wire empty
-  .rd_data_count(rd_data_count)             // output wire [5 : 0] data_count
+ExpandY_sipoX #(
+	.BIT_COUNT 	( `bit_count  ))
+u_ExpandY_sipoX(
+	.clk            	( clk             ),
+	.rstn           	( rstn            ),
+	.init           	( init            ),
+	.st_64bit       	( st_64bit        ),
+	.st_64bit_valid 	( st_64bit_valid  ),
+	.sipo_o         	( sipo_o          ),
+	.sipo_o_valid   	( sipo_o_valid    )
 );
+
 endmodule

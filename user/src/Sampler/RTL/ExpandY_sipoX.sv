@@ -1,5 +1,5 @@
 `include "../../param_conf.v"
-module ExpandY_sipo
+module ExpandY_sipoX
 #(
     parameter BIT_COUNT = `bit_count
 )(
@@ -33,7 +33,7 @@ generate
         );
     end
     else begin // 20 * 4
-        ExpandY_sipo72 u_ExpandY_sipo80(
+        ExpandY_sipo80 u_ExpandY_sipo80(
             .clk                (clk            ),
             .rstn               (rstn           ),
 
