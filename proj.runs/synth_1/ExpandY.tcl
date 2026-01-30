@@ -87,9 +87,9 @@ set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
 read_verilog -library xil_defaultlib -sv {
-  D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandY_sipo.sv
   D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandY_sipo72.sv
   D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandY_sipo80.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandY_sipoX.sv
   D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandY.sv
 }
 read_verilog -library xil_defaultlib D:/University/ML_DSA/vivado_proj/proj/user/src/param_conf.v

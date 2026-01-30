@@ -18,7 +18,7 @@ logic   [63 : 0]    st_64bit         = 0 ;
 logic               st_64bit_valid   = 0 ;
 
 // ExpandY Outputs
-logic   [4 * `bit_count - 1 : 0] coeff ;
+logic   [91 : 0]    coeff ;
 logic               coeff_valid      ;
 logic               expand_done      ;
 logic   [7 : 0]     dout             ;
@@ -60,20 +60,14 @@ initial begin
     $fwrite(fid, "[");
 end
 
-logic           [`bit_count - 1 : 0]        raw_data [0 : 3];
-assign raw_data[0] = coeff[`bit_count - 1 : 0];
-assign raw_data[1] = coeff[2 * `bit_count - 1 : `bit_count];
-assign raw_data[2] = coeff[3 * `bit_count - 1 : 2 * `bit_count];
-assign raw_data[3] = coeff[4 * `bit_count - 1 : 3 * `bit_count];
-
 integer i = 0;
 always_ff @(posedge clk) begin
     if (coeff_valid) begin
         $fwrite(fid, "%0d, %0d, %0d, %0d", 
-                        $signed(raw_data[0] > 1000 ? raw_data[0] - `q : raw_data[0]), 
-                        $signed(raw_data[1] > 1000 ? raw_data[1] - `q : raw_data[1]), 
-                        $signed(raw_data[2] > 1000 ? raw_data[2] - `q : raw_data[2]), 
-                        $signed(raw_data[3] > 1000 ? raw_data[3] - `q : raw_data[3]));
+                        $signed(coeff[22 : 0] > `gamma_1 ? coeff[22 : 0] - `q : coeff[22 : 0]), 
+                        $signed(coeff[45: 23] > `gamma_1 ? coeff[45: 23] - `q : coeff[45: 23]), 
+                        $signed(coeff[68 : 46] > `gamma_1 ? coeff[68 : 46] - `q : coeff[68 : 46]), 
+                        $signed(coeff[91 : 69] > `gamma_1 ? coeff[91 : 69] - `q : coeff[91 : 69]));
         i = i + 1;
         if (i % 64 == 0)
             $fwrite(fid, "]\n\n[");

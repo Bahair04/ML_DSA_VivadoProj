@@ -9,10 +9,9 @@ module ExpandY(
     input       logic   [15 : 0]    kappa,          // 伪随机数初始值
     input       logic               start_expand,   // 开始扩展Y矩阵信号
 
-    output      logic   [4 * `bit_count - 1 : 0]    
-                                    coeff,          // 4*bit_count bit 有效采样系数
+    output      logic   [91 : 0]    coeff,          // 92 bit 有效采样系数
+    output      logic               coeff_valid,    // 92 bit 有效采样系数信号
 
-    output      logic               coeff_valid,    // 4*bit_count bit 有效采样系数信号
     output      logic               expand_done,    // 扩展完成信号
 
     // --- SHA3 控制接口 ---
@@ -81,7 +80,7 @@ end
 // 填充逻辑
 // --------------------------------
 assign dout_len = 'd66;                 // 64字节随机种子 + 2字节 nouce
-assign out_len = `total_bits >> 3;      // 非拒绝采样方式 因此输出值与预设值一致 无需留有余量
+assign out_len = (`total_bits >> 3) + 30;      // 非拒绝采样方式 因此输出值与预设值一致 无需留有余量
 assign mdlen = 'd32;                    // shake256
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
@@ -160,13 +159,13 @@ always_ff @(posedge clk or negedge rstn) begin : reduction
         coeff_valid <= 1'b0;
         coeff <= 'd0;
     end
-    else if (sipo_o_valid) begin
+    else if (sipo_o_valid && state == S_SQUEEZE) begin
         if (single_poly_cnt <= 'd63) begin
             for (i = 0 ; i < 4 ; i++) begin
-                if (`gamma_1 > raw_data[0])
-                    coeff[i * `bit_count +: `bit_count] <= `gamma_1 - raw_data[0];
+                if (`gamma_1 > raw_data[i])
+                    coeff[i * 23 +: 23] <= `gamma_1 - raw_data[i];
                 else
-                    coeff[i * `bit_count +: `bit_count] <= `gamma_1 + `q - raw_data[0];
+                    coeff[i * 23 +: 23] <= `gamma_1 + `q - raw_data[i];
             end
             coeff_valid <= 1'b1;
         end
