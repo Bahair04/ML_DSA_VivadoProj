@@ -1,0 +1,2 @@
+ExpandC_coeff_ram.v,verilog,xil_defaultlib,../../../../proj.gen/sources_1/ip/ExpandC_coeff_ram/sim/ExpandC_coeff_ram.v,
+glbl.v,Verilog,xil_defaultlib,glbl.v

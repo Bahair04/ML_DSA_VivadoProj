@@ -4,7 +4,7 @@ module ExpandY(
     input       wire                clk,
     input       wire                rstn,
 
-    // --- ExpandS 数据接口 ---
+    // --- ExpandY 数据接口 ---
     input       logic   [511 : 0]   rho_prime,      // 512位随机种子
     input       logic   [15 : 0]    kappa,          // 伪随机数初始值
     input       logic               start_expand,   // 开始扩展Y矩阵信号

@@ -60,10 +60,10 @@ ExpandY_sipo your_instance_name (
   .din(din),                      // input wire [63 : 0] din
   .wr_en(wr_en),                  // input wire wr_en
   .rd_en(rd_en),                  // input wire rd_en
-  .dout(dout),                    // output wire [127 : 0] dout
+  .dout(dout),                    // output wire [7 : 0] dout
   .full(full),                    // output wire full
   .empty(empty),                  // output wire empty
-  .rd_data_count(rd_data_count)  // output wire [4 : 0] rd_data_count
+  .rd_data_count(rd_data_count)  // output wire [8 : 0] rd_data_count
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
