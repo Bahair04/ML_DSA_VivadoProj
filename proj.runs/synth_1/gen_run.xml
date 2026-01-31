@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769760319">
   <File Type="PA-TCL" Name="ExpandC.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="ExpandC_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="ExpandC_reports.tcl"/>
   <File Type="RDS-RDS" Name="ExpandC.vds"/>
   <File Type="RDS-UTIL" Name="ExpandC_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="ExpandC_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="ExpandC.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="ExpandC_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="ExpandC_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandC.sv">
