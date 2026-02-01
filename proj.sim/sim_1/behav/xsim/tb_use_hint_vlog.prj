@@ -1,0 +1,11 @@
+# compile verilog/system verilog design source files
+sv xil_defaultlib  \
+"../../../../user/src/Auxilary/RTL/decompose.sv" \
+"../../../../user/src/Auxilary/RTL/use_hint.sv" \
+"../../../../user/src/Auxilary/SIM/tb_use_hint.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
