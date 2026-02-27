@@ -4,7 +4,7 @@ module Encoder_single_channel                                       // 编码模块 
     parameter T1_BIT_LEN = $clog2(`q - 1) - `d,                     // default : 10
     parameter S1_S2_BIT_LEN = $clog2(2 * `eta) + 1,                 // default : 3
     parameter T0_BIT_LEN = `d,                                      // default : 13
-    parameter Z_BIT_LEN = 1 + $clog2(`gamma_1 - 1),                 // default : 18
+    parameter Z_BIT_LEN = 1 + $clog2(2 * `gamma_1 - 1),             // default : 18
     parameter H_BIT_LEN = 'd1                                       // 这个后面再写
 )(
     // --- 时钟与复位信号 ---

@@ -11,6 +11,7 @@ module ExpandS(
     output      logic               coeff_valid,    // 4*23bit 有效采样系数信号
     output      logic               expand_done,    // 扩展完成信号
     output      logic   [15 : 0]    nouce,          // 伪随机种子 用于指示输出系数属于 s1 还是 s2 
+    output      logic   signed  [15 : 0] coeff_raw, // 4*4bit有符号原始系数 存到系数存储矩阵当中
 
     // --- SHA3 控制接口 ---
     output      logic   [7 : 0]     dout,           // SHA3 串行输入字节数据
@@ -336,6 +337,19 @@ always_ff @(posedge clk or negedge rstn) begin
         coeff_valid <= 1'b0;
     end
 end
+
+// --------------------------------
+// 0 Latency 还原有符号原始系数
+// --------------------------------
+function logic [3 : 0] get_coeff_raw(logic [22 : 0] coeff_input);
+    if (coeff_input[22])
+        return {1'b1, coeff_input[2 : 0] - 3'd1};
+    else
+        return {1'b0, coeff_input[2 : 0]};
+endfunction
+logic           [22 : 0]            c0, c1, c2, c3;
+assign {c3, c2, c1, c0} = coeff;
+assign coeff_raw = {get_coeff_raw(c3), get_coeff_raw(c2), get_coeff_raw(c1), get_coeff_raw(c0)};
 
 // --------------------------------
 // 伪随机数据更新逻辑

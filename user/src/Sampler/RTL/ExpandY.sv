@@ -11,7 +11,8 @@ module ExpandY(
 
     output      logic   [91 : 0]    coeff,          // 92 bit 有效采样系数
     output      logic               coeff_valid,    // 92 bit 有效采样系数信号
-
+    output      logic   signed [79 : 0] coeff_raw,  // 4*20 bit 有符号原始系数 存到系数存储矩阵当中
+    
     output      logic               expand_done,    // 扩展完成信号
 
     // --- SHA3 控制接口 ---
@@ -180,6 +181,25 @@ always_ff @(posedge clk or negedge rstn) begin : reduction
         coeff_valid <= 1'b0;
     end
 end
+
+// --------------------------------
+// 0 Latency 还原 20-bit 有符号原始系数
+// --------------------------------
+function logic [19 : 0] get_coeff_raw(logic [22 : 0] coeff_input);
+    logic [22 : 0] recover_val;
+    if (coeff_input[22]) begin
+        // 负数情况：减去模数 q，截取低 20 位，天然得到 20-bit 的精准补码
+        recover_val = coeff_input - `q;
+        return recover_val[19 : 0];
+    end else begin
+        // 正数情况：直接截取低 20 位（高位自动为 0，符合正数补码规则）
+        return coeff_input[19 : 0];
+    end
+endfunction
+
+logic [22 : 0] c0, c1, c2, c3;
+assign {c3, c2, c1, c0} = coeff;
+assign coeff_raw = {get_coeff_raw(c3), get_coeff_raw(c2), get_coeff_raw(c1), get_coeff_raw(c0)};
 
 // --------------------------------
 // 伪随机数据更新逻辑
