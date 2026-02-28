@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="VectorY_CoeffRAM_synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772245306">
   <File Type="PA-TCL" Name="VectorY_CoeffRAM.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="VectorY_CoeffRAM_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="VectorY_CoeffRAM_reports.tcl"/>
   <File Type="RDS-RDS" Name="VectorY_CoeffRAM.vds"/>
   <File Type="RDS-UTIL" Name="VectorY_CoeffRAM_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="VectorY_CoeffRAM_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="VectorY_CoeffRAM.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="VectorY_CoeffRAM_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="VectorY_CoeffRAM_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="BlockSrcs" RelSrcDir="$PSRCDIR/VectorY_CoeffRAM">
     <File Path="$PSRCDIR/sources_1/ip/VectorY_CoeffRAM/VectorY_CoeffRAM.xci">
       <FileInfo>

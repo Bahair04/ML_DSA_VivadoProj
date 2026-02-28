@@ -1,8 +1,0 @@
-# compile vhdl design source files
-vhdl xil_defaultlib  \
-"../../../../proj.gen/sources_1/ip/mult_gen_2/sim/mult_gen_2.vhd" \
-"../../../../proj.gen/sources_1/ip/mult_gen_1/sim/mult_gen_1.vhd" \
-"../../../../proj.gen/sources_1/ip/mult_gen_0/sim/mult_gen_0.vhd" \
-
-# Do not sort compile order
-nosort
