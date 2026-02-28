@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/ExpandC.tcl"
+  variable script "D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/ReconfigCompute.tcl"
   variable category "vivado_synth"
 }
 
@@ -76,24 +76,26 @@ create_project -in_memory -part xc7a200tfbg484-2L
 set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
-set_msg_config -source 4 -id {IP_Flow 19-2162} -severity warning -new_severity info
 set_property webtalk.parent_dir D:/University/ML_DSA/vivado_proj/proj/proj.cache/wt [current_project]
 set_property parent.project_path D:/University/ML_DSA/vivado_proj/proj/proj.xpr [current_project]
-set_property XPM_LIBRARIES {XPM_CDC XPM_MEMORY} [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
 set_property ip_output_repo d:/University/ML_DSA/vivado_proj/proj/proj.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-read_verilog -library xil_defaultlib -sv D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandC.sv
-read_ip -quiet D:/University/ML_DSA/vivado_proj/proj/proj.srcs/sources_1/ip/ExpandC_sipo/ExpandC_sipo.xci
-set_property used_in_implementation false [get_files -all d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandC_sipo/ExpandC_sipo.xdc]
-set_property used_in_implementation false [get_files -all d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandC_sipo/ExpandC_sipo_ooc.xdc]
-
-read_ip -quiet D:/University/ML_DSA/vivado_proj/proj/proj.srcs/sources_1/ip/ExpandC_coeff_ram/ExpandC_coeff_ram.xci
-set_property used_in_implementation false [get_files -all d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandC_coeff_ram/ExpandC_coeff_ram_ooc.xdc]
-
+read_verilog -library xil_defaultlib -sv {
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/DSP_MultPipe.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/INTT_BU.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleAdd.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleDiv2.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMult.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleSub.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/NTT_BU.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigComputeUnit.sv
+  D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigCompute.sv
+}
+read_verilog -library xil_defaultlib D:/University/ML_DSA/vivado_proj/proj/user/src/param_conf.v
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being
 # stitched into the results of this synthesis run. Any black boxes in the
@@ -107,7 +109,7 @@ set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
 
 OPTRACE "synth_design" START { }
-synth_design -top ExpandC -part xc7a200tfbg484-2L
+synth_design -top ReconfigCompute -part xc7a200tfbg484-2L
 OPTRACE "synth_design" END { }
 if { [get_msg_config -count -severity {CRITICAL WARNING}] > 0 } {
  send_msg_id runtcl-6 info "Synthesis results are not added to the cache due to CRITICAL_WARNING"
@@ -117,10 +119,10 @@ if { [get_msg_config -count -severity {CRITICAL WARNING}] > 0 } {
 OPTRACE "write_checkpoint" START { CHECKPOINT }
 # disable binary constraint mode for synth run checkpoints
 set_param constraints.enableBinaryConstraints false
-write_checkpoint -force -noxdef ExpandC.dcp
+write_checkpoint -force -noxdef ReconfigCompute.dcp
 OPTRACE "write_checkpoint" END { }
 OPTRACE "synth reports" START { REPORT }
-create_report "synth_1_synth_report_utilization_0" "report_utilization -file ExpandC_utilization_synth.rpt -pb ExpandC_utilization_synth.pb"
+create_report "synth_1_synth_report_utilization_0" "report_utilization -file ReconfigCompute_utilization_synth.rpt -pb ReconfigCompute_utilization_synth.pb"
 OPTRACE "synth reports" END { }
 file delete __synthesis_is_running__
 close [open __synthesis_is_complete__ w]

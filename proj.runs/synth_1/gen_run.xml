@@ -1,15 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1769760319">
-  <File Type="PA-TCL" Name="ExpandC.tcl"/>
-  <File Type="REPORTS-TCL" Name="ExpandC_reports.tcl"/>
-  <File Type="RDS-RDS" Name="ExpandC.vds"/>
-  <File Type="RDS-UTIL" Name="ExpandC_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="ExpandC_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="ExpandC.dcp"/>
+<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772287968">
+  <File Type="PA-TCL" Name="ReconfigCompute.tcl"/>
+  <File Type="RDS-PROPCONSTRS" Name="ReconfigCompute_drc_synth.rpt"/>
+  <File Type="REPORTS-TCL" Name="ReconfigCompute_reports.tcl"/>
+  <File Type="RDS-RDS" Name="ReconfigCompute.vds"/>
+  <File Type="RDS-UTIL" Name="ReconfigCompute_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="ReconfigCompute_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="ReconfigCompute.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="ReconfigCompute_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="ReconfigCompute_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/DSP_MultPipe.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/param_conf.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/INTT_BU.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ModuleAdd.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ModuleDiv2.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ModuleMult.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ModuleSub.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/NTT_BU.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ReconfigComputeUnit.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ReconfigCompute.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandC.sv">
       <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
         <Attr Name="UsedIn" Val="simulation"/>
@@ -31,14 +105,6 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/user/src/param_conf.v">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
     <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandY_sipoX.sv">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
@@ -48,14 +114,6 @@
       </FileInfo>
     </File>
     <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandY.sv">
-      <FileInfo>
-        <Attr Name="AutoDisabled" Val="1"/>
-        <Attr Name="UsedIn" Val="synthesis"/>
-        <Attr Name="UsedIn" Val="implementation"/>
-        <Attr Name="UsedIn" Val="simulation"/>
-      </FileInfo>
-    </File>
-    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandY_sipo.sv">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -167,7 +225,7 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandS_sipo72.sv">
+    <File Path="$PPRDIR/user/src/Auxilary/RTL/decompose.sv">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -175,7 +233,39 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/user/src/Sampler/RTL/ExpandS_sipo80.sv">
+    <File Path="$PPRDIR/user/src/Auxilary/RTL/use_hint.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/CoeffBlockRAM/RTL/MatrixA.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/CoeffBlockRAM/RTL/VectorS.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv">
+      <FileInfo>
+        <Attr Name="AutoDisabled" Val="1"/>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/CoeffBlockRAM/RTL/VectorY.sv">
       <FileInfo>
         <Attr Name="AutoDisabled" Val="1"/>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -185,7 +275,7 @@
     </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="ExpandC"/>
+      <Option Name="TopModule" Val="ReconfigCompute"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -204,6 +294,4 @@
     <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
-  <BlockFileSet Type="BlockSrcs" Name="ExpandC_sipo"/>
-  <BlockFileSet Type="BlockSrcs" Name="ExpandC_coeff_ram"/>
 </GenRun>
