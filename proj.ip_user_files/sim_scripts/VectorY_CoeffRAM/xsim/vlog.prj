@@ -1,0 +1,6 @@
+verilog xil_defaultlib  \
+"../../../../proj.gen/sources_1/ip/VectorY_CoeffRAM/sim/VectorY_CoeffRAM.v" \
+
+verilog xil_defaultlib "glbl.v"
+
+nosort

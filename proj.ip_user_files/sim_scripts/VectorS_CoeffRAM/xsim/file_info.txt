@@ -1,0 +1,2 @@
+VectorS_CoeffRAM.v,verilog,xil_defaultlib,../../../../proj.gen/sources_1/ip/VectorS_CoeffRAM/sim/VectorS_CoeffRAM.v,
+glbl.v,Verilog,xil_defaultlib,glbl.v

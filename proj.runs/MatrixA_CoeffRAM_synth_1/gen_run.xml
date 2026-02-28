@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenRun Id="MatrixA_CoeffRAM_synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772244738">
+  <File Type="PA-TCL" Name="MatrixA_CoeffRAM.tcl"/>
+  <File Type="RDS-PROPCONSTRS" Name="MatrixA_CoeffRAM_drc_synth.rpt"/>
+  <File Type="REPORTS-TCL" Name="MatrixA_CoeffRAM_reports.tcl"/>
+  <File Type="RDS-RDS" Name="MatrixA_CoeffRAM.vds"/>
+  <File Type="RDS-UTIL" Name="MatrixA_CoeffRAM_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="MatrixA_CoeffRAM_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="MatrixA_CoeffRAM.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="MatrixA_CoeffRAM_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="MatrixA_CoeffRAM_timing_summary_synth.pb"/>
+  <FileSet Name="sources" Type="BlockSrcs" RelSrcDir="$PSRCDIR/MatrixA_CoeffRAM">
+    <File Path="$PSRCDIR/sources_1/ip/MatrixA_CoeffRAM/MatrixA_CoeffRAM.xci">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <Config>
+      <Option Name="TopModule" Val="MatrixA_CoeffRAM"/>
+      <Option Name="UseBlackboxStub" Val="1"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="constrs_in" Type="BlockSrcs" RelSrcDir="$PSRCDIR/MatrixA_CoeffRAM">
+    <File Path="$PSRCDIR/sources_1/ip/MatrixA_CoeffRAM/MatrixA_CoeffRAM.xci">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <Config>
+      <Option Name="TopModule" Val="MatrixA_CoeffRAM"/>
+      <Option Name="UseBlackboxStub" Val="1"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="utils" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">
+    <Filter Type="Utils"/>
+    <Config>
+      <Option Name="TopAutoSet" Val="TRUE"/>
+    </Config>
+  </FileSet>
+  <Strategy Version="1" Minor="2">
+    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
+    <Step Id="synth_design"/>
+  </Strategy>
+</GenRun>
