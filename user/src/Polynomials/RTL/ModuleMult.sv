@@ -1,3 +1,4 @@
+//* 7-latency
 module ModuleMult(
     // --- 时钟和复位信号 ---
     input       logic                   clk,

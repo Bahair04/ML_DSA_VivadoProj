@@ -1,3 +1,4 @@
+//* 0-latency
 `include "../../param_conf.v"
 module ModuleAdd(
     // --- 时钟和复位信号 ---

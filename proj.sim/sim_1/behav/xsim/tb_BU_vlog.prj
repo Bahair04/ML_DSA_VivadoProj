@@ -1,10 +1,13 @@
 # compile verilog/system verilog design source files
 sv xil_defaultlib  \
 "../../../../user/src/Polynomials/RTL/DSP_MultPipe.sv" \
+"../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleAdd.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleDiv2.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleMult.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleSub.sv" \
-"../../../../user/src/Polynomials/SIM/tb_ModuleCompute.sv" \
+"../../../../user/src/Polynomials/RTL/NTT_BU.sv" \
+"../../../../user/src/Polynomials/SIM/tb_BU.sv" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"

@@ -11,7 +11,10 @@ module ReconfigComputeUnit(
 
     output      logic                   valid_out,
     output      logic   [22 : 0]        U,
-    output      logic   [22 : 0]        V
+    output      logic   [22 : 0]        V,
+
+    // --- 可重构运算单元模式选择 ---
+    input       logic                   mode_config
 );
 
 endmodule
