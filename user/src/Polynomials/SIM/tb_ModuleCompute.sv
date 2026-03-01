@@ -35,6 +35,8 @@ begin
     #(PERIOD*2) rstn  =  1;
 end
 
+integer fid1, fid2, fid3;
+
 initial begin
     repeat (10) @(posedge clk);
     valid_in_add <= 1'b1;
@@ -183,7 +185,6 @@ ModuleMult  u_ModuleMult (
     .data_out   ( data_out_mult    )
 );
 
-integer fid1, fid2, fid3;
 initial begin
     fid1 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/SIM/ModuleAdd.txt", "w");
     fid2 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/SIM/ModuleSub.txt", "w");

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772287968">
   <File Type="PA-TCL" Name="ReconfigCompute.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="ReconfigCompute_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="ReconfigCompute_reports.tcl"/>
   <File Type="RDS-RDS" Name="ReconfigCompute.vds"/>
   <File Type="RDS-UTIL" Name="ReconfigCompute_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="ReconfigCompute_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="ReconfigCompute.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="ReconfigCompute_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="ReconfigCompute_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PPRDIR/user/src/Polynomials/RTL/DSP_MultPipe.sv">

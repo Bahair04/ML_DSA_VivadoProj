@@ -1,0 +1,6 @@
+verilog xil_defaultlib  \
+"../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
+
+verilog xil_defaultlib "glbl.v"
+
+nosort

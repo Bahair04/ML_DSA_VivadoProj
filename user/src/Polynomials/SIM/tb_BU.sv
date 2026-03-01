@@ -33,6 +33,8 @@ begin
     #(PERIOD*2) rstn  =  1;
 end
 
+integer fid1, fid2, fid3, fid4;
+
 initial begin
     repeat (10) @(posedge clk);
     valid_in <= 1'b1;
@@ -124,7 +126,6 @@ INTT_BU  u_INTT_BU (
     .data_out2  ( data_out2_intt   )
 );
 
-integer fid1, fid2, fid3, fid4;
 initial begin
     fid1 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/SIM/NTT1.txt", "w");
     fid2 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/SIM/NTT2.txt", "w");
