@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772287968">
-  <File Type="PA-TCL" Name="ReconfigCompute.tcl"/>
-  <File Type="REPORTS-TCL" Name="ReconfigCompute_reports.tcl"/>
-  <File Type="RDS-RDS" Name="ReconfigCompute.vds"/>
-  <File Type="RDS-UTIL" Name="ReconfigCompute_utilization_synth.rpt"/>
-  <File Type="RDS-UTIL-PB" Name="ReconfigCompute_utilization_synth.pb"/>
-  <File Type="RDS-DCP" Name="ReconfigCompute.dcp"/>
+<GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772537872">
+  <File Type="PA-TCL" Name="Poly_PAU.tcl"/>
+  <File Type="RDS-PROPCONSTRS" Name="Poly_PAU_drc_synth.rpt"/>
+  <File Type="REPORTS-TCL" Name="Poly_PAU_reports.tcl"/>
+  <File Type="RDS-RDS" Name="Poly_PAU.vds"/>
+  <File Type="RDS-UTIL" Name="Poly_PAU_utilization_synth.rpt"/>
+  <File Type="RDS-UTIL-PB" Name="Poly_PAU_utilization_synth.pb"/>
+  <File Type="RDS-DCP" Name="Poly_PAU.dcp"/>
+  <File Type="VDS-TIMINGSUMMARY" Name="Poly_PAU_timing_summary_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="Poly_PAU_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PPRDIR/user/src/Polynomials/RTL/DSP_MultPipe.sv">
@@ -64,6 +67,13 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ReconfigCompute.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <File Path="$PPRDIR/user/src/Polynomials/RTL/ReconfigComputeUnit.sv">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
@@ -71,7 +81,14 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
-    <File Path="$PPRDIR/user/src/Polynomials/RTL/ReconfigCompute.sv">
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/ZetaRomAddrGen.sv">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/user/src/Polynomials/RTL/Poly_PAU.sv">
       <FileInfo>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -270,9 +287,15 @@
         <Attr Name="UsedIn" Val="simulation"/>
       </FileInfo>
     </File>
+    <File Path="$PPRDIR/user/src/Polynomials/ROM_INIT/zeta_init_file.coe">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
     <Config>
       <Option Name="DesignMode" Val="RTL"/>
-      <Option Name="TopModule" Val="ReconfigCompute"/>
+      <Option Name="TopModule" Val="Poly_PAU"/>
     </Config>
   </FileSet>
   <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
@@ -291,4 +314,5 @@
     <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
+  <BlockFileSet Type="BlockSrcs" Name="ZetaRaw_ROM"/>
 </GenRun>

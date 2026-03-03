@@ -77,11 +77,20 @@ end
 
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-        i <= 'd0;
-        j <= 'd0;
-        N <= 'd0;
-        stage <= 'd0;
-        interval <= 'd0;
+        if (mode_config == 0) begin
+            stage <= 'd3;
+            interval <= 'd1;
+            N <= 'd4;
+            i <= 'd0;
+            j <= 'd0;
+        end
+        else if (mode_config == 1) begin
+            stage <= 'd0;
+            interval <= 'd64;
+            N <= 'd256;
+            i <= 'd0;
+            j <= 'd0;
+        end
         output_finish <= 1'b0;
     end
     else if (rom_request) begin
@@ -124,7 +133,7 @@ always_ff @(posedge clk or negedge rstn) begin
         else 
             output_finish <= 1'b0;
     end
-    else begin
+    else if (output_finish) begin
         if (mode_config == 0) begin
             stage <= 'd3;
             interval <= 'd1;

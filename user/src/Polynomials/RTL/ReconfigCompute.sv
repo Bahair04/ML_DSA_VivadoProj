@@ -13,13 +13,15 @@ module ReconfigCompute(
     output      logic   [91 : 0]        D,
 
     // --- 可重构运算单元模式选择 ---
-    input       logic                   mode_config     // 0: NTT 1: INTT 2: ModuleMult 3: ModuleAdd 4: ModuleSub
+    input       logic   [4 : 0]         mode_config     // 0: NTT 1: INTT 2: ModuleMult 3: ModuleAdd 4: ModuleSub
 );
 
 logic       [22 : 0]            a1, a2, a3, a4;
 logic       [22 : 0]            b1, b2, b3, b4;
 logic       [22 : 0]            z1, z2, z3, z4;
 logic       [22 : 0]            d1, d2, d3, d4;
+logic       [22 : 0]            z2_d [8 : 0];
+logic       [22 : 0]            z3_d [8 : 0];
 
 assign {a1, a2, a3, a4} = A;
 assign {b1, b2, b3, b4} = B;
@@ -34,8 +36,51 @@ logic        	                valid_out_1, valid_out_2, valid_out_3, valid_out_4
 logic       [22 : 0] 	        U_1, U_2, U_3, U_4;
 logic       [22 : 0] 	        V_1, V_2, V_3, V_4;
 
+always_ff @(posedge clk) begin : ZetaDelayBlock
+    integer i;
+    if (!rstn) begin
+        for (i = 0 ; i < 8 ; i++) begin
+            z2_d[i] = 0;
+            z3_d[i] = 0;
+        end
+    end
+    else begin
+        z2_d[0] <= z2;
+        z3_d[0] <= z3; 
+        for (i = 1 ; i < 9 ; i++) begin
+            z2_d[i] <= z2_d[i-1]; 
+            z3_d[i] <= z3_d[i-1];
+        end
+    end
+end
+
 always_comb begin
-    
+    valid_in_1 = 0;
+    valid_in_2 = 0;
+    valid_in_3 = 0;
+    valid_in_4 = 0;
+    A_1 = 0;
+    B_1 = 0;
+    Z_1 = 0;
+
+    A_2 = 0;
+    B_2 = 0;
+    Z_2 = 0;
+
+    A_3 = 0;
+    B_3 = 0;
+    Z_3 = 0;
+
+    A_4 = 0;
+    B_4 = 0;
+    Z_4 = 0;
+
+    d1 = 0;
+    d2 = 0;
+    d3 = 0;
+    d4 = 0;
+
+    valid_out = 0;
     case (mode_config)
         'd0 : begin         // NTT
             valid_in_1 = valid_in;
@@ -53,16 +98,16 @@ always_comb begin
 
             A_3 = U_1;
             B_3 = U_2;
-            Z_3 = z2;
+            Z_3 = z2_d[8];
 
             A_4 = V_1;
             B_4 = V_2;
-            Z_4 = z3;
+            Z_4 = z3_d[8];
 
-            d1 = U_3;
+            d1 = V_4;
             d2 = U_4;
             d3 = V_3;
-            d4 = V_4;
+            d4 = U_3;
 
             valid_out = valid_out_3 | valid_out_4;
         end

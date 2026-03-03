@@ -14,7 +14,7 @@ module ReconfigComputeUnit(
     output      logic   [22 : 0]        V,
 
     // --- 可重构运算单元模式选择 ---
-    input       logic                   mode_config
+    input       logic   [4 : 0]         mode_config
 );
 
 logic       	                NTT_BU_valid_out;
