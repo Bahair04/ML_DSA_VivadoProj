@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="ZetaRaw_ROM_synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1772366992">
   <File Type="PA-TCL" Name="ZetaRaw_ROM.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="ZetaRaw_ROM_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="ZetaRaw_ROM_reports.tcl"/>
   <File Type="RDS-RDS" Name="ZetaRaw_ROM.vds"/>
   <File Type="RDS-UTIL" Name="ZetaRaw_ROM_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="ZetaRaw_ROM_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="ZetaRaw_ROM.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="ZetaRaw_ROM_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="ZetaRaw_ROM_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="BlockSrcs" RelSrcDir="$PSRCDIR/ZetaRaw_ROM">
     <File Path="$PSRCDIR/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM.xci">
       <FileInfo>
@@ -42,9 +39,7 @@
     </Config>
   </FileSet>
   <Strategy Version="1" Minor="2">
-    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021">
-      <Desc>Vivado Synthesis Defaults</Desc>
-    </StratHandle>
+    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2021"/>
     <Step Id="synth_design"/>
   </Strategy>
 </GenRun>

@@ -41,14 +41,32 @@ always_comb begin
     end
 end
 
+logic   [5 : 0]             j_rev;
+logic   [5 : 0]             j_eff; 
+
+always_comb begin
+    // 根据不同的 stage (interval的位宽不同)，对计数器 j 进行不同位数的倒序
+    case (stage)
+        'd3: j_rev = 6'd0;                                     // Interval = 1, j=0
+        'd2: j_rev = {4'd0, j[0], j[1]};                       // Interval = 4, 2-bit倒序
+        'd1: j_rev = {2'd0, j[0], j[1], j[2], j[3]};           // Interval = 16, 4-bit倒序
+        'd0: j_rev = {j[0], j[1], j[2], j[3], j[4], j[5]};     // Interval = 64, 6-bit倒序
+        default: j_rev = 6'd0;
+    endcase
+end
+
+// NTT 使用倒序的 j_rev，而 INTT 使用线性的 j
+assign j_eff = (mode_config == 0) ? j_rev : j[5:0];
+
 always_comb begin
     rom_addr1 = 'd0;
     rom_addr2 = 'd0;
     rom_addr3 = 'd0;
     if (rom_request) begin
-        rom_addr1 = {j, 2'b10} << (stage << 1);
-        rom_addr2 = {j, 1'b1} << (stage << 1);
-        rom_addr3 = ({j, 1'b1} + (N >> 1)) << (stage << 1);
+        // 统一用 j_eff 代替原有的 j_rev
+        rom_addr1 = {j_eff, 2'b10} << (stage << 1);
+        rom_addr2 = {j_eff, 1'b1} << (stage << 1);
+        rom_addr3 = ({j_eff, 1'b1} + (N >> 1)) << (stage << 1);
         if (mode_config == 1) begin
             rom_addr1 = 256 - rom_addr1;
             rom_addr2 = 256 - rom_addr2;
@@ -68,6 +86,7 @@ always_ff @(posedge clk or negedge rstn) begin
     end
     else if (rom_request) begin
         if (mode_config == 0 && $signed(stage) >= 0) begin
+            // 【NTT 模式】：j 是内层循环 (交替输出不同地址)，i 是外层循环
             if (j == j_boundary - 1) begin
                 j <= 'd0;
                 if (i == i_boundary - 1) begin
@@ -85,10 +104,11 @@ always_ff @(posedge clk or negedge rstn) begin
                 j <= j + 1;
         end
         else if (mode_config == 1 && $signed(stage) <= 3) begin
-            if (j == j_boundary - 1) begin
-                j <= 'd0;
-                if (i == i_boundary - 1) begin
-                    i <= 'd0;
+            // 【INTT 模式】：i 是内层循环 (连续输出相同地址)，j 是外层循环 (矩阵转置效果)
+            if (i == i_boundary - 1) begin
+                i <= 'd0;
+                if (j == j_boundary - 1) begin
+                    j <= 'd0;
                     interval <= interval >> 2;
                     N <= N >> 2;
                     if ($signed(stage) == 3)
@@ -96,10 +116,10 @@ always_ff @(posedge clk or negedge rstn) begin
                     stage <= stage + 1;
                 end
                 else 
-                    i <= i + 1;
+                    j <= j + 1;
             end
             else 
-                j <= j + 1;
+                i <= i + 1;
         end
         else 
             output_finish <= 1'b0;
@@ -122,7 +142,6 @@ always_ff @(posedge clk or negedge rstn) begin
         output_finish <= 1'b0;
     end
 end
-
 
 always_comb begin
     rom_addr_out1 = 'd0;
