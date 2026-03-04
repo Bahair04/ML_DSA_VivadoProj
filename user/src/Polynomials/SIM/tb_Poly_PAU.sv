@@ -32,10 +32,15 @@ begin
     #(PERIOD*2) rstn  =  1;
 end
 
+reg [22 : 0] mem [0 : 255];
+initial begin
+    $readmemh("D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/SIM/intt_input.txt", mem);
+end
+
 integer i = 0;
 initial begin
     repeat (20) @(posedge clk);
-    mode_config <= 'd0;
+    mode_config <= 'd1;
     while (!ready) begin
         @(posedge clk);
     end
@@ -47,12 +52,13 @@ initial begin
     repeat (5) @(posedge clk);
     ori_coeff_valid <= 1'b1;
     for (i = 0 ; i < 256 ; i = i + 4) begin
-        ori_coeff <= {
-            23'(i + 3),
-            23'(i + 2),
-            23'(i + 1),
-            23'(i)
-        };
+        // ori_coeff <= {
+        //     23'(i + 3),
+        //     23'(i + 2),
+        //     23'(i + 1),
+        //     23'(i)
+        // };
+        ori_coeff <= {mem[i + 3], mem[i + 2], mem[i + 1], mem[i]};
         @(posedge clk);
     end
     ori_coeff_valid <= 1'b0;

@@ -7,7 +7,7 @@ module ZetaRomAddrGen(
     input       logic                   rstn,
 
     // --- 旋转因子地址产生单元模式选择 ---
-    input       logic                   mode_config,        // 0: NTT 1: INTT
+    input       logic   [4 : 0]         mode_config,        // 0: NTT 1: INTT
 
     // --- 输入输出端口 ---
     input       logic                   rom_request,
@@ -26,6 +26,7 @@ logic   [7 : 0]             rom_addr1, rom_addr2, rom_addr3;
 
 logic   [7 : 0]             i_boundary;
 logic   [7 : 0]             j_boundary;
+logic   [7 : 0]             AddrCount;
 
 always_comb begin
     i_boundary = 1'b0;
@@ -92,6 +93,7 @@ always_ff @(posedge clk or negedge rstn) begin
             j <= 'd0;
         end
         output_finish <= 1'b0;
+        AddrCount <= 'd0;
     end
     else if (rom_request) begin
         if (mode_config == 0 && $signed(stage) >= 0) begin
@@ -111,6 +113,7 @@ always_ff @(posedge clk or negedge rstn) begin
             end
             else 
                 j <= j + 1;
+            AddrCount <= AddrCount + 1;
         end
         else if (mode_config == 1 && $signed(stage) <= 3) begin
             // 【INTT 模式】：i 是内层循环 (连续输出相同地址)，j 是外层循环 (矩阵转置效果)
@@ -129,11 +132,12 @@ always_ff @(posedge clk or negedge rstn) begin
             end
             else 
                 i <= i + 1;
+            AddrCount <= AddrCount + 1;
         end
         else 
             output_finish <= 1'b0;
     end
-    else if (output_finish) begin
+    else if (AddrCount == 'd0) begin
         if (mode_config == 0) begin
             stage <= 'd3;
             interval <= 'd1;

@@ -20,6 +20,7 @@ logic       [22 : 0]            a1, a2, a3, a4;
 logic       [22 : 0]            b1, b2, b3, b4;
 logic       [22 : 0]            z1, z2, z3, z4;
 logic       [22 : 0]            d1, d2, d3, d4;
+logic       [22 : 0]            z1_d [8 : 0];
 logic       [22 : 0]            z2_d [8 : 0];
 logic       [22 : 0]            z3_d [8 : 0];
 
@@ -40,14 +41,17 @@ always_ff @(posedge clk) begin : ZetaDelayBlock
     integer i;
     if (!rstn) begin
         for (i = 0 ; i < 8 ; i++) begin
+            z1_d[i] = 0;
             z2_d[i] = 0;
             z3_d[i] = 0;
         end
     end
     else begin
+        z1_d[0] <= z1;
         z2_d[0] <= z2;
         z3_d[0] <= z3; 
         for (i = 1 ; i < 9 ; i++) begin
+            z1_d[i] <= z1_d[i-1];
             z2_d[i] <= z2_d[i-1]; 
             z3_d[i] <= z3_d[i-1];
         end
@@ -127,16 +131,16 @@ always_comb begin
 
             A_3 = U_1;
             B_3 = U_2;
-            Z_3 = z1;
+            Z_3 = z1_d[8];
 
             A_4 = V_1;
             B_4 = V_2;
-            Z_4 = z1;
+            Z_4 = z1_d[8];
 
-            d1 = U_3;
-            d2 = V_3;
-            d3 = U_4;
-            d4 = V_4;
+            d1 = V_4;
+            d2 = U_4;
+            d3 = V_3;
+            d4 = U_3;
 
             valid_out = valid_out_3 | valid_out_4;
         end
