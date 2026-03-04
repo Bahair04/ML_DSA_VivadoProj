@@ -118,36 +118,28 @@ logic   [1 : 0]     rd_offset;
 
 // --- INTT OUTPUT 阶段专用的乱序还原网络 ---
 // 在最后输出时，跨行跨Bank精准抓取数据，拼成自然顺序！
-wire [5:0] out_t = (state == OUTPUT) ? bram_row_cnt : '0;
-wire [1:0] out_col = {out_t[4], out_t[5]}; // 逻辑列反转
-
-wire [5:0] out_row_0 = {2'b00, out_t[0], out_t[1], out_t[2], out_t[3]};
-wire [5:0] out_row_1 = {2'b10, out_t[0], out_t[1], out_t[2], out_t[3]};
-wire [5:0] out_row_2 = {2'b01, out_t[0], out_t[1], out_t[2], out_t[3]};
-wire [5:0] out_row_3 = {2'b11, out_t[0], out_t[1], out_t[2], out_t[3]};
-
-// 计算这 4 个数据分别藏在哪个 Bank
-wire [1:0] out_offset_0 = (out_row_0[5:4] + out_row_0[3:2] + out_row_0[1:0]) % 4;
-wire [1:0] out_bank_0 = (out_col + out_offset_0) % 4;
-wire [1:0] out_bank_1 = (out_bank_0 + 2) % 4;
-wire [1:0] out_bank_2 = (out_bank_0 + 1) % 4;
-wire [1:0] out_bank_3 = (out_bank_0 + 3) % 4;
+// === 1. 地址乱序修复：直接按 bit-reverse 顺序读取 ===
+wire [5:0] out_t = (state == OUTPUT) ? bram_row_cnt : 'd0;
+// INTT CONV 结束后，自然顺序 4k ~ 4k+3 被完整保存在 bit_reverse(k) 行中
+wire [5:0] out_row_bit_rev = {out_t[0], out_t[1], out_t[2], out_t[3], out_t[4], out_t[5]};
 
 always_comb begin
     if (state == OUTPUT && mode_config == 'd1) begin
-        // INTT OUTPUT：允许4个Bank同时独立读取不同的行
-        rd_addr_b0 = (out_bank_0 == 0) ? out_row_0 : (out_bank_1 == 0) ? out_row_1 : (out_bank_2 == 0) ? out_row_2 : out_row_3;
-        rd_addr_b1 = (out_bank_0 == 1) ? out_row_0 : (out_bank_1 == 1) ? out_row_1 : (out_bank_2 == 1) ? out_row_2 : out_row_3;
-        rd_addr_b2 = (out_bank_0 == 2) ? out_row_0 : (out_bank_1 == 2) ? out_row_1 : (out_bank_2 == 2) ? out_row_2 : out_row_3;
-        rd_addr_b3 = (out_bank_0 == 3) ? out_row_0 : (out_bank_1 == 3) ? out_row_1 : (out_bank_2 == 3) ? out_row_2 : out_row_3;
-        rd_offset = 2'd0;
-    end else begin
-        // NTT OUTPUT & 所有 CONV：4个Bank常规读同一行
+        // INTT OUTPUT：4个 Bank 读同一个 bit-reverse 行，绝不会有 Bank 冲突
+        rd_addr_b0 = out_row_bit_rev;
+        rd_addr_b1 = out_row_bit_rev;
+        rd_addr_b2 = out_row_bit_rev;
+        rd_addr_b3 = out_row_bit_rev;
+        // 因为读的是同一行，偏移量依然按该物理行号计算
+        rd_offset  = (out_row_bit_rev[5:4] + out_row_bit_rev[3:2] + out_row_bit_rev[1:0]) % 4;
+    end 
+    else begin
+        // NTT OUTPUT & 所有 CONV：常规读取
         rd_addr_b0 = (state == OUTPUT) ? bram_row_cnt : conv_cnt;
         rd_addr_b1 = rd_addr_b0;
         rd_addr_b2 = rd_addr_b0;
         rd_addr_b3 = rd_addr_b0;
-        rd_offset = (rd_addr_b0[5:4] + rd_addr_b0[3:2] + rd_addr_b0[1:0]) % 4;
+        rd_offset  = (rd_addr_b0[5:4] + rd_addr_b0[3:2] + rd_addr_b0[1:0]) % 4;
     end
 end
 
@@ -161,24 +153,19 @@ assign out_b1 = read_ping ? bramPing[1][rd_addr_b1] : bramPong[1][rd_addr_b1];
 assign out_b2 = read_ping ? bramPing[2][rd_addr_b2] : bramPong[2][rd_addr_b2];
 assign out_b3 = read_ping ? bramPing[3][rd_addr_b3] : bramPong[3][rd_addr_b3];
 
+// === 2. 消除 Bank 偏移并还原隐式列交换 ===
 always_comb begin
     if (state == OUTPUT && mode_config == 'd1) begin
-        // INTT OUTPUT：按目标 Bank 重新组装成自然顺序
-        a0 = (out_bank_0 == 0) ? out_b0 : (out_bank_0 == 1) ? out_b1 : (out_bank_0 == 2) ? out_b2 : out_b3;
-        a1 = (out_bank_1 == 0) ? out_b0 : (out_bank_1 == 1) ? out_b1 : (out_bank_1 == 2) ? out_b2 : out_b3;
-        a2 = (out_bank_2 == 0) ? out_b0 : (out_bank_2 == 1) ? out_b1 : (out_bank_2 == 2) ? out_b2 : out_b3;
-        a3 = (out_bank_3 == 0) ? out_b0 : (out_bank_3 == 1) ? out_b1 : (out_bank_3 == 2) ? out_b2 : out_b3;
-    end else if (mode_config == 'd1) begin
-        // INTT CONV 模式：交叉互换 (注意这里 a1 和 a2 互换)
+        // INTT输出
         case (rd_offset)
-            2'd0: begin a0 = out_b0; a1 = out_b1; a2 = out_b2; a3 = out_b3; end
-            2'd1: begin a0 = out_b1; a1 = out_b2; a2 = out_b3; a3 = out_b0; end
-            2'd2: begin a0 = out_b2; a1 = out_b3; a2 = out_b0; a3 = out_b1; end
-            2'd3: begin a0 = out_b3; a1 = out_b0; a2 = out_b1; a3 = out_b2; end
+            2'd0: begin a0 = out_b0; a2 = out_b1; a1 = out_b2; a3 = out_b3; end
+            2'd1: begin a0 = out_b1; a2 = out_b2; a1 = out_b3; a3 = out_b0; end
+            2'd2: begin a0 = out_b2; a2 = out_b3; a1 = out_b0; a3 = out_b1; end
+            2'd3: begin a0 = out_b3; a2 = out_b0; a1 = out_b1; a3 = out_b2; end
         endcase
-    end 
+    end
     else begin
-        // NTT 模式
+        // NTT输出 或 NTT/INTT 转换
         case (rd_offset)
             2'd0: begin a0 = out_b0; a1 = out_b1; a2 = out_b2; a3 = out_b3; end
             2'd1: begin a0 = out_b1; a1 = out_b2; a2 = out_b3; a3 = out_b0; end
@@ -188,7 +175,23 @@ always_comb begin
     end
 end
 
-assign con_coeff = {a3, a2, a1, a0};
+// 计算当前行的 popcount 的奇偶性
+wire [2:0] pop_cnt = bram_row_cnt[0] + bram_row_cnt[1] + bram_row_cnt[2] +
+                     bram_row_cnt[3] + bram_row_cnt[4] + bram_row_cnt[5];
+wire is_odd = pop_cnt[0];
+
+// INTT 模式下，奇数 popcount 的路径多乘了一次 -1，这里做模反 (`q - X) 修正回来
+wire [22:0] tmp_a0 = (mode_config == 'd1 && is_odd == 1'b1) ? ((a0 == 0) ? 0 : `q - a0) : a0;
+wire [22:0] tmp_a1 = (mode_config == 'd1 && is_odd == 1'b0) ? ((a1 == 0) ? 0 : `q - a1) : a1;
+wire [22:0] tmp_a2 = (mode_config == 'd1 && is_odd == 1'b0) ? ((a2 == 0) ? 0 : `q - a2) : a2;
+wire [22:0] tmp_a3 = (mode_config == 'd1 && is_odd == 1'b1) ? ((a3 == 0) ? 0 : `q - a3) : a3;
+
+wire [22:0] final_a0 = (tmp_a0 == `q) ? 23'd0 : tmp_a0;
+wire [22:0] final_a1 = (tmp_a1 == `q) ? 23'd0 : tmp_a1;
+wire [22:0] final_a2 = (tmp_a2 == `q) ? 23'd0 : tmp_a2;
+wire [22:0] final_a3 = (tmp_a3 == `q) ? 23'd0 : tmp_a3;
+
+assign con_coeff = {final_a3, final_a2, final_a1, final_a0};
 
 // ==========================================================
 // 6. 蝶形运算单元 (Butterfly Unit)
@@ -223,9 +226,6 @@ ReconfigCompute u_ReconfigCompute(
 );
 
 assign {c3, c2, c1, c0} = ReconfigCompute_res;
-
-// assign ReconfigCompute_valid_out = ReconfigCompute_valid_in;
-// assign {c3, c2, c1, c0} = {a3_d, a2_d, a1_d, a0_d};
 
 //* 0-latency
 ZetaRomAddrGen u_ZetaRomAddrGen(
@@ -265,7 +265,7 @@ ZetaRaw_ROM Zeta3_ROM (
 // 7. 核心数据流：写交叉开关 (Write Crossbar) 与 BRAM 写入
 // ==========================================================
 
-// 7.1 NTT 模式下的写逻辑 (跨行散布)
+// 7.1 NTT 模式下输入写逻辑 
 wire [1:0] in_offset = (bram_row_cnt[5:4] + bram_row_cnt[3:2] + bram_row_cnt[1:0]) % 4;
 wire [5:0] in_row_0 = {bram_row_cnt[3:0], 2'd0};
 wire [5:0] in_row_1 = {bram_row_cnt[3:0], 2'd1};

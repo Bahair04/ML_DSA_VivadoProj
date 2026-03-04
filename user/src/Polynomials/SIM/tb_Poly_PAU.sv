@@ -53,10 +53,10 @@ initial begin
     ori_coeff_valid <= 1'b1;
     for (i = 0 ; i < 256 ; i = i + 4) begin
         // ori_coeff <= {
-        //     23'(i + 3),
-        //     23'(i + 2),
-        //     23'(i + 1),
-        //     23'(i)
+            // 23'(i + 3),
+            // 23'(i + 2),
+            // 23'(i + 1),
+            // 23'(i)
         // };
         ori_coeff <= {mem[i + 3], mem[i + 2], mem[i + 1], mem[i]};
         @(posedge clk);
