@@ -1,6 +1,6 @@
 `include "../../param_conf.v"
-//* 9-latency γ2 = 95232
-module Decomposes(
+//* 9-latency γ2 = 261888
+module Decomposes2(
     // --- 时钟与复位信号 ---
     input       logic                       clk,
     input       logic                       rstn,
@@ -29,13 +29,12 @@ logic           [13 : 0]            U1;
 logic           [26 : 0]            X;
 logic           [23 : 0]            rp;
 logic           [23 : 0]            rp_d [2 : 0];
-logic           [7 : 0]             rp_shift1;
-logic           [11 : 0]            rp_v1;
+logic           [6 : 0]             rp_shift1;
+logic           [17 : 0]            rp_v1;
 logic           [25 : 0]            rp_con1;
-logic           [7 : 0]             rp_con1_clip;
-logic           [11 : 0]            rp_con1_clip_p1;
-logic           [10 : 0]            rp_con1_clip_p2;
-logic           [26 : 0]            rp_mult1;
+logic           [6 : 0]             rp_con1_clip;
+logic           [17 : 0]            rp_con1_clip_p1;
+logic           [27 : 0]            rp_mult1;
 logic   signed  [23 : 0]            rp_sub1;
 logic   signed  [23 : 0]            r0_1;
 logic   signed  [23 : 0]            r0_1_d;
@@ -94,30 +93,28 @@ always_ff @(posedge clk) begin
     end
 end
 
-assign rp_shift1 = rp[23 : 16];
+assign rp_shift1 = rp[23 : 17];
 
 //* 1-latency
 always_ff @(posedge clk) begin
     if (!rstn)
         rp_v1 <= 'd0;
     else 
-        rp_v1 <= (rp_shift1 << 3) + (rp_shift1 << 1) + rp_shift1;
+        rp_v1 <= (rp_shift1 << 10) + rp_shift1;
 end
-assign rp_con1 = (rp_v1 << 13) + (rp_v1 << 3);
-assign rp_con1_clip = rp_con1[25 : 18];
+assign rp_con1 = rp_v1 << 7;
+assign rp_con1_clip = rp_con1[25 : 19];
 
 //* 1-latency
 always_ff @(posedge clk) begin
     if (!rstn) begin
         rp_con1_clip_p1 <= 'd0;
-        rp_con1_clip_p2 <= 'd0;
     end
     else begin
-        rp_con1_clip_p1 <= (rp_con1_clip << 3) + (rp_con1_clip << 1) + rp_con1_clip;
-        rp_con1_clip_p2 <= (rp_con1_clip << 2) + rp_con1_clip;
+        rp_con1_clip_p1 <= (rp_con1_clip << 10) - rp_con1_clip;
     end
 end
-assign rp_mult1 = ((rp_con1_clip_p1 << 3) + rp_con1_clip_p2) << 11;
+assign rp_mult1 = rp_con1_clip_p1 << 9;
 assign rp_sub1 = (rp_d[1] - {1'b0, rp_mult1[22 : 0]} > 2 * `gamma_2) ? (rp_d[1] - {1'b0, rp_mult1[22 : 0]} - 2 * `gamma_2):
                     rp_d[1] - {1'b0, rp_mult1[22 : 0]};
 

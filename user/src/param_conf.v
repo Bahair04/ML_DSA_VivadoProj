@@ -1,4 +1,4 @@
-`define ML_DSA_44
+`define ML_DSA_65
 
 `ifdef ML_DSA_44
 

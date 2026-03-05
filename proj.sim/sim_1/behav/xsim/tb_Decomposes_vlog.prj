@@ -1,6 +1,6 @@
 # compile verilog/system verilog design source files
 sv xil_defaultlib  \
-"../../../../user/src/Auxilary/RTL/Decomposes.sv" \
+"../../../../user/src/Auxilary/RTL/Decomposes2.sv" \
 "../../../../user/src/Auxilary/SIM/tb_Decomposes.sv" \
 
 # compile glbl module

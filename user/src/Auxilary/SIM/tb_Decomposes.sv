@@ -42,7 +42,7 @@ logic   signed  [23 : 0]    tmp;
 initial begin
     repeat (20) @(posedge clk);
     r_valid <= 1;
-    for (i = 0 ; i < 100 ; i = i + 1) begin
+    for (i = 0 ; i < 400 ; i = i + 1) begin
         $fscanf(fid_read, "%d", tmp);
         r <= tmp;
         @(posedge clk);
@@ -59,7 +59,7 @@ always_ff @(posedge clk) begin
         $fwrite(fid_write1, "%d\n", r1);
 end
 
-Decomposes  u_Decomposes (
+Decomposes2  u_Decomposes (
     .clk       ( clk        ),
     .rstn      ( rstn       ),
     .r         ( r          ),
