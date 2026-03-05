@@ -6,7 +6,7 @@ module Decomposes2(
     input       logic                       rstn,
 
     // --- 输入信号 ---
-    input       logic   signed  [23 : 0]    r,
+    input       logic   signed  [24 : 0]    r,
     input       logic                       r_valid,
 
     // --- 输出信号 ---
@@ -16,17 +16,17 @@ module Decomposes2(
     output      logic                       r0_valid
 );
 
-logic   signed  [23 : 0]            r_prime;
-logic   signed  [23 : 0]            r_prime_d [1 : 0];
-logic           [1 : 0]             V;
-logic           [1 : 0]             V_d;
-logic           [12 : 0]            V1;
-logic           [3 : 0]             V2;
-logic           [26 : 0]            V_concat;
-logic           [2 : 0]             U;
-logic           [2 : 0]             U_d;
-logic           [13 : 0]            U1;
-logic           [26 : 0]            X;
+logic   signed  [24 : 0]            r_prime;
+logic   signed  [24 : 0]            r_prime_d [1 : 0];
+logic           [2 : 0]             V;
+logic           [2 : 0]             V_d;
+logic           [13 : 0]            V1;
+logic           [4 : 0]             V2;
+logic           [27 : 0]            V_concat;
+logic           [3 : 0]             U;
+logic           [3 : 0]             U_d;
+logic           [14 : 0]            U1;
+logic           [27 : 0]            X;
 logic           [23 : 0]            rp;
 logic           [23 : 0]            rp_d [2 : 0];
 logic           [6 : 0]             rp_shift1;
@@ -53,7 +53,7 @@ always_ff @(posedge clk) begin
     end
 end
 
-assign V = r_prime[23 : 22];
+assign V = r_prime[24 : 22];
 
 //* 1-latency
 always_ff @(posedge clk) begin
@@ -67,8 +67,8 @@ always_ff @(posedge clk) begin
     end
 end
 
-assign V_concat = {1'b0, V1, 8'd0, V2, V_d[0]};
-assign U = V_concat[26 : 24];
+assign V_concat = {1'b0, V1, 7'd0, V2, V_d[0]};
+assign U = V_concat[27 : 24];
 
 //* 1-latency
 always_ff @(posedge clk) begin

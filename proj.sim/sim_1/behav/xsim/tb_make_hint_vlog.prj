@@ -1,7 +1,9 @@
 # compile verilog/system verilog design source files
 sv xil_defaultlib  \
+"../../../../user/src/Auxilary/RTL/Decomposes.sv" \
 "../../../../user/src/Auxilary/RTL/Decomposes2.sv" \
-"../../../../user/src/Auxilary/SIM/tb_Decomposes.sv" \
+"../../../../user/src/Auxilary/RTL/make_hint.sv" \
+"../../../../user/src/Auxilary/SIM/tb_make_hint.sv" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"

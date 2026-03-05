@@ -9,7 +9,7 @@ parameter PERIOD  = 10;
 // Decomposes Inputs
 logic                       clk      = 0 ;
 logic                       rstn     = 0 ;
-logic   signed  [23 : 0]    r        = 0 ;
+logic   signed  [24 : 0]    r        = 0 ;
 logic                       r_valid  = 0 ;
 
 // Decomposes Outputs
@@ -38,7 +38,7 @@ initial begin
 end
 
 integer i = 0;
-logic   signed  [23 : 0]    tmp;
+logic   signed  [24 : 0]    tmp;
 initial begin
     repeat (20) @(posedge clk);
     r_valid <= 1;
