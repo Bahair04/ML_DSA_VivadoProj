@@ -50,6 +50,11 @@ initial begin
     end
     i_valid <= 0;
     repeat (200) @(posedge clk);
+
+    $fclose(fid_write);
+    $fclose(fid_read0);
+    $fclose(fid_read1);
+    
     $finish;
 end
 
