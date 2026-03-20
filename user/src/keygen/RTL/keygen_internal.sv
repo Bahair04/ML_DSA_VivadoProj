@@ -17,8 +17,8 @@ module keygen_internal(
 	output		logic   [91 : 0]    coeff_rho_ExpandA,          // 4*23bit 有效采样系数
 	output		logic               coeff_valid_rho_ExpandA,    // 4*23bit 有效采样系数信号
 
-	output		logic   [91 : 0]    coeff_rho_ExpandS,          // 4*23bit 有效采样系数
-	output		logic               coeff_valid_rho_ExpandS,    // 4*23bit 有效采样系数信号
+	output		logic   [15 : 0]    coeff_rho_ExpandS,          // 4*4bit 有效采样系数
+	output		logic               coeff_valid_rho_ExpandS,    // 4*4bit 有效采样系数信号
 
 	// --- SHA3 控制接口 ---
     output      logic   [7 : 0]     dout1,           // SHA3 串行输入字节数据
@@ -406,5 +406,10 @@ ExpandS u_ExpandS(
 	.st_64bit       	( st_64bit_ExpandS        ),
 	.st_64bit_valid 	( st_64bit_valid_ExpandS  )
 );
+
+assign coeff_rho_ExpandA = coeff_ExpandA;
+assign coeff_valid_rho_ExpandA = coeff_valid_ExpandA;
+assign coeff_rho_ExpandS = coeff_raw;
+assign coeff_valid_rho_ExpandS = coeff_valid_ExpandS;
 
 endmodule

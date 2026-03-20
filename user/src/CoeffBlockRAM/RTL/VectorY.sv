@@ -1,36 +1,42 @@
+`include "../../param_conf.v"
 module VectorY(
     // --- 时钟和复位信号 ---
     input       logic               clk,
-    input       logic               rstn,
 
     // --- Vector Y ---
     input       logic   signed  [79 : 0]    w_VectorY_Coeff,            // 4*20bit有符号数
     input       logic                       w_VectorY_Coeff_valid,
     input       logic           [5 : 0]     w_VectorY_Coeff_addr,
-    output      logic           [22 : 0]    r_VectorY_Coeff,            // 对q取模 无符号
-    input       logic                       r_VectorY_Coeff_request,
-    input       logic           [7 : 0]     r_VectorY_Coeff_addr
+    output      logic           [91 : 0]    r_VectorY_Coeff,            // 对q取模 无符号
+    input       logic           [5 : 0]     r_VectorY_Coeff_addr
 );
 
-logic   signed  [19 : 0]        doutb;
-
-VectorY_CoeffRAM u_VectorY_CoeffRAM (
-  .clka(clk),    // input wire clka
-  .ena(w_VectorY_Coeff_valid),      // input wire ena
-  .wea(w_VectorY_Coeff_valid),      // input wire [0 : 0] wea
-  .addra(w_VectorY_Coeff_addr),  // input wire [5 : 0] addra
-  .dina(w_VectorY_Coeff),   // input wire [79 : 0] dina
-  .clkb(clk),    // input wire clkb
-  .enb(r_VectorY_Coeff_request),      // input wire enb
-  .addrb(r_VectorY_Coeff_addr),  // input wire [7 : 0] addrb
-  .doutb(doutb)  // output wire [19 : 0] doutb
+localparam                  			DATA_WIDTH = 'd80;
+logic   signed  [DATA_WIDTH - 1 : 0] 	rd_data;
+inferred_bram #(
+	.DEPTH      	( 64            ),          // 标量 共256个系数 每个地址存4个系数 共64个地址
+	.ADDR_WIDTH 	( 6             ),          // 地址线宽：log2(64) = 6
+	.DATA_WIDTH 	( DATA_WIDTH    ))          // 数据线宽：80 bit
+u_inferred_bram(
+	.clk     	( clk                       ),
+	.we      	( w_VectorY_Coeff_valid     ),
+	.wr_addr 	( w_VectorY_Coeff_addr      ),
+	.wr_data 	( w_VectorY_Coeff           ),
+	.rd_addr 	( r_VectorY_Coeff_addr      ),
+	.rd_data 	( rd_data                   )
 );
 
+logic           [22 : 0]                doutb [3 : 0];
+integer i;
 always_comb begin
-    if (doutb[19])
-        r_VectorY_Coeff = {{3{doutb[19]}}, doutb} + `q;
-    else 
-        r_VectorY_Coeff = {{3{doutb[19]}}, doutb};
+    for (i = 0 ; i < 4 ; i = i + 1) begin
+        logic   [19 : 0]                raw_slice;
+        raw_slice = rd_data[i * 20 +: 20];
+        if (raw_slice[19])
+            doutb[i] = {{3{raw_slice[19]}}, raw_slice} + `q;
+        else 
+            doutb[i] = {{3{raw_slice[19]}}, raw_slice};
+    end    
 end
-
+assign r_VectorY_Coeff = {doutb[3], doutb[2], doutb[1], doutb[0]};
 endmodule

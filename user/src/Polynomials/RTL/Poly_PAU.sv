@@ -1,3 +1,4 @@
+`include "../../param_conf.v"
 module Poly_PAU(
     // --- 时钟和复位信号 ---
     input       logic                   clk,

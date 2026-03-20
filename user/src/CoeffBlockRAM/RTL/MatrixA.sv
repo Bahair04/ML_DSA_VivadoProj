@@ -1,31 +1,32 @@
+`include "../../param_conf.v"
 module MatrixA(
     // --- 时钟和复位信号 ---
     input       logic               clk,
-    input       logic               rstn,
 
     // --- Matrix A ---
     input       logic           [91 : 0]    w_MatrixA_Coeff,
     input       logic                       w_MatrixA_Coeff_valid,
     input       logic           [11 : 0]    w_MatrixA_Coeff_addr,
-    output      logic           [22 : 0]    r_MatrixA_Coeff,
-    input       logic                       r_MatrixA_Coeff_request,
-    input       logic           [13 : 0]    r_MatrixA_Coeff_addr
+    output      logic           [91 : 0]    r_MatrixA_Coeff,
+    input       logic           [11 : 0]    r_MatrixA_Coeff_addr
 );
 
-logic   [22 : 0]    doutb;
+localparam                  			DATA_WIDTH = 'd92;
+logic 			[DATA_WIDTH - 1 : 0] 	rd_data;
 
-MatrixA_CoeffRAM u_MatrixA_CoeffRAM (
-  .clka(clk),    // input wire clka
-  .ena(w_MatrixA_Coeff_valid),      // input wire ena
-  .wea(w_MatrixA_Coeff_valid),      // input wire [0 : 0] wea
-  .addra(w_MatrixA_Coeff_addr),  // input wire [11 : 0] addra
-  .dina(w_MatrixA_Coeff),    // input wire [91 : 0] dina
-  .clkb(clk),    // input wire clkb
-  .enb(r_MatrixA_Coeff_request),      // input wire enb
-  .addrb(r_MatrixA_Coeff_addr),  // input wire [13 : 0] addrb
-  .doutb(doutb)  // output wire [22 : 0] doutb
+inferred_bram #(
+	.DEPTH      	( 3584  		),
+	.ADDR_WIDTH 	( 12    		),
+	.DATA_WIDTH 	( DATA_WIDTH   	))
+u_inferred_bram(
+	.clk     	( clk      						),
+	.we      	( w_MatrixA_Coeff_valid       	),
+	.wr_addr 	( w_MatrixA_Coeff_addr  		),
+	.wr_data 	( w_MatrixA_Coeff  				),
+	.rd_addr 	( r_MatrixA_Coeff_addr  		),
+	.rd_data 	( rd_data  						)
 );
 
-assign r_MatrixA_Coeff = doutb;
+assign r_MatrixA_Coeff = rd_data;
 
 endmodule

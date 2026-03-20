@@ -27,7 +27,7 @@ logic   [7 : 0]     pk               ;
 logic   [7 : 0]     sk               ;
 logic   [91 : 0]    coeff_rho_ExpandA ;
 logic               coeff_valid_rho_ExpandA ;
-logic   [91 : 0]    coeff_rho_ExpandS ;
+logic   [15 : 0]    coeff_rho_ExpandS ;
 logic               coeff_valid_rho_ExpandS ;
 logic   [7 : 0]     dout1            ;
 logic               dout_valid1      ;

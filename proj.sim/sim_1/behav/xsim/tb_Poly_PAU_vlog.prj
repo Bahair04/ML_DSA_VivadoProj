@@ -1,0 +1,23 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
+
+sv xil_defaultlib  \
+"../../../../user/src/Polynomials/RTL/DSP_MultPipe.sv" \
+"../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleAdd.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleDiv2.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleMult.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleSub.sv" \
+"../../../../user/src/Polynomials/RTL/NTT_BU.sv" \
+"../../../../user/src/Polynomials/RTL/Poly_PAU.sv" \
+"../../../../user/src/Polynomials/RTL/ReconfigCompute.sv" \
+"../../../../user/src/Polynomials/RTL/ReconfigComputeUnit.sv" \
+"../../../../user/src/Polynomials/RTL/ZetaRomAddrGen.sv" \
+"../../../../user/src/Polynomials/SIM/tb_Poly_PAU.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

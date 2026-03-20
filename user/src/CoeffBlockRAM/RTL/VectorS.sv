@@ -1,36 +1,42 @@
+`include "../../param_conf.v"
 module VectorS(
     // --- 时钟和复位信号 ---
     input       logic               clk,
-    input       logic               rstn,
 
     // --- Vector S ---
     input       logic   signed  [15 : 0]    w_VectorS_Coeff,            // 4*4bit有符号数
     input       logic                       w_VectorS_Coeff_valid,
     input       logic           [9 : 0]     w_VectorS_Coeff_addr,
-    output      logic           [22 : 0]    r_VectorS_Coeff,            // 对q取模 无符号
-    input       logic                       r_VectorS_Coeff_request,
-    input       logic           [11 : 0]    r_VectorS_Coeff_addr
+    output      logic           [91 : 0]    r_VectorS_Coeff,            // 对q取模 无符号
+    input       logic           [9 : 0]     r_VectorS_Coeff_addr
 );
 
-logic   signed  [3 : 0]         doutb; 
+localparam                  			DATA_WIDTH = 'd16;
+logic   signed  [DATA_WIDTH - 1 : 0] 	rd_data;
 
-VectorS_CoeffRAM u_VectorS_CoeffRAM (
-  .clka(clk),    // input wire clka
-  .ena(w_VectorS_Coeff_valid),      // input wire ena
-  .wea(w_VectorS_Coeff_valid),      // input wire [0 : 0] wea
-  .addra(w_VectorS_Coeff_addr),  // input wire [9 : 0] addra
-  .dina(w_VectorS_Coeff),    // input wire [15 : 0] dina
-  .clkb(clk),    // input wire clkb
-  .enb(r_VectorS_Coeff_request),      // input wire enb
-  .addrb(r_VectorS_Coeff_addr),  // input wire [11 : 0] addrb
-  .doutb(doutb)  // output wire [3 : 0] doutb
+inferred_bram #(
+	.DEPTH      	( 960               ),
+	.ADDR_WIDTH 	( 10                ),
+	.DATA_WIDTH 	( DATA_WIDTH        ))
+u_inferred_bram(
+	.clk     	( clk                       ),
+	.we      	( w_VectorS_Coeff_valid     ),
+	.wr_addr 	( w_VectorS_Coeff_addr      ),
+	.wr_data 	( w_VectorS_Coeff           ),
+	.rd_addr 	( r_VectorS_Coeff_addr      ),
+	.rd_data 	( rd_data                   )
 );
 
+logic           [22 : 0]                doutb [3 : 0];
 always_comb begin
-    if (doutb[3])
-        r_VectorS_Coeff = {{19{doutb[3]}}, doutb} + `q;
-    else 
-        r_VectorS_Coeff = {{19{doutb[3]}}, doutb};
+    for (int i = 0 ; i < 4 ; i = i + 1) begin
+        logic   [3 : 0]                raw_slice;
+        raw_slice = rd_data[i * 4 +: 4];
+        if (raw_slice[3])
+            doutb[i] = {{19{raw_slice[3]}}, raw_slice} + `q;
+        else 
+            doutb[i] = {{19{raw_slice[3]}}, raw_slice};
+    end    
 end
-
+assign r_VectorS_Coeff = {doutb[3], doutb[2], doutb[1], doutb[0]};
 endmodule

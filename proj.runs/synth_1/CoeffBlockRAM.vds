@@ -1,0 +1,280 @@
+#-----------------------------------------------------------
+# Vivado v2021.1 (64-bit)
+# SW Build 3247384 on Thu Jun 10 19:36:33 MDT 2021
+# IP Build 3246043 on Fri Jun 11 00:30:35 MDT 2021
+# Start of session at: Fri Mar 20 18:30:10 2026
+# Process ID: 19748
+# Current directory: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1
+# Command line: vivado.exe -log CoeffBlockRAM.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source CoeffBlockRAM.tcl
+# Log file: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/CoeffBlockRAM.vds
+# Journal file: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1\vivado.jou
+#-----------------------------------------------------------
+source CoeffBlockRAM.tcl -notrace
+Command: synth_design -top CoeffBlockRAM -part xc7a200tfbg484-2L
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 28940
+---------------------------------------------------------------------------------
+Starting Synthesize : Time (s): cpu = 00:00:00 ; elapsed = 00:00:02 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'CoeffBlockRAM' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'MatrixA' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/MatrixA.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 3584 - type: integer 
+	Parameter ADDR_WIDTH bound to: 12 - type: integer 
+	Parameter DATA_WIDTH bound to: 92 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram' (1#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'MatrixA' (2#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/MatrixA.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorS' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized0' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 960 - type: integer 
+	Parameter ADDR_WIDTH bound to: 10 - type: integer 
+	Parameter DATA_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized0' (2#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorS' (3#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorY' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorY.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized1' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 6 - type: integer 
+	Parameter DATA_WIDTH bound to: 80 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized1' (3#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorY' (4#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorY.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorT' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorT.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized2' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 512 - type: integer 
+	Parameter ADDR_WIDTH bound to: 9 - type: integer 
+	Parameter DATA_WIDTH bound to: 92 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized2' (4#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorT' (5#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorT.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'CoeffBlockRAM' (6#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv:1]
+---------------------------------------------------------------------------------
+Finished Synthesize : Time (s): cpu = 00:00:00 ; elapsed = 00:00:03 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:01 ; elapsed = 00:00:03 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7a200tfbg484-2L
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:01 ; elapsed = 00:00:03 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+INFO: [Device 21-403] Loading part xc7a200tfbg484-2L
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:01 ; elapsed = 00:00:03 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   23 Bit       Adders := 8     
++---Registers : 
+	               92 Bit    Registers := 2     
+	               80 Bit    Registers := 1     
+	               16 Bit    Registers := 1     
++---RAMs : 
+	             322K Bit	(3584 X 92 bit)          RAMs := 1     
+	              46K Bit	(512 X 92 bit)          RAMs := 1     
+	              15K Bit	(960 X 16 bit)          RAMs := 1     
+	               5K Bit	(64 X 80 bit)          RAMs := 1     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 740 (col length:100)
+BRAMs: 730 (col length: RAMB18 100 RAMB36 50)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:01 ; elapsed = 00:00:06 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Preliminary Mapping Report (see note below)
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name   | RTL Object                                | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|CoeffBlockRAM | u_MatrixA/u_inferred_bram/poly_matrix_reg | 3 K x 92(READ_FIRST)   | W |   | 3 K x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 10     | 
+|CoeffBlockRAM | u_VectorS/u_inferred_bram/poly_matrix_reg | 0 K x 16(READ_FIRST)   | W |   | 0 K x 16(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      | 
+|CoeffBlockRAM | u_VectorY/u_inferred_bram/poly_matrix_reg | 64 x 80(READ_FIRST)    | W |   | 64 x 80(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|CoeffBlockRAM | u_VectorT/u_inferred_bram/poly_matrix_reg | 512 x 92(READ_FIRST)   | W |   | 512 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+No constraint files found.
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:01 ; elapsed = 00:00:06 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Final Mapping Report
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name   | RTL Object                                | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|CoeffBlockRAM | u_MatrixA/u_inferred_bram/poly_matrix_reg | 3 K x 92(READ_FIRST)   | W |   | 3 K x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 10     | 
+|CoeffBlockRAM | u_VectorS/u_inferred_bram/poly_matrix_reg | 0 K x 16(READ_FIRST)   | W |   | 0 K x 16(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      | 
+|CoeffBlockRAM | u_VectorY/u_inferred_bram/poly_matrix_reg | 64 x 80(READ_FIRST)    | W |   | 64 x 80(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|CoeffBlockRAM | u_VectorT/u_inferred_bram/poly_matrix_reg | 512 x 92(READ_FIRST)   | W |   | 512 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
++--------------+-------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_4 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_5 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_6 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_7 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_8 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_9 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_MatrixA/u_inferred_bram/poly_matrix_reg_10 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_VectorS/u_inferred_bram/poly_matrix_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_VectorY/u_inferred_bram/poly_matrix_reg_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_VectorY/u_inferred_bram/poly_matrix_reg_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_VectorT/u_inferred_bram/poly_matrix_reg_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_VectorT/u_inferred_bram/poly_matrix_reg_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:01 ; elapsed = 00:00:06 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+---------+------+
+|      |Cell     |Count |
++------+---------+------+
+|1     |BUFG     |     1|
+|2     |CARRY4   |    24|
+|3     |LUT1     |     4|
+|4     |LUT2     |    36|
+|5     |LUT3     |     4|
+|6     |LUT4     |    16|
+|7     |RAMB18E1 |     4|
+|8     |RAMB36E1 |    12|
+|9     |IBUF     |   359|
+|10    |OBUF     |   368|
++------+---------+------+
+
+Report Instance Areas: 
++------+--------------------+------------------------------+------+
+|      |Instance            |Module                        |Cells |
++------+--------------------+------------------------------+------+
+|1     |top                 |                              |   828|
+|2     |  u_MatrixA         |MatrixA                       |    11|
+|3     |    u_inferred_bram |inferred_bram                 |    11|
+|4     |  u_VectorS         |VectorS                       |    25|
+|5     |    u_inferred_bram |inferred_bram__parameterized0 |     5|
+|6     |  u_VectorT         |VectorT                       |     2|
+|7     |    u_inferred_bram |inferred_bram__parameterized2 |     2|
+|8     |  u_VectorY         |VectorY                       |    62|
+|9     |    u_inferred_bram |inferred_bram__parameterized1 |    26|
++------+--------------------+------------------------------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 0 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+Synthesis Optimization Complete : Time (s): cpu = 00:00:02 ; elapsed = 00:00:08 . Memory (MB): peak = 1283.352 ; gain = 0.000
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.015 . Memory (MB): peak = 1283.352 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 40 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1283.352 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Synth Design complete, checksum: e7674950
+INFO: [Common 17-83] Releasing license: Synthesis
+46 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:02 ; elapsed = 00:00:10 . Memory (MB): peak = 1283.352 ; gain = 0.000
+INFO: [Common 17-1381] The checkpoint 'D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/CoeffBlockRAM.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_utilization -file CoeffBlockRAM_utilization_synth.rpt -pb CoeffBlockRAM_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Fri Mar 20 18:30:24 2026...
