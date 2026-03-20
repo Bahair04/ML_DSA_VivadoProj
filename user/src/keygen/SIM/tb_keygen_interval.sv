@@ -63,7 +63,9 @@ initial begin
     start <= 1'b1;
     @(posedge clk);
     start <= 1'b0;
-    @(posedge done);
+    while (keygen_internal.state != 8) begin
+        @(posedge clk);
+    end
     $finish;
 end
 
@@ -87,6 +89,12 @@ initial begin
     fid1 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/output/tb_ExpandS_output.txt", "w");
     $fwrite(fid1, "[");
 end
+
+logic   [22 : 0]            conv0, conv1, conv2, conv3;
+assign conv0 = keygen_internal.con_coeff[22 : 0];
+assign conv1 = keygen_internal.con_coeff[45: 23];
+assign conv2 = keygen_internal.con_coeff[68 : 46];
+assign conv3 = keygen_internal.con_coeff[91 : 69];
 
 integer i1 = 0;
 always_ff @(posedge clk) begin

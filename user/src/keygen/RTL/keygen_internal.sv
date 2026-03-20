@@ -52,13 +52,19 @@ module keygen_internal(
 // 参数与状态定义
 // ==========================================================
 
-typedef enum logic [3 : 0] {  
-	S_IDLE,
-	S_INIT,
-	S_LOAD,
-	S_SQUEEZE,
-	S_EXPAND,
-	S_STORE
+typedef enum logic [4 : 0] {  
+	S_IDLE,				// 空闲等待
+	S_INIT,				// 初始化 存储种子[seed, `k, `l]
+	S_LOAD,				// 给 SHA3 装载种子
+	S_SQUEEZE,			// 挤出数据 获取扩展种子 用于生成矩阵A，向量S
+	S_EXPAND,			// 生成矩阵 A 和向量 S 此状态给出起始信号
+	S_STORE,			// 获得矩阵 A 和向量 S 并存入存储空间
+	S_S1_NTT_ACK, 		// 当前模块与 Poly_PAU 模块的握手状态
+	S_S1_NTT,			// 从存储空间中获得一组 S（256个系数） 存入 Poly_PAU 当中 并启动 NTT 转换
+	S_S1_NTT_WAIT,		// 等待 NTT 转换完成 输出 64 个 92bits数据 (共256个系数)
+	S_VECTOR_MULT,   	// 从存储空间中获得一组 A (256个系数，已在 NTT 空间) 与 向量 S 相乘 相同系数相累加 获得 T (256个系数 NTT空间) 
+	S_T_INTT,			// 获得 T 并启动 INTT
+	S_T_ADD_S2			// 在系数与 T + S2 获得最终的 T 同时给到 power_2_bound 获得 t0 和 t1
 } state_t;
 state_t 							state, state_d;
 
@@ -122,6 +128,53 @@ logic   		[31 : 0]    		out_len_ExpandS;        // SHA3 挤出数据长度
 logic               				done_out_ExpandS;       // SHA3 挤出数据完成
 logic   		[63 : 0]    		st_64bit_ExpandS;       // SHA3 挤出8字节数据
 logic               				st_64bit_valid_ExpandS; // SHA3 挤出8字节数据有效信号
+
+// --- CoeffBlockRAM ---
+
+// --- Matrix A ---
+logic           [91 : 0]    		w_MatrixA_Coeff;
+logic                       		w_MatrixA_Coeff_valid;
+logic           [11 : 0]    		w_MatrixA_Coeff_addr;
+logic           [91 : 0]    		r_MatrixA_Coeff;
+logic           [11 : 0]    		r_MatrixA_Coeff_addr;
+
+// --- Vector S ---
+logic   signed  [15 : 0]    		w_VectorS_Coeff;            // 4*4bit有符号数
+logic                       		w_VectorS_Coeff_valid;
+logic           [9 : 0]     		w_VectorS_Coeff_addr;       // S1 [0 : 7*64-1] S2 [7*64 : 15*64-1]
+logic           [91 : 0]    		r_VectorS_Coeff;            // 对q取模 无符号
+logic           [9 : 0]     		r_VectorS_Coeff_addr;
+
+// --- Vector Y ---
+logic   signed  [79 : 0]    		w_VectorY_Coeff;            // 4*20bit有符号数
+logic                       		w_VectorY_Coeff_valid;
+logic           [5 : 0]     		w_VectorY_Coeff_addr;
+logic           [91 : 0]    		r_VectorY_Coeff;            // 对q取模 无符号
+logic           [5 : 0]     		r_VectorY_Coeff_addr;
+
+// --- Vector T ---
+logic           [91 : 0]    		w_VectorT_Coeff;
+logic                       		w_VectorT_Coeff_valid;
+logic           [8 : 0]     		w_VectorT_Coeff_addr;
+logic           [91 : 0]    		r_VectorT_Coeff;
+logic           [8 : 0]     		r_VectorT_Coeff_addr;
+
+// --- Poly_PAU ---
+
+// --- 原始系数(从存储矩阵中一次读取四个) ---
+logic   		[91 : 0]        	ori_coeff;
+logic                   			ori_coeff_valid;
+logic                   			request;            		// 上游请求信号
+logic   		[91 : 0]        	ext_operand;        		// 外部输入的计算数
+logic                   			ext_operand_request;		// 请求获取外部输入的计算数  First World Fall Through
+logic   		[4 : 0]         	mode_config;        		// 模式选择 0: NTT 1: INTT 2: 模乘 3: 模加 4: 模减
+
+// --- NTT域系数(向存储矩阵中一次写入四个) ---
+logic                   			ready;              		// 下游准备信号
+logic   		[91 : 0]        	con_coeff;
+logic                   			con_coeff_valid;
+
+logic			[7 : 0]				con_coeff_cnt;				// 输出系数计数器(共 256 个)
 
 always_ff @(posedge clk) begin
 	if (!rstn)
@@ -340,10 +393,35 @@ always_ff @(posedge clk) begin
 				state <= S_STORE;
 			end
 			S_STORE : begin
-				if (done_out_ExpandA)
-					state <= S_STORE;
+				if (expand_done_ExpandA)
+					state <= S_S1_NTT_ACK;
 				else
 					state <= S_STORE;
+			end
+			S_S1_NTT_ACK : begin
+				if (ready == 1'b0 && request == 1'b1)
+					state <= S_S1_NTT;
+				else 
+					state <= S_S1_NTT_ACK;
+			end
+			S_S1_NTT : begin
+				if (r_VectorS_Coeff_addr > 0 && r_VectorS_Coeff_addr[5 : 0] == 0)  // r_VectorS_Coeff_addr % 64 == 0
+					state <= S_S1_NTT_WAIT;
+				else 
+					state <= S_S1_NTT;
+			end
+			S_S1_NTT_WAIT : begin
+				if (con_coeff_cnt[5 : 0] == 'd63) begin
+					if (con_coeff_cnt == `l * 64 - 1)
+						state <= S_T_INTT;
+					else 
+						state <= S_S1_NTT_ACK;
+				end
+				else 
+					state <= S_S1_NTT_WAIT;
+			end
+			default : begin
+				state <= S_IDLE;
 			end
 		endcase
 	end
@@ -356,6 +434,9 @@ always_ff @(posedge clk) begin
 		state_d <= state;
 end
 
+// --------------------------------
+// 扩展模块
+// --------------------------------
 
 assign rho_ExpandA = {<<8{seed_expand[1023 : 768]}};
 ExpandA u_ExpandA(
@@ -407,9 +488,139 @@ ExpandS u_ExpandS(
 	.st_64bit_valid 	( st_64bit_valid_ExpandS  )
 );
 
+// --------------------------------
+// 存储模块
+// --------------------------------
+
 assign coeff_rho_ExpandA = coeff_ExpandA;
 assign coeff_valid_rho_ExpandA = coeff_valid_ExpandA;
 assign coeff_rho_ExpandS = coeff_raw;
 assign coeff_valid_rho_ExpandS = coeff_valid_ExpandS;
+
+assign w_MatrixA_Coeff = coeff_ExpandA;
+assign w_MatrixA_Coeff_valid = coeff_valid_ExpandA;
+
+assign w_VectorS_Coeff = coeff_raw;
+assign w_VectorS_Coeff_valid = coeff_valid_ExpandS;
+
+always_ff @(posedge clk) begin
+	if (!rstn) begin
+		w_MatrixA_Coeff_addr <= 'd0;
+		w_VectorS_Coeff_addr <= 'd0;
+	end
+	else begin
+		if (w_MatrixA_Coeff_valid)
+			w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr + 1'b1;
+		else
+			w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr;
+		if (w_VectorS_Coeff_valid) 
+			w_VectorS_Coeff_addr <= w_VectorS_Coeff_addr + 1'b1;
+		else
+			w_VectorS_Coeff_addr <= w_VectorS_Coeff_addr;
+	end
+end
+
+//* 后面记得放顶层
+CoeffBlockRAM u_CoeffBlockRAM(
+	.clk                   	( clk                    ),
+	.w_MatrixA_Coeff       	( w_MatrixA_Coeff        ),
+	.w_MatrixA_Coeff_valid 	( w_MatrixA_Coeff_valid  ),
+	.w_MatrixA_Coeff_addr  	( w_MatrixA_Coeff_addr   ),
+	.r_MatrixA_Coeff       	( r_MatrixA_Coeff        ),
+	.r_MatrixA_Coeff_addr  	( r_MatrixA_Coeff_addr   ),
+	.w_VectorS_Coeff       	( w_VectorS_Coeff        ),
+	.w_VectorS_Coeff_valid 	( w_VectorS_Coeff_valid  ),
+	.w_VectorS_Coeff_addr  	( w_VectorS_Coeff_addr   ),
+	.r_VectorS_Coeff       	( r_VectorS_Coeff        ),
+	.r_VectorS_Coeff_addr  	( r_VectorS_Coeff_addr   ),
+	.w_VectorY_Coeff       	( w_VectorY_Coeff        ),
+	.w_VectorY_Coeff_valid 	( w_VectorY_Coeff_valid  ),
+	.w_VectorY_Coeff_addr  	( w_VectorY_Coeff_addr   ),
+	.r_VectorY_Coeff       	( r_VectorY_Coeff        ),
+	.r_VectorY_Coeff_addr  	( r_VectorY_Coeff_addr   ),
+	.w_VectorT_Coeff       	( w_VectorT_Coeff        ),
+	.w_VectorT_Coeff_valid 	( w_VectorT_Coeff_valid  ),
+	.w_VectorT_Coeff_addr  	( w_VectorT_Coeff_addr   ),
+	.r_VectorT_Coeff       	( r_VectorT_Coeff        ),
+	.r_VectorT_Coeff_addr  	( r_VectorT_Coeff_addr   )
+);
+
+// --------------------------------
+// NTT/INTT模块
+// --------------------------------
+
+always_ff @(posedge clk) begin
+	if (!rstn)
+		request <= 1'b0;
+	else if (state == S_S1_NTT_ACK) begin
+		if (ready)
+			request <= 1'b1;
+		else 
+			request <= 1'b0;
+	end
+	else 
+		request <= 1'b0;
+end
+
+assign mode_config = (state == S_S1_NTT || state == S_S1_NTT_WAIT) ? 1'b0 : 1'b1;
+
+always_ff @(posedge clk) begin
+	if (!rstn) begin
+		r_VectorS_Coeff_addr <= 'd0;
+		ori_coeff_valid <= 1'b0;
+	end
+	else if (state == S_S1_NTT) begin
+		if (r_VectorS_Coeff_addr == `l * 64) begin
+			r_VectorS_Coeff_addr <= 'd0;
+			ori_coeff_valid <= 1'b0;
+		end
+		else if (r_VectorS_Coeff_addr > 0 && r_VectorS_Coeff_addr[5 : 0] == 0) begin
+			r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr;
+			ori_coeff_valid <= 1'b0;
+		end
+		else begin
+			r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr + 1'b1;
+			ori_coeff_valid <= 1'b1;
+		end
+	end
+	else if (ready == 1'b0 && request == 1'b1) begin
+		r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr + 1'b1;
+		ori_coeff_valid <= 1'b1;
+	end
+	else begin
+		r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr;
+		ori_coeff_valid <= 1'b0;
+	end
+end
+assign ori_coeff = r_VectorS_Coeff;
+
+always_ff @(posedge clk) begin
+	if (!rstn)
+		con_coeff_cnt <= 'd0;
+	else if (con_coeff_valid) begin
+		if (con_coeff_cnt == `l * 64 - 1)
+			con_coeff_cnt <= 'd0;
+		else
+			con_coeff_cnt <= con_coeff_cnt + 1'b1;
+	end
+	else 
+		con_coeff_cnt <= con_coeff_cnt;
+end
+
+//* 后面记得放顶层
+Poly_PAU u_Poly_PAU(
+	.clk                 	( clk                  ),
+	.rstn                	( rstn                 ),
+	.ori_coeff           	( ori_coeff            ),
+	.ori_coeff_valid     	( ori_coeff_valid      ),
+	.request             	( request              ),
+	.ext_operand         	( ext_operand          ),
+	.ext_operand_request 	( ext_operand_request  ),
+	.mode_config         	( mode_config          ),
+	.ready               	( ready                ),
+	.con_coeff           	( con_coeff            ),
+	.con_coeff_valid     	( con_coeff_valid      )
+);
+
 
 endmodule

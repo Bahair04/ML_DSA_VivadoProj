@@ -1,0 +1,42 @@
+# compile verilog/system verilog design source files
+verilog fifo_generator_v13_2_5  \
+"../../../../proj.ip_user_files/ipstatic/simulation/fifo_generator_vlog_beh.v" \
+"../../../../proj.ip_user_files/ipstatic/hdl/fifo_generator_v13_2_rfs.v" \
+
+verilog xil_defaultlib  \
+"../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
+"../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
+"../../../../proj.gen/sources_1/ip/ExpandS_sipo_1/sim/ExpandS_sipo_1.v" \
+"../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
+
+sv xil_defaultlib  \
+"../../../../user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv" \
+"../../../../user/src/Polynomials/RTL/DSP_MultPipe.sv" \
+"../../../../user/src/Sampler/RTL/ExpandA.sv" \
+"../../../../user/src/Sampler/RTL/ExpandA_sipo96.sv" \
+"../../../../user/src/Sampler/RTL/ExpandS.sv" \
+"../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/MatrixA.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleAdd.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleDiv2.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleMult.sv" \
+"../../../../user/src/Polynomials/RTL/ModuleSub.sv" \
+"../../../../user/src/Polynomials/RTL/NTT_BU.sv" \
+"../../../../user/src/Polynomials/RTL/Poly_PAU.sv" \
+"../../../../user/src/Polynomials/RTL/ReconfigCompute.sv" \
+"../../../../user/src/Polynomials/RTL/ReconfigComputeUnit.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/VectorS.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/VectorT.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/VectorY.sv" \
+"../../../../user/src/Polynomials/RTL/ZetaRomAddrGen.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/inferred_bram.sv" \
+"../../../../user/src/Hash/RTL/keccak.sv" \
+"../../../../user/src/keygen/RTL/keygen_internal.sv" \
+"../../../../user/src/Hash/RTL/sha3.sv" \
+"../../../../user/src/keygen/SIM/tb_keygen_interval.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
