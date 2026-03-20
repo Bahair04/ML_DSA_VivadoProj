@@ -59,11 +59,54 @@ end
 
 initial begin
     repeat (60) @(posedge clk);
-    zeta <= 256'h8691a380d927dad25b905f78ca3ee32dd665ae54237846938386ad913fd0a9dd;
+    zeta <= 256'hb5e76cd5fadc562bda2f7df47708506579434a132b6adfa44dc0cafb79143056;
     start <= 1'b1;
     @(posedge clk);
     start <= 1'b0;
     @(posedge done);
+    $finish;
+end
+
+integer fid;
+initial begin
+    fid = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/output/tb_ExpandA_output.txt", "w");
+end
+
+integer i = 0;
+always_ff @(posedge clk) begin
+    if (keygen_internal.coeff_valid_ExpandA) begin
+        $fwrite(fid, "%d : %d\t%d\t%d\t%d\t\n", i, keygen_internal.coeff_ExpandA[22 : 0], 
+        keygen_internal.coeff_ExpandA[45: 23], keygen_internal.coeff_ExpandA[68 : 46], 
+        keygen_internal.coeff_ExpandA[91 : 69]);
+        i = i + 1;
+    end
+end
+
+integer fid1;
+initial begin
+    fid1 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/output/tb_ExpandS_output.txt", "w");
+    $fwrite(fid1, "[");
+end
+
+integer i1 = 0;
+always_ff @(posedge clk) begin
+    if (keygen_internal.coeff_valid_ExpandS) begin
+        $fwrite(fid1, "%0d, %0d, %0d, %0d", 
+                        $signed(keygen_internal.coeff_raw[3 : 0]),
+                        $signed(keygen_internal.coeff_raw[7 : 4]),
+                        $signed(keygen_internal.coeff_raw[11 : 8]),
+                        $signed(keygen_internal.coeff_raw[15 : 12])
+                        );
+                        // $signed(keygen_internal.coeff_ExpandS[22 : 0] > 1000 ? keygen_internal.coeff_ExpandS[22 : 0] - `q : keygen_internal.coeff_ExpandS[22 : 0]), 
+                        // $signed(keygen_internal.coeff_ExpandS[45: 23] > 1000 ? keygen_internal.coeff_ExpandS[45: 23] - `q : keygen_internal.coeff_ExpandS[45: 23]), 
+                        // $signed(keygen_internal.coeff_ExpandS[68 : 46] > 1000 ? keygen_internal.coeff_ExpandS[68 : 46] - `q : keygen_internal.coeff_ExpandS[68 : 46]), 
+                        // $signed(keygen_internal.coeff_ExpandS[91 : 69] > 1000 ? keygen_internal.coeff_ExpandS[91 : 69] - `q : keygen_internal.coeff_ExpandS[91 : 69]));
+        i1 = i1 + 1;
+        if (i1 % 64 == 0)
+            $fwrite(fid1, "]\n\n[");
+        else 
+            $fwrite(fid1, ", ");
+    end
 end
 
 keygen_internal  u_keygen_internal (

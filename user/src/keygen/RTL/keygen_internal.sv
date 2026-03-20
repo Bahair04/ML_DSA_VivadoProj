@@ -154,7 +154,7 @@ always_ff @(posedge clk) begin
 	else if (state == S_INIT) begin
 		dout_seed <= 'd0;
 		dout_valid_seed <= 1'b0;
-		seed_domain_sep <= {zeta, `l, `k};
+		seed_domain_sep <= {zeta, `k, `l};
 		seed_load_cnt <= 'd0;
 	end
 	else if (state == S_LOAD) begin
@@ -234,7 +234,7 @@ always_comb begin
     done_ExpandS = 'd0; done_out_ExpandS = 'd0; st_64bit_ExpandS = 'd0; st_64bit_valid_ExpandS = 'd0;
     done_seed    = 'd0; done_out_seed    = 'd0; st_64bit_seed    = 'd0; st_64bit_valid_seed    = 'd0;
 
-    if (state == S_EXPAND) begin
+    if (state == S_EXPAND || state == S_STORE) begin
         // ==========================================
         // 状态为 EXPAND 时，SHA3-1 分配给 ExpandA
         // ==========================================
@@ -297,6 +297,15 @@ always_comb begin
     end
 end
 
+always_ff @(posedge clk) begin
+	if (!rstn)
+		done <= 1'b0;
+	else if (expand_done_ExpandA)
+		done <= 1'b1;
+	else 
+		done <= 1'b0;
+end
+
 // --------------------------------
 // 状态机
 // --------------------------------
@@ -332,10 +341,9 @@ always_ff @(posedge clk) begin
 			end
 			S_STORE : begin
 				if (done_out_ExpandA)
-					done <= 1'b1;
+					state <= S_STORE;
 				else
-					done <= 1'b0;
-				state <= S_IDLE;
+					state <= S_STORE;
 			end
 		endcase
 	end
@@ -349,7 +357,7 @@ always_ff @(posedge clk) begin
 end
 
 
-assign rho_ExpandA = seed_expand[1023 : 768];
+assign rho_ExpandA = {<<8{seed_expand[1023 : 768]}};
 ExpandA u_ExpandA(
 	.clk            	( clk             		  ),
 	.rstn           	( rstn            		  ),
@@ -373,7 +381,7 @@ ExpandA u_ExpandA(
 	.st_64bit_valid 	( st_64bit_valid_ExpandA  )
 );
 
-assign rho_ExpandS = seed_expand[767 : 256];
+assign rho_ExpandS = {<<8{seed_expand[767 : 256]}};
 ExpandS u_ExpandS(
 	.clk            	( clk             		  ),
 	.rstn           	( rstn            		  ),
@@ -383,7 +391,8 @@ ExpandS u_ExpandS(
 	.coeff_valid    	( coeff_valid_ExpandS     ),
 	.expand_done    	( expand_done_ExpandS     ),
 	.nouce				( nouce					  ),
-	.coeff_raw			( coeff_rawcoeff_raw      ),
+	.coeff_raw			( coeff_raw	      		  ),
+
 	.dout           	( dout_ExpandS            ),
 	.dout_valid     	( dout_valid_ExpandS      ),
 	.dout_len       	( dout_len_ExpandS        ),
