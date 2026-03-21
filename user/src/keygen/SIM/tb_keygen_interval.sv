@@ -21,7 +21,7 @@ logic   [63 : 0]    st_64bit2        = 0 ;
 logic               st_64bit_valid2  = 0 ;
 
 // keygen_internal Outputs
-logic               ready            ;
+logic               key_ready            ;
 logic               done             ;
 logic   [7 : 0]     pk               ;
 logic   [7 : 0]     sk               ;
@@ -59,7 +59,7 @@ end
 
 initial begin
     repeat (60) @(posedge clk);
-    zeta <= 256'hb5e76cd5fadc562bda2f7df47708506579434a132b6adfa44dc0cafb79143056;
+    zeta <= 256'h4d365dce0ab23f3e5f7904870b35be6db993df7daf8967ecafcf73ac95e9eb20;
     start <= 1'b1;
     @(posedge clk);
     start <= 1'b0;
@@ -131,7 +131,7 @@ keygen_internal  u_keygen_internal (
     .st_64bit2                ( st_64bit2                 ),
     .st_64bit_valid2          ( st_64bit_valid2           ),
 
-    .ready                    ( ready                     ),
+    .key_ready                ( key_ready                 ),
     .done                     ( done                      ),
     .pk                       ( pk                        ),
     .sk                       ( sk                        ),

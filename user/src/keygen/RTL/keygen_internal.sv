@@ -6,7 +6,7 @@ module keygen_internal(
 
 	// --- 控制标志位 ---
     input       logic               start,      // 启动标志
-    output      logic               ready,		// 准备标志
+    output      logic               key_ready,		// 准备标志
 	output		logic				done,		// 完成标志
 
 	// --- 输入输出数据 ---
@@ -178,11 +178,11 @@ logic			[7 : 0]				con_coeff_cnt;				// 输出系数计数器(共 256 个)
 
 always_ff @(posedge clk) begin
 	if (!rstn)
-		ready <= 1'b1;
+		key_ready <= 1'b1;
 	else if (state == S_IDLE)
-		ready <= 1'b1;
+		key_ready <= 1'b1;
 	else 
-		ready <= 1'b0;
+		key_ready <= 1'b0;
 end
 
 assign out_len_seed = 'd128;
@@ -369,7 +369,7 @@ always_ff @(posedge clk) begin
 	else begin
 		case (state)
 			S_IDLE : begin
-				if (start && ready)
+				if (start && key_ready)
 					state <= S_INIT;
 				else 
 					state <= S_IDLE;
