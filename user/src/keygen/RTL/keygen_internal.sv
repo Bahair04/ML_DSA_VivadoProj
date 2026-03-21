@@ -131,33 +131,40 @@ logic               				st_64bit_valid_ExpandS; // SHA3 挤出8字节数据有效信号
 
 // --- CoeffBlockRAM ---
 
+localparam							K = `k;
 // --- Matrix A ---
 logic           [91 : 0]    		w_MatrixA_Coeff;
 logic                       		w_MatrixA_Coeff_valid;
 logic           [11 : 0]    		w_MatrixA_Coeff_addr;
-logic           [91 : 0]    		r_MatrixA_Coeff;
-logic           [11 : 0]    		r_MatrixA_Coeff_addr;
+logic           [91 : 0]    		r_MatrixA_Coeff [0 : K - 1];
+logic           [8 : 0]     		r_MatrixA_Coeff_addr [0 : K - 1];
 
 // --- Vector S ---
-logic   signed  [15 : 0]    		w_VectorS_Coeff;            // 4*4bit有符号数
-logic                       		w_VectorS_Coeff_valid;
-logic           [9 : 0]     		w_VectorS_Coeff_addr;       // S1 [0 : 7*64-1] S2 [7*64 : 15*64-1]
-logic           [91 : 0]    		r_VectorS_Coeff;            // 对q取模 无符号
-logic           [9 : 0]     		r_VectorS_Coeff_addr;
+logic   signed  [15 : 0]    		w_VectorS1_Coeff;            		// 4*4bit有符号数
+logic                       		w_VectorS1_Coeff_valid;
+logic           [8 : 0]     		w_VectorS1_Coeff_addr;
+logic           [91 : 0]    		r_VectorS1_Coeff;            		// 对q取模 无符号
+logic           [8 : 0]     		r_VectorS1_Coeff_addr;
+
+logic   signed  [15 : 0]    		w_VectorS2_Coeff;   				// 4*4bit有符号数
+logic                       		w_VectorS2_Coeff_valid;
+logic           [8 : 0]     		w_VectorS2_Coeff_addr;
+logic           [91 : 0]    		r_VectorS2_Coeff [0 : K - 1];     	// 对q取模 无符号
+logic           [5 : 0]     		r_VectorS2_Coeff_addr [0 : K - 1];
 
 // --- Vector Y ---
-logic   signed  [79 : 0]    		w_VectorY_Coeff;            // 4*20bit有符号数
+logic   signed  [79 : 0]    		w_VectorY_Coeff;            		// 4*20bit有符号数
 logic                       		w_VectorY_Coeff_valid;
 logic           [5 : 0]     		w_VectorY_Coeff_addr;
-logic           [91 : 0]    		r_VectorY_Coeff;            // 对q取模 无符号
+logic           [91 : 0]    		r_VectorY_Coeff;            		// 对q取模 无符号
 logic           [5 : 0]     		r_VectorY_Coeff_addr;
 
 // --- Vector T ---
-logic           [91 : 0]    		w_VectorT_Coeff;
-logic                       		w_VectorT_Coeff_valid;
-logic           [8 : 0]     		w_VectorT_Coeff_addr;
-logic           [91 : 0]    		r_VectorT_Coeff;
-logic           [8 : 0]     		r_VectorT_Coeff_addr;
+logic           [91 : 0]    		w_VectorT_Coeff [0 : K - 1];
+logic                       		w_VectorT_Coeff_valid [0 : K - 1];
+logic           [5 : 0]     		w_VectorT_Coeff_addr [0 : K - 1];
+logic           [91 : 0]    		r_VectorT_Coeff [0 : K - 1];
+logic           [5 : 0]     		r_VectorT_Coeff_addr [0 : K - 1];
 
 // --- Poly_PAU ---
 
@@ -405,7 +412,7 @@ always_ff @(posedge clk) begin
 					state <= S_S1_NTT_ACK;
 			end
 			S_S1_NTT : begin
-				if (r_VectorS_Coeff_addr > 0 && r_VectorS_Coeff_addr[5 : 0] == 0)  // r_VectorS_Coeff_addr % 64 == 0
+				if (r_VectorS1_Coeff_addr > 0 && r_VectorS1_Coeff_addr[5 : 0] == 0)  // r_VectorS1_Coeff_addr % 64 == 0
 					state <= S_S1_NTT_WAIT;
 				else 
 					state <= S_S1_NTT;
@@ -500,49 +507,79 @@ assign coeff_valid_rho_ExpandS = coeff_valid_ExpandS;
 assign w_MatrixA_Coeff = coeff_ExpandA;
 assign w_MatrixA_Coeff_valid = coeff_valid_ExpandA;
 
-assign w_VectorS_Coeff = coeff_raw;
-assign w_VectorS_Coeff_valid = coeff_valid_ExpandS;
+assign w_VectorS1_Coeff = coeff_raw;
+assign w_VectorS1_Coeff_valid = coeff_valid_ExpandS & (nouce <= `l - 1);
+
+assign w_VectorS2_Coeff = coeff_raw;
+assign w_VectorS2_Coeff_valid = coeff_valid_ExpandS & (nouce > `l - 1);
 
 always_ff @(posedge clk) begin
 	if (!rstn) begin
 		w_MatrixA_Coeff_addr <= 'd0;
-		w_VectorS_Coeff_addr <= 'd0;
+		w_VectorS1_Coeff_addr <= 'd0;
+		w_VectorS2_Coeff_addr <= 'd0;
 	end
 	else begin
 		if (w_MatrixA_Coeff_valid)
 			w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr + 1'b1;
 		else
 			w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr;
-		if (w_VectorS_Coeff_valid) 
-			w_VectorS_Coeff_addr <= w_VectorS_Coeff_addr + 1'b1;
+		if (w_VectorS1_Coeff_valid) 
+			w_VectorS1_Coeff_addr <= w_VectorS1_Coeff_addr + 1'b1;
 		else
-			w_VectorS_Coeff_addr <= w_VectorS_Coeff_addr;
+			w_VectorS1_Coeff_addr <= w_VectorS1_Coeff_addr;
+		if (w_VectorS2_Coeff_valid) 
+			w_VectorS2_Coeff_addr <= w_VectorS2_Coeff_addr + 1'b1;
+		else
+			w_VectorS2_Coeff_addr <= w_VectorS2_Coeff_addr;
 	end
 end
 
 //* 后面记得放顶层
-CoeffBlockRAM u_CoeffBlockRAM(
-	.clk                   	( clk                    ),
-	.w_MatrixA_Coeff       	( w_MatrixA_Coeff        ),
-	.w_MatrixA_Coeff_valid 	( w_MatrixA_Coeff_valid  ),
-	.w_MatrixA_Coeff_addr  	( w_MatrixA_Coeff_addr   ),
-	.r_MatrixA_Coeff       	( r_MatrixA_Coeff        ),
-	.r_MatrixA_Coeff_addr  	( r_MatrixA_Coeff_addr   ),
-	.w_VectorS_Coeff       	( w_VectorS_Coeff        ),
-	.w_VectorS_Coeff_valid 	( w_VectorS_Coeff_valid  ),
-	.w_VectorS_Coeff_addr  	( w_VectorS_Coeff_addr   ),
-	.r_VectorS_Coeff       	( r_VectorS_Coeff        ),
-	.r_VectorS_Coeff_addr  	( r_VectorS_Coeff_addr   ),
-	.w_VectorY_Coeff       	( w_VectorY_Coeff        ),
-	.w_VectorY_Coeff_valid 	( w_VectorY_Coeff_valid  ),
-	.w_VectorY_Coeff_addr  	( w_VectorY_Coeff_addr   ),
-	.r_VectorY_Coeff       	( r_VectorY_Coeff        ),
-	.r_VectorY_Coeff_addr  	( r_VectorY_Coeff_addr   ),
-	.w_VectorT_Coeff       	( w_VectorT_Coeff        ),
-	.w_VectorT_Coeff_valid 	( w_VectorT_Coeff_valid  ),
-	.w_VectorT_Coeff_addr  	( w_VectorT_Coeff_addr   ),
-	.r_VectorT_Coeff       	( r_VectorT_Coeff        ),
-	.r_VectorT_Coeff_addr  	( r_VectorT_Coeff_addr   )
+
+CoeffBlockRAM #(
+	.K 	( K  )
+)u_CoeffBlockRAM(
+    // --- 时钟和复位信号 ---
+    .clk							(clk						),
+
+    // --- Matrix A ---
+    .w_MatrixA_Coeff				(w_MatrixA_Coeff			),
+    .w_MatrixA_Coeff_valid			(w_MatrixA_Coeff_valid		),
+    .w_MatrixA_Coeff_addr			(w_MatrixA_Coeff_addr		),
+
+    .r_MatrixA_Coeff				(r_MatrixA_Coeff			),
+    .r_MatrixA_Coeff_addr			(r_MatrixA_Coeff_addr		),
+
+    // --- Vector S ---
+    .w_VectorS1_Coeff				(w_VectorS1_Coeff			),            	// 4*4bit有符号数
+    .w_VectorS1_Coeff_valid			(w_VectorS1_Coeff_valid		),
+    .w_VectorS1_Coeff_addr			(w_VectorS1_Coeff_addr		),
+
+    .r_VectorS1_Coeff				(r_VectorS1_Coeff			),            	// 对q取模 无符号
+    .r_VectorS1_Coeff_addr			(r_VectorS1_Coeff_addr		),
+
+    .w_VectorS2_Coeff				(w_VectorS2_Coeff			),            	// 4*4bit有符号数
+    .w_VectorS2_Coeff_valid			(w_VectorS2_Coeff_valid		),
+    .w_VectorS2_Coeff_addr			(w_VectorS2_Coeff_addr		),
+
+    .r_VectorS2_Coeff				(r_VectorS2_Coeff			),          	// 对q取模 无符号
+    .r_VectorS2_Coeff_addr			(r_VectorS2_Coeff_addr		),
+
+    // --- Vector Y ---
+    .w_VectorY_Coeff				(w_VectorY_Coeff			),            	// 4*20bit有符号数
+    .w_VectorY_Coeff_valid			(w_VectorY_Coeff_valid		),
+    .w_VectorY_Coeff_addr			(w_VectorY_Coeff_addr		),
+    .r_VectorY_Coeff				(r_VectorY_Coeff			),            	// 对q取模 无符号
+    .r_VectorY_Coeff_addr			(r_VectorY_Coeff_addr		),
+
+    // --- Vector T ---
+    .w_VectorT_Coeff				(w_VectorT_Coeff			),
+    .w_VectorT_Coeff_valid			(w_VectorT_Coeff_valid		),
+    .w_VectorT_Coeff_addr			(w_VectorT_Coeff_addr		),
+
+    .r_VectorT_Coeff				(r_VectorT_Coeff			),
+    .r_VectorT_Coeff_addr			(r_VectorT_Coeff_addr		)
 );
 
 // --------------------------------
@@ -566,33 +603,33 @@ assign mode_config = (state == S_S1_NTT || state == S_S1_NTT_WAIT) ? 1'b0 : 1'b1
 
 always_ff @(posedge clk) begin
 	if (!rstn) begin
-		r_VectorS_Coeff_addr <= 'd0;
+		r_VectorS1_Coeff_addr <= 'd0;
 		ori_coeff_valid <= 1'b0;
 	end
 	else if (state == S_S1_NTT) begin
-		if (r_VectorS_Coeff_addr == `l * 64) begin
-			r_VectorS_Coeff_addr <= 'd0;
+		if (r_VectorS1_Coeff_addr == `l * 64) begin
+			r_VectorS1_Coeff_addr <= 'd0;
 			ori_coeff_valid <= 1'b0;
 		end
-		else if (r_VectorS_Coeff_addr > 0 && r_VectorS_Coeff_addr[5 : 0] == 0) begin
-			r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr;
+		else if (r_VectorS1_Coeff_addr > 0 && r_VectorS1_Coeff_addr[5 : 0] == 0) begin
+			r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr;
 			ori_coeff_valid <= 1'b0;
 		end
 		else begin
-			r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr + 1'b1;
+			r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
 			ori_coeff_valid <= 1'b1;
 		end
 	end
 	else if (ready == 1'b0 && request == 1'b1) begin
-		r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr + 1'b1;
+		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
 		ori_coeff_valid <= 1'b1;
 	end
 	else begin
-		r_VectorS_Coeff_addr <= r_VectorS_Coeff_addr;
+		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr;
 		ori_coeff_valid <= 1'b0;
 	end
 end
-assign ori_coeff = r_VectorS_Coeff;
+assign ori_coeff = r_VectorS1_Coeff;
 
 always_ff @(posedge clk) begin
 	if (!rstn)

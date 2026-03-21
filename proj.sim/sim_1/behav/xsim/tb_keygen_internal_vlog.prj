@@ -25,7 +25,8 @@ sv xil_defaultlib  \
 "../../../../user/src/Polynomials/RTL/Poly_PAU.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigCompute.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigComputeUnit.sv" \
-"../../../../user/src/CoeffBlockRAM/RTL/VectorS.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/VectorS1.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/VectorS2.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorT.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorY.sv" \
 "../../../../user/src/Polynomials/RTL/ZetaRomAddrGen.sv" \

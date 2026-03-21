@@ -15,9 +15,9 @@ localparam                  			DATA_WIDTH = 'd16;
 logic   signed  [DATA_WIDTH - 1 : 0] 	rd_data;
 
 inferred_bram #(
-	.DEPTH      	( 960               ),
-	.ADDR_WIDTH 	( 10                ),
-	.DATA_WIDTH 	( DATA_WIDTH        ))
+	.DEPTH      	( 960               ),              // (k+l)维向量 共(k+l)*256个系数 每个地址存4个系数 共960个地址 (按k最大8，l最大7来计算)
+	.ADDR_WIDTH 	( 10                ),              // 地址线宽：log2(960) = 10
+	.DATA_WIDTH 	( DATA_WIDTH        ))              // 数据线宽：16 bit
 u_inferred_bram(
 	.clk     	( clk                       ),
 	.we      	( w_VectorS_Coeff_valid     ),
