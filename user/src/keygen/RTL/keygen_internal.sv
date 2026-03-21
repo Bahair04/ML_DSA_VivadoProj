@@ -61,9 +61,12 @@ typedef enum logic [4 : 0] {
 	S_STORE,			// 获得矩阵 A 和向量 S 并存入存储空间
 	S_S1_NTT_ACK, 		// 当前模块与 Poly_PAU 模块的握手状态
 	S_S1_NTT,			// 从存储空间中获得一组 S（256个系数） 存入 Poly_PAU 当中 并启动 NTT 转换
-	S_S1_NTT_WAIT,		// 等待 NTT 转换完成 输出 64 个 92bits数据 (共256个系数)
-	S_VECTOR_MULT,   	// 从存储空间中获得一组 A (256个系数，已在 NTT 空间) 与 向量 S 相乘 相同系数相累加 获得 T (256个系数 NTT空间) 
-	S_T_INTT,			// 获得 T 并启动 INTT
+	S_S1_NTT_WAIT,		// 等待 NTT 转换完成 输出 64 个 92bits数据 (共 `l * 64 个系数)
+	S_MATRIX_MULT_WAIT, // 等待矩阵乘法完成 因为 ModuleMAC有 8 级流水线延迟 所以在 S_S1_NTT_WAIT 状态转到 S_MATRIX_MULT_WAIT 后 还要等待
+						// (7-1=)6个时钟周期才能到 S_T_INTT 状态 以开始注入 T 向量 并进行 INTT 变换
+	S_T_INTT_ACK,		// 当前模块与 Poly_PAU 模块的握手状态
+	S_T_INTT,			// 从存储空间中获得一组 T（256个系数） 存入 Poly_PAU 当中 并启动 INTT 变换
+	S_T_INTT_WAIT,		// 等待 INTT 转换完成 输出 64 个 92bits数据 (共 `k * 64 个系数)
 	S_T_ADD_S2			// 在系数与 T + S2 获得最终的 T 同时给到 power_2_bound 获得 t0 和 t1
 } state_t;
 state_t 							state, state_d;
@@ -132,6 +135,8 @@ logic               				st_64bit_valid_ExpandS; // SHA3 挤出8字节数据有效信号
 // --- CoeffBlockRAM ---
 
 localparam							K = `k;
+localparam							L = `l;
+
 // --- Matrix A ---
 logic           [91 : 0]    		w_MatrixA_Coeff;
 logic                       		w_MatrixA_Coeff_valid;
@@ -162,9 +167,12 @@ logic           [5 : 0]     		r_VectorY_Coeff_addr;
 // --- Vector T ---
 logic           [91 : 0]    		w_VectorT_Coeff [0 : K - 1];
 logic                       		w_VectorT_Coeff_valid [0 : K - 1];
+logic								w_VectorT_Coeff_valid_d;
 logic           [5 : 0]     		w_VectorT_Coeff_addr [0 : K - 1];
 logic           [91 : 0]    		r_VectorT_Coeff [0 : K - 1];
 logic           [5 : 0]     		r_VectorT_Coeff_addr [0 : K - 1];
+
+logic			[8 : 0]				r_VectorT_Coeff_addr_INTT;
 
 // --- Poly_PAU ---
 
@@ -181,7 +189,7 @@ logic                   			ready;              		// 下游准备信号
 logic   		[91 : 0]        	con_coeff;
 logic                   			con_coeff_valid;
 
-logic			[7 : 0]				con_coeff_cnt;				// 输出系数计数器(共 256 个)
+logic			[8 : 0]				con_coeff_cnt;				// 输出系数计数器(共 `l*256/4 个con_coeff, 一个con_coeff包含4个系数)
 
 always_ff @(posedge clk) begin
 	if (!rstn)
@@ -420,12 +428,33 @@ always_ff @(posedge clk) begin
 			S_S1_NTT_WAIT : begin
 				if (con_coeff_cnt[5 : 0] == 'd63) begin
 					if (con_coeff_cnt == `l * 64 - 1)
-						state <= S_T_INTT;
+						state <= S_MATRIX_MULT_WAIT;
 					else 
 						state <= S_S1_NTT_ACK;
 				end
 				else 
 					state <= S_S1_NTT_WAIT;
+			end
+			S_MATRIX_MULT_WAIT : begin
+				if (w_VectorT_Coeff_valid_d && !w_VectorT_Coeff_valid[0])
+					state <= S_T_INTT_ACK;
+				else 
+					state <= S_MATRIX_MULT_WAIT;
+			end
+			S_T_INTT_ACK : begin
+				if (ready == 1'b0 && request == 1'b1)
+					state <= S_T_INTT;
+				else 
+					state <= S_T_INTT_ACK;
+			end
+			S_T_INTT : begin
+				if (r_VectorT_Coeff_addr_INTT > 0 && r_VectorT_Coeff_addr_INTT[5 : 0] == 0)  // r_VectorT_Coeff_addr % 64 == 0
+					state <= S_T_INTT_WAIT;
+				else 
+					state <= S_T_INTT;
+			end
+			S_T_INTT_WAIT : begin
+				
 			end
 			default : begin
 				state <= S_IDLE;
@@ -535,10 +564,117 @@ always_ff @(posedge clk) begin
 	end
 end
 
+always_comb begin : matrix_mult_read_control
+	for (int i = 0 ; i < K ; i = i + 1) begin
+		r_MatrixA_Coeff_addr[i] = 'd0;
+		r_VectorT_Coeff_addr[i] = 'd0;
+	end
+	if (con_coeff_valid) begin
+		for (int i = 0 ; i < K ; i = i + 1) begin
+			r_MatrixA_Coeff_addr[i] = con_coeff_cnt;
+			r_VectorT_Coeff_addr[i] = con_coeff_cnt[5 : 0];
+		end
+	end
+end
+
+logic			[91 : 0]			con_coeff_d;
+logic								con_coeff_valid_d;
+logic   		[22 : 0]            conv [0 : 3];
+assign conv[0] = con_coeff_d[22 : 0];
+assign conv[1] = con_coeff_d[45: 23];
+assign conv[2] = con_coeff_d[68 : 46];
+assign conv[3] = con_coeff_d[91 : 69];
+always_ff @(posedge clk) begin 
+	if (!rstn) begin
+		con_coeff_d <= 'd0;
+		con_coeff_valid_d <= 1'b0;
+	end
+	else begin
+		con_coeff_d <= con_coeff;
+		con_coeff_valid_d <= con_coeff_valid;
+	end
+end
+
+//* 7-latency
+logic								valid_out [0 : K - 1] [0 : 3];
+generate
+	for (genvar i = 0 ; i < K ; i = i + 1) begin : row_mac_inst
+		wire 	[91 : 0] 	data1 = r_MatrixA_Coeff[i];
+		wire	[91 : 0]	data2 = r_VectorT_Coeff[i];
+		wire	[91 : 0]	row_data_out;
+		for (genvar j = 0 ; j < 4 ; j = j + 1) begin : col_mac_inst
+			wire	[22 : 0]	matrix_a = data1[23 * j +: 23];
+			wire	[22 : 0]	ori_t = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 23'd0 : data2[23 * j +: 23];
+			wire	[22 : 0]	mac_out;
+			ModuleMAC u_ModuleMAC(
+				.clk       	( clk        							),
+				.rstn      	( rstn       							),
+				.valid_in  	( con_coeff_valid_d						),
+				.data_in1  	( matrix_a   							),
+				.data_in2  	( conv[j]   							),
+				.data_in3  	( ori_t 								),
+				.valid_out 	( valid_out[i][j]	  					),
+				.data_out  	( mac_out  								)
+			);
+			assign row_data_out[23 * j +: 23] = mac_out;
+		end
+		assign w_VectorT_Coeff[i] = row_data_out;
+	end
+endgenerate
+
+always_comb begin
+	for (int i = 0 ; i < K ; i = i + 1) 
+		w_VectorT_Coeff_valid[i] = valid_out[i][0];
+end
+
+always_ff @(posedge clk) begin
+	if (!rstn)
+		w_VectorT_Coeff_valid_d <= 1'b0;
+	else 
+		w_VectorT_Coeff_valid_d <= w_VectorT_Coeff_valid[0];
+end
+
+always_ff @(posedge clk) begin : vector_t_write_control
+	if (!rstn) begin
+		for (int i = 0 ; i < K ; i = i + 1)
+			w_VectorT_Coeff_addr[i] <= 'd0;
+	end
+	else if (w_VectorT_Coeff_valid[0]) begin
+		for (int i = 0 ; i < K ; i = i + 1) begin
+			if (w_VectorT_Coeff_addr[i] == 'd63)
+				w_VectorT_Coeff_addr[i] <= 'd0;
+			else
+				w_VectorT_Coeff_addr[i] <= w_VectorT_Coeff_addr[i] + 1'b1;
+		end
+	end
+	else begin
+		for (int i = 0 ; i < K ; i = i + 1)
+			w_VectorT_Coeff_addr[i] <= w_VectorT_Coeff_addr[i];
+	end
+end
+
+always_ff @(posedge clk) begin
+	if (!rstn) 
+		r_VectorT_Coeff_addr_INTT <= 'd0;
+	else if (state == S_T_INTT) begin
+		if (r_VectorT_Coeff_addr_INTT == `l * 64) 
+			r_VectorT_Coeff_addr_INTT <= 'd0;
+		else if (r_VectorT_Coeff_addr_INTT > 0 && r_VectorT_Coeff_addr_INTT[5 : 0] == 0) 
+			r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT;
+		else 
+			r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT + 1'b1;
+	end
+	else if (ready == 1'b0 && request == 1'b1) 
+		r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT + 1'b1;
+	else 
+		r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT;
+end
+
 //* 后面记得放顶层
 
 CoeffBlockRAM #(
-	.K 	( K  )
+	.K 	( K  ),
+	.L	( L  )
 )u_CoeffBlockRAM(
     // --- 时钟和复位信号 ---
     .clk							(clk						),
@@ -589,7 +725,7 @@ CoeffBlockRAM #(
 always_ff @(posedge clk) begin
 	if (!rstn)
 		request <= 1'b0;
-	else if (state == S_S1_NTT_ACK) begin
+	else if (state == S_S1_NTT_ACK || state == S_T_INTT_ACK) begin
 		if (ready)
 			request <= 1'b1;
 		else 
@@ -602,33 +738,47 @@ end
 assign mode_config = (state == S_S1_NTT || state == S_S1_NTT_WAIT) ? 1'b0 : 1'b1;
 
 always_ff @(posedge clk) begin
-	if (!rstn) begin
+	if (!rstn) 
 		r_VectorS1_Coeff_addr <= 'd0;
-		ori_coeff_valid <= 1'b0;
-	end
 	else if (state == S_S1_NTT) begin
-		if (r_VectorS1_Coeff_addr == `l * 64) begin
+		if (r_VectorS1_Coeff_addr == `l * 64) 
 			r_VectorS1_Coeff_addr <= 'd0;
-			ori_coeff_valid <= 1'b0;
-		end
-		else if (r_VectorS1_Coeff_addr > 0 && r_VectorS1_Coeff_addr[5 : 0] == 0) begin
+		else if (r_VectorS1_Coeff_addr > 0 && r_VectorS1_Coeff_addr[5 : 0] == 0) 
 			r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr;
-			ori_coeff_valid <= 1'b0;
-		end
-		else begin
+		else 
 			r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
-			ori_coeff_valid <= 1'b1;
-		end
 	end
-	else if (ready == 1'b0 && request == 1'b1) begin
+	else if (ready == 1'b0 && request == 1'b1) 
 		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
-		ori_coeff_valid <= 1'b1;
-	end
-	else begin
+	else 
 		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr;
-		ori_coeff_valid <= 1'b0;
-	end
 end
+
+always_ff @(posedge clk) begin
+	if (!rstn) 
+		ori_coeff_valid <= 1'b0;
+	else if (state == S_S1_NTT) begin
+		if (r_VectorS1_Coeff_addr == `l * 64) 
+			ori_coeff_valid <= 1'b0;
+		else if (r_VectorS1_Coeff_addr > 0 && r_VectorS1_Coeff_addr[5 : 0] == 0) 
+			ori_coeff_valid <= 1'b0;
+		else 
+			ori_coeff_valid <= 1'b1;
+	end
+	else if (state == S_T_INTT) begin
+		if (r_VectorT_Coeff_addr_INTT == `l * 64)
+			ori_coeff_valid <= 1'b0;
+		else if (r_VectorT_Coeff_addr_INTT > 0 && r_VectorT_Coeff_addr_INTT[5 : 0] == 0) 
+			ori_coeff_valid <= 1'b0;
+		else 
+			ori_coeff_valid <= 1'b1;
+	end
+	else if (ready == 1'b0 && request == 1'b1) 
+		ori_coeff_valid <= 1'b1;
+	else 
+		ori_coeff_valid <= 1'b0;
+end
+
 assign ori_coeff = r_VectorS1_Coeff;
 
 always_ff @(posedge clk) begin

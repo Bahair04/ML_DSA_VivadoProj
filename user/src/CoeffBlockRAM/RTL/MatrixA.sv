@@ -1,6 +1,7 @@
 `include "../../param_conf.v"
 module MatrixA #(
-	parameter                   K = 8
+	parameter                   K = 8,
+    parameter                   L = 7
 )(
     // --- 时钟和复位信号 ---
     input       logic                   clk,
@@ -21,8 +22,8 @@ generate
         logic                       we;
         logic   [8 : 0]             wr_addr;
 
-        assign we = w_MatrixA_Coeff_valid && (i * 448 <= w_MatrixA_Coeff_addr && w_MatrixA_Coeff_addr < (i + 1) * 448);
-        assign wr_addr = w_MatrixA_Coeff_addr - i * 448;
+        assign we = w_MatrixA_Coeff_valid && (i * (L * 64) <= w_MatrixA_Coeff_addr && w_MatrixA_Coeff_addr < (i + 1) * (L * 64));
+        assign wr_addr = w_MatrixA_Coeff_addr - i * (L * 64);
 
         inferred_bram #(
             .DEPTH          ( 448           ),              // l维行向量 共l*256个系数 每个地址存4个系数 共448个地址 (l最大为7来计算)

@@ -1,6 +1,7 @@
 module CoeffBlockRAM
 #(
-	parameter                   K = 8
+	parameter                   K = 8,
+	parameter					L = 7
 )(
     // --- 时钟和复位信号 ---
     input       logic               clk,
@@ -45,7 +46,8 @@ module CoeffBlockRAM
 );
 
 MatrixA #(
-	.K 	( K  ))
+	.K 	( K  ),
+	.L	( L  ))
 u_MatrixA(
 	.clk                   	( clk                    ),
 	.w_MatrixA_Coeff       	( w_MatrixA_Coeff        ),

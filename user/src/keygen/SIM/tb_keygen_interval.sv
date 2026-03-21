@@ -59,7 +59,7 @@ end
 
 initial begin
     repeat (60) @(posedge clk);
-    zeta <= 256'h4d365dce0ab23f3e5f7904870b35be6db993df7daf8967ecafcf73ac95e9eb20;
+    zeta <= 256'hfc32628c24f9078950e3325f6cab06c7ee1eec4ed7117030065165f6d1d6da00;
     start <= 1'b1;
     @(posedge clk);
     start <= 1'b0;

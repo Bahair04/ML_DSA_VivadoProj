@@ -52,7 +52,7 @@ ModuleAdd u_ModuleAdd(
 	.rstn      	( rstn              ),
 	.valid_in  	( mult_valid_out    ),
 	.data_in1  	( mult_data_out     ),
-	.data_in2  	( data_in3_delay[7] ),
+	.data_in2  	( data_in3_delay[6] ),
 	.valid_out 	( add_valid_out     ),
 	.data_out  	( add_data_out      )
 );
