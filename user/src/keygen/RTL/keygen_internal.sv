@@ -167,7 +167,7 @@ logic           [5 : 0]             r_VectorY_Coeff_addr;
 
 logic           [91 : 0]            w_VectorT_Coeff [0 : K - 1];
 logic                               w_VectorT_Coeff_valid [0 : K - 1];
-logic                               w_VectorT_Coeff_valid_d;
+logic                               w_VectorT_Coeff_valid_d [0 : K - 1];
 logic           [5 : 0]             w_VectorT_Coeff_addr [0 : K - 1];
 logic           [91 : 0]            r_VectorT_Coeff [0 : K - 1];
 logic           [5 : 0]             r_VectorT_Coeff_addr [0 : K - 1];
@@ -198,6 +198,8 @@ logic                               con_coeff_valid_d;
 logic           [22 : 0]            conv [0 : 3];				// 分解 NTT/INTT 输出结果 同时处理四个 每个位宽 23 bit
 logic           [22 : 0]            temp0, temp1, temp2, temp3;	// 临时变量 用于分解观察 T向量 输出结果 同时输出4个23bit系数
 
+// --- ADD 阵列信号 ---
+logic			[22 : 0]			S2 [0 : 3];
 
 // ==========================================================
 // 3. 状态机
@@ -261,7 +263,7 @@ always_ff @(posedge clk) begin
                     state <= S_S1_NTT_WAIT;
             end
             S_MATRIX_MULT_WAIT : begin					// w_VectorT_Coeff_valid为Module_MAC的输出有效信号 如果出现下降沿 则表明 MAC计算结束 进入下一个状态
-                if (w_VectorT_Coeff_valid_d && !w_VectorT_Coeff_valid[0])
+                if (w_VectorT_Coeff_valid_d[0] && !w_VectorT_Coeff_valid[0])
                     state <= S_T_INTT_ACK;
                 else 
                     state <= S_MATRIX_MULT_WAIT;
@@ -613,7 +615,10 @@ always_ff @(posedge clk) begin : vector_t_write_control
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorT_Coeff_addr[i] <= 'd0;
     end
-    else if (w_VectorT_Coeff_valid[0]) begin						// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址
+    else if ((w_VectorT_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT)			// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址
+			|| ((w_VectorT_Coeff_valid[0] || w_VectorT_Coeff_valid[1] || 
+				 w_VectorT_Coeff_valid[2] || w_VectorT_Coeff_valid[3] || 
+				 w_VectorT_Coeff_valid[4]) && state > S_MATRIX_MULT_WAIT)) begin		// 加法阶段 根据ADD的输出有效信号更新存储T的地址
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (w_VectorT_Coeff_addr[i] == 'd63)
                 w_VectorT_Coeff_addr[i] <= 'd0;
@@ -818,8 +823,9 @@ always_ff @(posedge clk) begin
     end
 end
 
-logic valid_out [0 : K - 1] [0 : 3];
-
+// MAC-T = A * NTT(S1) + T
+logic 					valid_out [0 : K - 1] [0 : 3];
+logic	[91 : 0]		mac_out_comb [0 : K - 1];
 generate
     for (genvar i = 0 ; i < K ; i = i + 1) begin : row_mac_inst
         wire    [91 : 0]    data1 = r_MatrixA_Coeff[i];
@@ -843,20 +849,60 @@ generate
             );
             assign row_data_out[23 * j +: 23] = mac_out;
         end
-        assign w_VectorT_Coeff[i] = row_data_out;
+        assign mac_out_comb[i] = row_data_out;
     end
 endgenerate
 
+// Module Add-T = S2 + INTT(T)
+assign S2[0] = r_VectorS2_Coeff[con_coeff_cnt_d[8 : 6]][23 * 0 +: 23];
+assign S2[1] = r_VectorS2_Coeff[con_coeff_cnt_d[8 : 6]][23 * 1 +: 23];
+assign S2[2] = r_VectorS2_Coeff[con_coeff_cnt_d[8 : 6]][23 * 2 +: 23];
+assign S2[3] = r_VectorS2_Coeff[con_coeff_cnt_d[8 : 6]][23 * 3 +: 23];
+logic 				add_valid_out [0 : 3];
+logic	[91 : 0]	add_out_comb;
+generate
+	for (genvar i = 0 ; i < 4 ; i = i + 1) begin : row_add_inst
+		wire	[22 : 0]	add_out;
+		ModuleAdd u_ModuleAdd(
+			.clk       	( clk        ),
+			.rstn      	( rstn       ),
+			.valid_in  	( con_coeff_valid_d   ),
+			.data_in1  	( conv[i]   ),
+			.data_in2  	( S2[i]   ),
+			.valid_out 	( add_valid_out[i]  ),
+			.data_out  	( add_out   )
+		);
+		assign add_out_comb[23 * i +: 23] = add_out;
+	end
+endgenerate
+
 always_comb begin
-    for (int i = 0 ; i < K ; i = i + 1) 
-        w_VectorT_Coeff_valid[i] = valid_out[i][0];
+	for (int i = 0 ; i < K ; i = i + 1) begin
+		w_VectorT_Coeff_valid[i] = 1'b0;
+		w_VectorT_Coeff[i] = 'd0;
+	end
+	if (state <= S_MATRIX_MULT_WAIT) begin
+		for (int i = 0 ; i < K ; i = i + 1) begin
+			w_VectorT_Coeff_valid[i] = valid_out[i][0];
+			w_VectorT_Coeff[i] = mac_out_comb[i];
+ 		end
+	end
+	else begin
+		w_VectorT_Coeff_valid[con_coeff_cnt_d[8 : 6]] = add_valid_out[0];
+		for (int i = 0 ; i < K ; i = i + 1)
+			w_VectorT_Coeff[i] = add_out_comb;
+	end
 end
 
-always_ff @(posedge clk) begin
-    if (!rstn)
-        w_VectorT_Coeff_valid_d <= 1'b0;
-    else 
-        w_VectorT_Coeff_valid_d <= w_VectorT_Coeff_valid[0];
+always_ff @(posedge clk) begin : w_VectorT_Coeff_valid_delay
+    if (!rstn) begin
+		for (int i = 0 ; i < K ; i = i + 1)
+        	w_VectorT_Coeff_valid_d[i] <= 1'b0;
+	end
+    else begin
+		for (int i = 0 ; i < K ; i = i + 1)
+        	w_VectorT_Coeff_valid_d[i] <= w_VectorT_Coeff_valid[i];
+	end
 end
 
 endmodule
