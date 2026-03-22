@@ -34,6 +34,7 @@ sv xil_defaultlib  \
 "../../../../user/src/CoeffBlockRAM/RTL/inferred_bram.sv" \
 "../../../../user/src/Hash/RTL/keccak.sv" \
 "../../../../user/src/keygen/RTL/keygen_internal.sv" \
+"../../../../user/src/En_Decoder/power2round.sv" \
 "../../../../user/src/Hash/RTL/sha3.sv" \
 "../../../../user/src/keygen/SIM/tb_keygen_interval.sv" \
 

@@ -117,6 +117,58 @@ always_ff @(posedge clk) begin
     end
 end
 
+integer fid2;
+initial begin
+    fid2 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/output/tb_power2bound_output_t0.txt", "w");
+    $fwrite(fid2, "[");
+end
+integer fid3;
+initial begin
+    fid3 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/output/tb_power2bound_output_t1.txt", "w");
+    $fwrite(fid3, "[");
+end
+
+logic   [12 : 0]            t00, t01, t02, t03;
+assign t00 = keygen_internal.t0_out_comb[13 * 0 +: 13];
+assign t01 = keygen_internal.t0_out_comb[13 * 1 +: 13];
+assign t02 = keygen_internal.t0_out_comb[13 * 2 +: 13];
+assign t03 = keygen_internal.t0_out_comb[13 * 3 +: 13];
+
+logic   [9 : 0]             t10, t11, t12, t13;
+assign t10 = keygen_internal.t1_out_comb[10 * 0 +: 10];
+assign t11 = keygen_internal.t1_out_comb[10 * 1 +: 10];
+assign t12 = keygen_internal.t1_out_comb[10 * 2 +: 10];
+assign t13 = keygen_internal.t1_out_comb[10 * 3 +: 10];
+
+integer i4 = 0;
+always_ff @(posedge clk) begin
+    if (keygen_internal.final_t_valid) begin
+        $fwrite(fid2, "%0d, %0d, %0d, %0d", 
+                        $signed(t00),
+                        $signed(t01),
+                        $signed(t02),
+                        $signed(t03)
+                        );
+        $fwrite(fid3, "%0d, %0d, %0d, %0d", 
+                        t10,
+                        t11,
+                        t12,
+                        t13
+                        );
+        i4 = i4 + 1;
+        if (i4 % 64 == 0) begin
+            $fwrite(fid2, "]\n\n[");
+            $fwrite(fid3, "]\n\n[");
+        end
+        else begin
+            $fwrite(fid2, ", ");
+            $fwrite(fid3, ", ");
+        end
+        $fflush(fid2);
+        $fflush(fid3);
+    end
+end
+
 keygen_internal  u_keygen_internal (
     .clk                      ( clk                       ),
     .rstn                     ( rstn                      ),

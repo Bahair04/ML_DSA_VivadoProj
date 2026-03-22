@@ -1,3 +1,5 @@
+`include "../param_conf.v"
+//* 4-latency
 module power2round(
     // --- 时钟与复位信号 ---
     input       logic               clk,
@@ -44,7 +46,7 @@ always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         add <= 'd0;
     else if (t_valid)
-        add <= t + 'd4095;          // 先加4095 便于后面移位以后的四舍五入
+        add <= t + 'd4096;          // 先加4096 便于后面移位以后的四舍五入
     else 
         add <= 'd0;
 end
@@ -99,7 +101,7 @@ always_ff @(posedge clk or negedge rstn) begin
         shift_d[2] <= shift_d[1];
     end
 end
-assign t1 = shift_d[2];
+assign t1 = shift_d[1];
 assign t1_valid = t_valid_d[3];
 
 endmodule

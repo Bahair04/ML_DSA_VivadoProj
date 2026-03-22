@@ -897,4 +897,37 @@ always_ff @(posedge clk) begin : w_VectorT_Coeff_valid_delay
 	end
 end
 
+// ==========================================================
+// 9. power2round
+// ==========================================================
+
+logic [39 : 0] t1_out_comb;      
+logic [51 : 0] t0_out_comb;      
+logic [3 : 0]  t1_valid_out_vec; 
+logic [3 : 0]  t0_valid_out_vec;
+
+generate
+    for (genvar i = 0 ; i < 4 ; i = i + 1) begin : row_power2round_inst    
+        wire [22 : 0] t_in = add_out_comb[23 * i +: 23];
+        wire          t_valid_in = add_valid_out[0]; 
+		wire [9 : 0]  t1_out;
+		wire [12 : 0] t0_out_prime;
+		wire [12 : 0] t0_out = 4096 - t0_out_prime;
+        power2round u_power2round(
+            .clk        ( clk 					),
+            .rstn       ( rstn 					),
+            .t          ( t_in 					),
+            .t_valid    ( t_valid_in 			),
+            .t1         ( t1_out 				), 
+            .t1_valid   ( t1_valid_out_vec[i] 	),
+            .t0         ( t0_out_prime 			),  
+            .t0_valid   ( t0_valid_out_vec[i] 	)
+        );  
+		assign t0_out_comb[13 * i +: 13] = t0_out;
+		assign t1_out_comb[10 * i +: 10] = t1_out;
+    end
+endgenerate
+
+wire final_t_valid = t1_valid_out_vec[0] & state > S_MATRIX_MULT_WAIT;
+
 endmodule
