@@ -17,7 +17,7 @@ module ModuleAdd(
 logic   [23 : 0]            raw_add;
 assign raw_add = {1'b0, data_in1} + {1'b0, data_in2};
 always_comb begin
-    if (raw_add > `q) begin
+    if (raw_add >= `q) begin
         logic [23 : 0] tmp = raw_add - `q;
         data_out = tmp[22 : 0];
     end

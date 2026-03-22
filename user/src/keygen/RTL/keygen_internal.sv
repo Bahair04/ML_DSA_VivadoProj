@@ -172,6 +172,7 @@ logic           [5 : 0]     		w_VectorT_Coeff_addr [0 : K - 1];
 logic           [91 : 0]    		r_VectorT_Coeff [0 : K - 1];
 logic           [5 : 0]     		r_VectorT_Coeff_addr [0 : K - 1];
 
+logic           [91 : 0]    		r_VectorT_Coeff_INTT;
 logic			[8 : 0]				r_VectorT_Coeff_addr_INTT;
 
 // --- Poly_PAU ---
@@ -190,7 +191,7 @@ logic   		[91 : 0]        	con_coeff;
 logic                   			con_coeff_valid;
 
 logic			[8 : 0]				con_coeff_cnt;				// 输出系数计数器(共 `l*256/4 个con_coeff, 一个con_coeff包含4个系数)
-
+logic			[8 : 0]				con_coeff_cnt_d;
 always_ff @(posedge clk) begin
 	if (!rstn)
 		key_ready <= 1'b1;
@@ -454,7 +455,17 @@ always_ff @(posedge clk) begin
 					state <= S_T_INTT;
 			end
 			S_T_INTT_WAIT : begin
-				
+				if (con_coeff_cnt[5 : 0] == 'd63) begin
+					if (con_coeff_cnt == `l * 64 - 1)
+						state <= S_T_ADD_S2;
+					else 
+						state <= S_T_INTT_ACK;
+				end
+				else 
+					state <= S_T_INTT_WAIT;
+			end
+			S_T_ADD_S2 : begin
+				state <= S_T_ADD_S2;
 			end
 			default : begin
 				state <= S_IDLE;
@@ -569,11 +580,15 @@ always_comb begin : matrix_mult_read_control
 		r_MatrixA_Coeff_addr[i] = 'd0;
 		r_VectorT_Coeff_addr[i] = 'd0;
 	end
-	if (con_coeff_valid) begin
+	if (state <= S_MATRIX_MULT_WAIT && con_coeff_valid) begin
 		for (int i = 0 ; i < K ; i = i + 1) begin
 			r_MatrixA_Coeff_addr[i] = con_coeff_cnt;
 			r_VectorT_Coeff_addr[i] = con_coeff_cnt[5 : 0];
 		end
+	end
+	if (state > S_MATRIX_MULT_WAIT) begin
+		for (int i = 0 ; i < K ; i = i + 1) 
+			r_VectorT_Coeff_addr[i] = r_VectorT_Coeff_addr_INTT[5 : 0];
 	end
 end
 
@@ -653,6 +668,7 @@ always_ff @(posedge clk) begin : vector_t_write_control
 	end
 end
 
+logic 			[8 : 0] 			r_VectorT_Coeff_addr_INTT_d;
 always_ff @(posedge clk) begin
 	if (!rstn) 
 		r_VectorT_Coeff_addr_INTT <= 'd0;
@@ -664,11 +680,26 @@ always_ff @(posedge clk) begin
 		else 
 			r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT + 1'b1;
 	end
-	else if (ready == 1'b0 && request == 1'b1) 
+	else if (state > S_MATRIX_MULT_WAIT && ready == 1'b0 && request == 1'b1) 
 		r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT + 1'b1;
 	else 
 		r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT;
 end
+
+always_ff @(posedge clk) begin
+	if (!rstn)
+		r_VectorT_Coeff_addr_INTT_d <= 'd0;
+	else 
+		r_VectorT_Coeff_addr_INTT_d <= r_VectorT_Coeff_addr_INTT;
+end
+
+assign r_VectorT_Coeff_INTT = r_VectorT_Coeff[r_VectorT_Coeff_addr_INTT_d[8 : 6]];
+
+logic	[22 : 0]		temp0, temp1, temp2, temp3;
+assign temp0 = r_VectorT_Coeff_INTT[23 * 0 +: 23];
+assign temp1 = r_VectorT_Coeff_INTT[23 * 1 +: 23];
+assign temp2 = r_VectorT_Coeff_INTT[23 * 2 +: 23];
+assign temp3 = r_VectorT_Coeff_INTT[23 * 3 +: 23];
 
 //* 后面记得放顶层
 
@@ -748,10 +779,19 @@ always_ff @(posedge clk) begin
 		else 
 			r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
 	end
-	else if (ready == 1'b0 && request == 1'b1) 
+	else if (state <= S_MATRIX_MULT_WAIT && ready == 1'b0 && request == 1'b1) 
 		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
 	else 
 		r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr;
+end
+
+always_comb begin : r_VectorS2_control
+	for (int i = 0 ; i < K ; i = i + 1)
+		r_VectorS2_Coeff_addr[i] <= 'd0;
+	if (state == S_T_INTT_WAIT) begin
+		for (int i = 0 ; i < K ; i = i + 1)
+			r_VectorS2_Coeff_addr[i] <= con_coeff_cnt[5 : 0];
+	end
 end
 
 always_ff @(posedge clk) begin
@@ -779,7 +819,7 @@ always_ff @(posedge clk) begin
 		ori_coeff_valid <= 1'b0;
 end
 
-assign ori_coeff = r_VectorS1_Coeff;
+assign ori_coeff = (state <= S_MATRIX_MULT_WAIT) ? r_VectorS1_Coeff : r_VectorT_Coeff_INTT;
 
 always_ff @(posedge clk) begin
 	if (!rstn)
@@ -792,6 +832,12 @@ always_ff @(posedge clk) begin
 	end
 	else 
 		con_coeff_cnt <= con_coeff_cnt;
+end
+always_ff @(posedge clk) begin
+	if (!rstn)
+		con_coeff_cnt_d <= 'd0;
+	else 
+		con_coeff_cnt_d <= con_coeff_cnt;
 end
 
 //* 后面记得放顶层
