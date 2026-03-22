@@ -615,10 +615,7 @@ always_ff @(posedge clk) begin : vector_t_write_control
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorT_Coeff_addr[i] <= 'd0;
     end
-    else if ((w_VectorT_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT)			// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址
-			|| ((w_VectorT_Coeff_valid[0] || w_VectorT_Coeff_valid[1] || 
-				 w_VectorT_Coeff_valid[2] || w_VectorT_Coeff_valid[3] || 
-				 w_VectorT_Coeff_valid[4]) && state > S_MATRIX_MULT_WAIT)) begin		// 加法阶段 根据ADD的输出有效信号更新存储T的地址
+    else if ((w_VectorT_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT) ) begin		// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址	
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (w_VectorT_Coeff_addr[i] == 'd63)
                 w_VectorT_Coeff_addr[i] <= 'd0;
@@ -886,11 +883,6 @@ always_comb begin
 			w_VectorT_Coeff_valid[i] = valid_out[i][0];
 			w_VectorT_Coeff[i] = mac_out_comb[i];
  		end
-	end
-	else begin
-		w_VectorT_Coeff_valid[con_coeff_cnt_d[8 : 6]] = add_valid_out[0];
-		for (int i = 0 ; i < K ; i = i + 1)
-			w_VectorT_Coeff[i] = add_out_comb;
 	end
 end
 
