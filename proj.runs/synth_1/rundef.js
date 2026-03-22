@@ -23,7 +23,7 @@ eval( EAInclude(ISEJScriptLib) );
 
 
 ISEStep( "vivado",
-         "-log CoeffBlockRAM.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source CoeffBlockRAM.tcl" );
+         "-log keygen_internal.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source keygen_internal.tcl" );
 
 
 

@@ -1,0 +1,982 @@
+#-----------------------------------------------------------
+# Vivado v2021.1 (64-bit)
+# SW Build 3247384 on Thu Jun 10 19:36:33 MDT 2021
+# IP Build 3246043 on Fri Jun 11 00:30:35 MDT 2021
+# Start of session at: Sun Mar 22 12:03:38 2026
+# Process ID: 14396
+# Current directory: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1
+# Command line: vivado.exe -log keygen_internal.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source keygen_internal.tcl
+# Log file: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/keygen_internal.vds
+# Journal file: D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1\vivado.jou
+#-----------------------------------------------------------
+source keygen_internal.tcl -notrace
+Command: synth_design -top keygen_internal -part xc7a200tfbg484-2L
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Device 21-403] Loading part xc7a200tfbg484-2L
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 2 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 23936
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:01 ; elapsed = 00:00:03 . Memory (MB): peak = 1282.719 ; gain = 0.000
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'keygen_internal' [D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/RTL/keygen_internal.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'ModuleMAC' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMAC.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'ModuleMult' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMult.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'DSP_MultPipe' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/DSP_MultPipe.sv:1]
+INFO: [Synth 8-6155] done synthesizing module 'DSP_MultPipe' (1#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/DSP_MultPipe.sv:1]
+WARNING: [Synth 8-7071] port 'valid_out' of module 'DSP_MultPipe' is unconnected for instance 'u_DSP_MultPipe_2' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMult.sv:45]
+WARNING: [Synth 8-7023] instance 'u_DSP_MultPipe_2' of module 'DSP_MultPipe' has 7 connections declared, but only 6 given [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMult.sv:45]
+INFO: [Synth 8-6155] done synthesizing module 'ModuleMult' (2#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMult.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'ModuleAdd' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleAdd.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'ModuleAdd' (3#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleAdd.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'ModuleMAC' (4#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleMAC.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'ExpandA' [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA.sv:2]
+WARNING: [Synth 8-6090] variable 'low_bit' is written by both blocking and non-blocking assignments, entire logic could be removed [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA.sv:196]
+INFO: [Synth 8-155] case statement is not full and has no default [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA.sv:200]
+INFO: [Synth 8-6157] synthesizing module 'ExpandA_sipo96' [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA_sipo96.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'ExpandA_sipo' [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ExpandA_sipo_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ExpandA_sipo' (5#1) [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ExpandA_sipo_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ExpandA_sipo96' (6#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA_sipo96.sv:1]
+INFO: [Synth 8-6155] done synthesizing module 'ExpandA' (7#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'ExpandS' [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:2]
+INFO: [Synth 8-226] default block is never used [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:201]
+WARNING: [Synth 8-6090] variable 'low_bit' is written by both blocking and non-blocking assignments, entire logic could be removed [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:282]
+INFO: [Synth 8-155] case statement is not full and has no default [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:286]
+INFO: [Synth 8-6157] synthesizing module 'ExpandS_sipo_1' [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ExpandS_sipo_1_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ExpandS_sipo_1' (8#1) [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ExpandS_sipo_1_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ExpandS' (9#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'CoeffBlockRAM' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv:1]
+	Parameter K bound to: 8'b00000100 
+	Parameter L bound to: 8'b00000100 
+INFO: [Synth 8-6157] synthesizing module 'MatrixA' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/MatrixA.sv:2]
+	Parameter K bound to: 8'b00000100 
+	Parameter L bound to: 8'b00000100 
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 448 - type: integer 
+	Parameter ADDR_WIDTH bound to: 9 - type: integer 
+	Parameter DATA_WIDTH bound to: 92 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram' (10#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'MatrixA' (11#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/MatrixA.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorS1' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS1.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized0' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 448 - type: integer 
+	Parameter ADDR_WIDTH bound to: 9 - type: integer 
+	Parameter DATA_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized0' (11#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorS1' (12#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS1.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorS2' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS2.sv:2]
+	Parameter K bound to: 8'b00000100 
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized1' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 6 - type: integer 
+	Parameter DATA_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized1' (12#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorS2' (13#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorS2.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorY' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorY.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized2' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 6 - type: integer 
+	Parameter DATA_WIDTH bound to: 80 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized2' (13#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorY' (14#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorY.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'VectorT' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorT.sv:2]
+	Parameter K bound to: 8'b00000100 
+INFO: [Synth 8-6157] synthesizing module 'inferred_bram__parameterized3' [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+	Parameter DEPTH bound to: 64 - type: integer 
+	Parameter ADDR_WIDTH bound to: 6 - type: integer 
+	Parameter DATA_WIDTH bound to: 92 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'inferred_bram__parameterized3' (14#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/inferred_bram.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'VectorT' (15#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/VectorT.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'CoeffBlockRAM' (16#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'Poly_PAU' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/Poly_PAU.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'ReconfigCompute' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigCompute.sv:1]
+INFO: [Synth 8-155] case statement is not full and has no default [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigCompute.sv:88]
+INFO: [Synth 8-6157] synthesizing module 'ReconfigComputeUnit' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigComputeUnit.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'NTT_BU' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/NTT_BU.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'ModuleSub' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleSub.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'ModuleSub' (17#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleSub.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'NTT_BU' (18#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/NTT_BU.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'INTT_BU' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/INTT_BU.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'ModuleDiv2' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleDiv2.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'ModuleDiv2' (19#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ModuleDiv2.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'INTT_BU' (20#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/INTT_BU.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'ReconfigComputeUnit' (21#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigComputeUnit.sv:1]
+INFO: [Synth 8-6155] done synthesizing module 'ReconfigCompute' (22#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ReconfigCompute.sv:1]
+INFO: [Synth 8-6157] synthesizing module 'ZetaRomAddrGen' [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ZetaRomAddrGen.sv:4]
+INFO: [Synth 8-155] case statement is not full and has no default [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ZetaRomAddrGen.sv:35]
+INFO: [Synth 8-6155] done synthesizing module 'ZetaRomAddrGen' (23#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/ZetaRomAddrGen.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'ZetaRaw_ROM' [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ZetaRaw_ROM_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ZetaRaw_ROM' (24#1) [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/.Xil/Vivado-14396-LAPTOP-EUGMKLPQ/realtime/ZetaRaw_ROM_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'Poly_PAU' (25#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/Polynomials/RTL/Poly_PAU.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'keygen_internal' (26#1) [D:/University/ML_DSA/vivado_proj/proj/user/src/keygen/RTL/keygen_internal.sv:2]
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:05 ; elapsed = 00:00:15 . Memory (MB): peak = 1516.344 ; gain = 233.625
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:06 ; elapsed = 00:00:19 . Memory (MB): peak = 1516.344 ; gain = 233.625
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:06 ; elapsed = 00:00:19 . Memory (MB): peak = 1516.344 ; gain = 233.625
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:01 ; elapsed = 00:00:01 . Memory (MB): peak = 1516.344 ; gain = 0.000
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandA_sipo/ExpandA_sipo/ExpandA_sipo_in_context.xdc] for cell 'u_ExpandA/u_ExpandA_sipo96/u_ExpandA_sipo'
+Finished Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandA_sipo/ExpandA_sipo/ExpandA_sipo_in_context.xdc] for cell 'u_ExpandA/u_ExpandA_sipo96/u_ExpandA_sipo'
+Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1/ExpandS_sipo_1_in_context.xdc] for cell 'u_ExpandS/u_ExpandS_sipo'
+Finished Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ExpandS_sipo_1/ExpandS_sipo_1/ExpandS_sipo_1_in_context.xdc] for cell 'u_ExpandS/u_ExpandS_sipo'
+Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta1_ROM'
+Finished Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta1_ROM'
+Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta2_ROM'
+Finished Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta2_ROM'
+Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta3_ROM'
+Finished Parsing XDC File [d:/University/ML_DSA/vivado_proj/proj/proj.gen/sources_1/ip/ZetaRaw_ROM/ZetaRaw_ROM/ZetaRaw_ROM_in_context.xdc] for cell 'u_Poly_PAU/Zeta3_ROM'
+Parsing XDC File [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/dont_touch.xdc]
+Finished Parsing XDC File [D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/dont_touch.xdc]
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.008 . Memory (MB): peak = 1719.801 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.210 . Memory (MB): peak = 1719.801 ; gain = 0.000
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:10 ; elapsed = 00:00:33 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7a200tfbg484-2L
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:10 ; elapsed = 00:00:33 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+Applied set_property KEEP_HIERARCHY = SOFT for u_ExpandA/u_ExpandA_sipo96/u_ExpandA_sipo. (constraint file  auto generated constraint).
+Applied set_property KEEP_HIERARCHY = SOFT for u_ExpandS/u_ExpandS_sipo. (constraint file  auto generated constraint).
+Applied set_property KEEP_HIERARCHY = SOFT for u_Poly_PAU/Zeta1_ROM. (constraint file  auto generated constraint).
+Applied set_property KEEP_HIERARCHY = SOFT for u_Poly_PAU/Zeta2_ROM. (constraint file  auto generated constraint).
+Applied set_property KEEP_HIERARCHY = SOFT for u_Poly_PAU/Zeta3_ROM. (constraint file  auto generated constraint).
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:10 ; elapsed = 00:00:33 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'Poly_PAU'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'keygen_internal'
+WARNING: [Synth 8-327] inferring latch for variable 'tmp_reg_reg' [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandA.sv:201]
+WARNING: [Synth 8-327] inferring latch for variable 'tmp_reg_reg' [D:/University/ML_DSA/vivado_proj/proj/user/src/Sampler/RTL/ExpandS.sv:287]
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    IDLE |                            00001 |                              000
+                     ACK |                            10000 |                              001
+                   INPUT |                            01000 |                              010
+                    CONV |                            00100 |                              011
+                  OUTPUT |                            00010 |                              100
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'Poly_PAU'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  S_IDLE |                   00000000000001 |                            00000
+                  S_INIT |                   00000000000010 |                            00001
+                  S_LOAD |                   00100000000000 |                            00010
+               S_SQUEEZE |                   00000100000000 |                            00011
+                S_EXPAND |                   00001000000000 |                            00100
+                 S_STORE |                   00000010000000 |                            00101
+            S_S1_NTT_ACK |                   00000001000000 |                            00110
+                S_S1_NTT |                   00000000000100 |                            00111
+           S_S1_NTT_WAIT |                   00000000001000 |                            01000
+      S_MATRIX_MULT_WAIT |                   00000000010000 |                            01001
+            S_T_INTT_ACK |                   00000000100000 |                            01010
+                S_T_INTT |                   10000000000000 |                            01011
+           S_T_INTT_WAIT |                   01000000000000 |                            01100
+              S_T_ADD_S2 |                   00010000000000 |                            01101
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'keygen_internal'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:13 ; elapsed = 00:00:40 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   46 Bit       Adders := 28    
+	   2 Input   43 Bit       Adders := 56    
+	   2 Input   35 Bit       Adders := 56    
+	   4 Input   35 Bit       Adders := 28    
+	   2 Input   32 Bit       Adders := 6     
+	   3 Input   26 Bit       Adders := 28    
+	   3 Input   24 Bit       Adders := 68    
+	   2 Input   24 Bit       Adders := 28    
+	   2 Input   23 Bit       Adders := 80    
+	   2 Input   16 Bit       Adders := 1     
+	   2 Input   10 Bit       Adders := 2     
+	   2 Input    9 Bit       Adders := 6     
+	   2 Input    8 Bit       Adders := 14    
+	   2 Input    6 Bit       Adders := 8     
+	   2 Input    5 Bit       Adders := 2     
+	   2 Input    4 Bit       Adders := 3     
+	   3 Input    4 Bit       Adders := 2     
+	   3 Input    3 Bit       Adders := 2     
+	   2 Input    3 Bit       Adders := 4     
+	   3 Input    2 Bit       Adders := 5     
+	   2 Input    2 Bit       Adders := 3     
+	   6 Input    1 Bit       Adders := 1     
++---Registers : 
+	             1024 Bit    Registers := 1     
+	              528 Bit    Registers := 1     
+	              272 Bit    Registers := 2     
+	              192 Bit    Registers := 1     
+	              184 Bit    Registers := 2     
+	               92 Bit    Registers := 13    
+	               80 Bit    Registers := 1     
+	               48 Bit    Registers := 224   
+	               46 Bit    Registers := 84    
+	               43 Bit    Registers := 56    
+	               35 Bit    Registers := 56    
+	               26 Bit    Registers := 28    
+	               25 Bit    Registers := 112   
+	               24 Bit    Registers := 84    
+	               23 Bit    Registers := 739   
+	               16 Bit    Registers := 6     
+	               10 Bit    Registers := 2     
+	                9 Bit    Registers := 7     
+	                8 Bit    Registers := 14    
+	                7 Bit    Registers := 4     
+	                6 Bit    Registers := 8     
+	                5 Bit    Registers := 1     
+	                4 Bit    Registers := 32    
+	                3 Bit    Registers := 63    
+	                1 Bit    Registers := 41    
++---RAMs : 
+	              40K Bit	(448 X 92 bit)          RAMs := 4     
+	               7K Bit	(448 X 16 bit)          RAMs := 1     
+	               5K Bit	(64 X 80 bit)          RAMs := 1     
+	               5K Bit	(64 X 92 bit)          RAMs := 4     
+	             1024 Bit	(64 X 16 bit)          RAMs := 4     
++---Muxes : 
+	   2 Input  528 Bit        Muxes := 2     
+	   2 Input  272 Bit        Muxes := 4     
+	   5 Input  192 Bit        Muxes := 1     
+	   2 Input  192 Bit        Muxes := 2     
+	   2 Input  184 Bit        Muxes := 8     
+	   4 Input  184 Bit        Muxes := 4     
+	   4 Input   92 Bit        Muxes := 1     
+	   2 Input   92 Bit        Muxes := 15    
+	   2 Input   64 Bit        Muxes := 3     
+	   2 Input   32 Bit        Muxes := 4     
+	   2 Input   24 Bit        Muxes := 28    
+	   2 Input   23 Bit        Muxes := 102   
+	   6 Input   23 Bit        Muxes := 4     
+	   5 Input   23 Bit        Muxes := 16    
+	   4 Input   23 Bit        Muxes := 16    
+	   2 Input   16 Bit        Muxes := 1     
+	  14 Input   14 Bit        Muxes := 1     
+	   2 Input   14 Bit        Muxes := 13    
+	   2 Input   10 Bit        Muxes := 2     
+	   2 Input    9 Bit        Muxes := 10    
+	   2 Input    8 Bit        Muxes := 34    
+	   4 Input    8 Bit        Muxes := 2     
+	   8 Input    8 Bit        Muxes := 2     
+	   2 Input    7 Bit        Muxes := 2     
+	   6 Input    7 Bit        Muxes := 1     
+	   4 Input    6 Bit        Muxes := 1     
+	   2 Input    6 Bit        Muxes := 13    
+	   5 Input    5 Bit        Muxes := 1     
+	   2 Input    5 Bit        Muxes := 5     
+	  14 Input    5 Bit        Muxes := 1     
+	   2 Input    4 Bit        Muxes := 12    
+	   2 Input    3 Bit        Muxes := 4     
+	   3 Input    3 Bit        Muxes := 2     
+	  16 Input    3 Bit        Muxes := 4     
+	   2 Input    2 Bit        Muxes := 3     
+	   2 Input    1 Bit        Muxes := 850   
+	   5 Input    1 Bit        Muxes := 5     
+	   3 Input    1 Bit        Muxes := 9     
+	   4 Input    1 Bit        Muxes := 514   
+	   8 Input    1 Bit        Muxes := 2     
+	   9 Input    1 Bit        Muxes := 2     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 740 (col length:100)
+BRAMs: 730 (col length: RAMB18 100 RAMB36 50)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_NTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_INTT_BU/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[3].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[1].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[3].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[2].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[1].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_2/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: Generating DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+DSP Report: operator row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0 is absorbed into DSP row_mac_inst[0].col_mac_inst[2].u_ModuleMAC/u_ModuleMult/u_DSP_MultPipe_1/m_reg0.
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:24 ; elapsed = 00:01:18 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Preliminary Mapping Report (see note below)
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name         | RTL Object                                                   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[0].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[1].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[2].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[3].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorS1/u_inferred_bram/poly_matrix_reg                   | 448 x 16(READ_FIRST)   | W |   | 448 x 16(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[0].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[1].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[2].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[3].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
+
+DSP: Preliminary Mapping Report (see note below)
++-------------+----------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|Module Name  | DSP Mapping    | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
++-------------+----------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | A*B            | 18     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|DSP_MultPipe | (PCIN>>17)+A*B | 18     | 9      | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
++-------------+----------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+
+Note: The table above is a preliminary report that shows the DSPs inferred at the current stage of the synthesis flow. Some DSP may be reimplemented as non DSP primitives later in the synthesis flow. Multiple instantiated DSPs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:26 ; elapsed = 00:01:25 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:26 ; elapsed = 00:01:26 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Final Mapping Report
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name         | RTL Object                                                   | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[0].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[1].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[2].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_MatrixA/row_vector_bram[3].u_inferred_bram/poly_matrix_reg | 448 x 92(READ_FIRST)   | W |   | 448 x 92(WRITE_FIRST)  |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorS1/u_inferred_bram/poly_matrix_reg                   | 448 x 16(READ_FIRST)   | W |   | 448 x 16(WRITE_FIRST)  |   | R | Port A and B     | 1      | 0      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[0].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[1].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[2].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
+|i_0/u_CoeffBlockRAM | u_VectorT/row_vector_bram[3].u_inferred_bram/poly_matrix_reg | 64 x 92(READ_FIRST)    | W |   | 64 x 92(WRITE_FIRST)   |   | R | Port A and B     | 1      | 1      | 
++--------------------+--------------------------------------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:27 ; elapsed = 00:01:30 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Static Shift Register Report:
++----------------+------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|Module Name     | RTL Name                                                                     | Length | Width | Reset Signal | Pull out first Reg | Pull out last Reg | SRL16E | SRLC32E | 
++----------------+------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|keygen_internal | u_Poly_PAU/u_ReconfigCompute/u_ReconfigComputeUnit_4/valid_out_reg           | 18     | 1     | YES          | NO                 | YES               | 1      | 0       | 
+|keygen_internal | row_mac_inst[0].col_mac_inst[0].u_ModuleMAC/u_ModuleMult/mult_valid_d_reg[3] | 7      | 1     | YES          | NO                 | YES               | 1      | 0       | 
+|keygen_internal | seed_expand_reg[319]                                                         | 5      | 64    | YES          | NO                 | YES               | 64     | 0       | 
++----------------+------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++------+---------------+----------+
+|      |BlackBox name  |Instances |
++------+---------------+----------+
+|1     |ExpandA_sipo   |         1|
+|2     |ExpandS_sipo_1 |         1|
+|3     |ZetaRaw_ROM    |         3|
++------+---------------+----------+
+
+Report Cell Usage: 
++------+-------------+------+
+|      |Cell         |Count |
++------+-------------+------+
+|1     |ExpandA_sipo |     1|
+|2     |ExpandS_sipo |     1|
+|3     |ZetaRaw_ROM  |     3|
+|6     |BUFG         |     2|
+|7     |CARRY4       |    36|
+|8     |LUT1         |     8|
+|9     |LUT2         |   412|
+|10    |LUT3         |   424|
+|11    |LUT4         |  1222|
+|12    |LUT5         |   347|
+|13    |LUT6         |   731|
+|14    |MUXF7        |     1|
+|15    |SRL16E       |    66|
+|16    |FDCE         |  1613|
+|17    |FDPE         |     6|
+|18    |FDRE         |  1191|
+|19    |FDSE         |     2|
+|20    |LD           |   189|
+|21    |LDC          |     5|
+|22    |IBUF         |   393|
+|23    |OBUF         |   280|
+|24    |OBUFT        |    16|
++------+-------------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:28 ; elapsed = 00:01:32 . Memory (MB): peak = 1719.801 ; gain = 437.082
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 2 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:19 ; elapsed = 00:01:22 . Memory (MB): peak = 1719.801 ; gain = 233.625
+Synthesis Optimization Complete : Time (s): cpu = 00:00:28 ; elapsed = 00:01:33 . Memory (MB): peak = 1719.801 ; gain = 437.082
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.038 . Memory (MB): peak = 1719.801 ; gain = 0.000
+INFO: [Netlist 29-17] Analyzing 231 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 1719.801 ; gain = 0.000
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 194 instances were transformed.
+  LD => LDCE: 189 instances
+  LDC => LDCE: 5 instances
+
+Synth Design complete, checksum: 16ffe699
+INFO: [Common 17-83] Releasing license: Synthesis
+83 Infos, 6 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:30 ; elapsed = 00:01:37 . Memory (MB): peak = 1719.801 ; gain = 437.082
+INFO: [Common 17-1381] The checkpoint 'D:/University/ML_DSA/vivado_proj/proj/proj.runs/synth_1/keygen_internal.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_utilization -file keygen_internal_utilization_synth.rpt -pb keygen_internal_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Sun Mar 22 12:05:19 2026...

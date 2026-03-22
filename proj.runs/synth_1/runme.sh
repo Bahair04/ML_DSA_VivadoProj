@@ -40,4 +40,4 @@ EAStep()
      fi
 }
 
-EAStep vivado -log CoeffBlockRAM.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source CoeffBlockRAM.tcl
+EAStep vivado -log keygen_internal.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source keygen_internal.tcl
