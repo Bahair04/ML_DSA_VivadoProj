@@ -821,7 +821,7 @@ generate
         wire          t_valid_in = add_valid_out[0]; 
 		wire [9 : 0]  t1_out;
 		wire [12 : 0] t0_out_prime;
-		wire [12 : 0] t0_out = 4096 - t0_out_prime;
+		wire [12 : 0] t0_out = t0_out_prime;
         power2round u_power2round(
             .clk            ( clk 					),
             .rstn           ( rstn 					),
