@@ -75,6 +75,14 @@ module keygen_internal
     input       logic           [91 : 0]    con_coeff,					// NTT/INTT 结果输出
     input       logic                       con_coeff_valid,			// NTT/INTT 输出有效信号
 
+    // --- MAC 阵列接口 ---
+    output      logic                       mac_valid_in_keygen,
+    output      logic           [91 : 0]    mac_data_in1_keygen [0 : K - 1],
+    output      logic           [91 : 0]    mac_data_in2_keygen,
+    output      logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1],
+    input       logic                       mac_valid_out_keygen,
+    input       logic           [91 : 0]    mac_data_out_keygen [0 : K - 1],
+
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
     output      logic                       dout_valid1, 
@@ -733,34 +741,23 @@ always_ff @(posedge clk) begin
 end
 
 // MAC-T = A * NTT(S1) + T
-logic 					valid_out [0 : K - 1] [0 : 3];
-logic	[91 : 0]		mac_out_comb [0 : K - 1];
-generate
-    for (genvar i = 0 ; i < K ; i = i + 1) begin : row_mac_inst
-        wire    [91 : 0]    data1 = r_MatrixA_Coeff[i];
-        wire    [91 : 0]    data2 = r_VectorT_Coeff[i];
-        wire    [91 : 0]    row_data_out;
+logic                   valid_out [0 : K - 1] [0 : 3];
+logic   [91 : 0]        mac_out_comb [0 : K - 1];
+
+assign mac_valid_in_keygen = con_coeff_valid_d;
+assign mac_data_in2_keygen = con_coeff_d;
+
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        // 输出给 MAC 的操作数
+        mac_data_in1_keygen[i] = r_MatrixA_Coeff[i];
+        mac_data_in3_keygen[i] = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 92'd0 : r_VectorT_Coeff[i];
         
-        for (genvar j = 0 ; j < 4 ; j = j + 1) begin : col_mac_inst
-            wire    [22 : 0]    matrix_a = data1[23 * j +: 23];
-            wire    [22 : 0]    ori_t = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 23'd0 : data2[23 * j +: 23];
-            wire    [22 : 0]    mac_out;
-            
-            ModuleMAC u_ModuleMAC(
-                .clk        ( clk                                   ),
-                .rstn       ( rstn                                  ),
-                .valid_in   ( con_coeff_valid_d                     ),
-                .data_in1   ( matrix_a                              ),
-                .data_in2   ( conv[j]                               ),
-                .data_in3   ( ori_t                                 ),
-                .valid_out  ( valid_out[i][j]                       ),
-                .data_out   ( mac_out                               )
-            );
-            assign row_data_out[23 * j +: 23] = mac_out;
-        end
-        assign mac_out_comb[i] = row_data_out;
+        // 接收来自 MAC 的结果
+        valid_out[i][0] = mac_valid_out_keygen;
+        mac_out_comb[i] = mac_data_out_keygen[i];
     end
-endgenerate
+end
 
 // Module Add-T = S2 + INTT(T)
 assign S2[0] = r_VectorS2_Coeff[con_coeff_cnt_d[8 : 6]][23 * 0 +: 23];

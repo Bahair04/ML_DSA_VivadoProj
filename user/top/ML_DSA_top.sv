@@ -1,3 +1,4 @@
+`include "../src/param_conf.v"
 module ML_DSA_top
 #(
     parameter           K = `k,
@@ -85,6 +86,15 @@ logic           [4 : 0]     mode_config_keygen;
 logic                       ready_keygen;                  
 logic           [91 : 0]    con_coeff_keygen;				
 logic                       con_coeff_valid_keygen;		
+
+// --- MAC 计算池 ---
+logic                       mac_valid_in_keygen;
+logic           [91 : 0]    mac_data_in1_keygen [0 : K - 1];
+logic           [91 : 0]    mac_data_in2_keygen;
+logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1];
+logic                       mac_valid_out_keygen;
+logic           [91 : 0]    mac_data_out_keygen [0 : K - 1];
+
 
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_keygen; 
@@ -178,6 +188,13 @@ u_keygen_internal(
     .con_coeff                  ( con_coeff_keygen               ),
     .con_coeff_valid            ( con_coeff_valid_keygen         ),
 
+    .mac_valid_in_keygen        ( mac_valid_in_keygen            ),
+    .mac_data_in1_keygen        ( mac_data_in1_keygen            ),
+    .mac_data_in2_keygen        ( mac_data_in2_keygen            ),
+    .mac_data_in3_keygen        ( mac_data_in3_keygen            ),
+    .mac_valid_out_keygen       ( mac_valid_out_keygen           ),
+    .mac_data_out_keygen        ( mac_data_out_keygen            ),
+
 	.dout1                  	( dout1_keygen                   ),
 	.dout_valid1            	( dout_valid1_keygen             ),
 	.dout_len1              	( dout_len1_keygen               ),
@@ -270,6 +287,13 @@ GlobalComputeArbitration #(
     .ready_keygen                   ( ready_keygen                   ),                  
     .con_coeff_keygen               ( con_coeff_keygen               ),				
     .con_coeff_valid_keygen         ( con_coeff_valid_keygen         ),	
+
+    .mac_valid_in_keygen            ( mac_valid_in_keygen            ),
+    .mac_data_in1_keygen            ( mac_data_in1_keygen            ),
+    .mac_data_in2_keygen            ( mac_data_in2_keygen            ),
+    .mac_data_in3_keygen            ( mac_data_in3_keygen            ),
+    .mac_valid_out_keygen           ( mac_valid_out_keygen           ),
+    .mac_data_out_keygen            ( mac_data_out_keygen            ),
 
     .dout1_keygen                   ( dout1_keygen                   ), 
     .dout_valid1_keygen             ( dout_valid1_keygen             ), 

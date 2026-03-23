@@ -18,6 +18,7 @@ sv xil_defaultlib  \
 "../../../../user/top/GlobalBRAMArbitration.sv" \
 "../../../../user/top/GlobalComputeArbitration.sv" \
 "../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
+"../../../../user/src/Polynomials/RTL/MAC_Array_Pool.sv" \
 "../../../../user/top/ML_DSA_top.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/MatrixA.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleAdd.sv" \

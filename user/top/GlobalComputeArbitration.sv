@@ -44,6 +44,14 @@ module GlobalComputeArbitration
     output      logic           [91 : 0]    con_coeff_keygen,				
     output      logic                       con_coeff_valid_keygen,	
 
+    // --- MAC 阵列信号 ---
+    input       logic                       mac_valid_in_keygen,
+    input       logic           [91 : 0]    mac_data_in1_keygen [0 : K - 1],
+    input       logic           [91 : 0]    mac_data_in2_keygen,
+    input       logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1],
+    output      logic                       mac_valid_out_keygen,
+    output      logic           [91 : 0]    mac_data_out_keygen [0 : K - 1],
+
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_keygen, 
     input       logic                       dout_valid1_keygen, 
@@ -110,6 +118,14 @@ logic                       pau_ready;
 logic           [91 : 0]    pau_con_coeff;
 logic                       pau_con_coeff_valid;
 
+// --- MAC_Pool 内部线声明 ---
+logic                       mac_valid_in;
+logic           [91 : 0]    mac_data_in1 [0 : K - 1];
+logic           [91 : 0]    mac_data_in2;
+logic           [91 : 0]    mac_data_in3 [0 : K - 1];
+logic                       mac_valid_out;
+logic           [91 : 0]    mac_data_out [0 : K - 1];
+
 // --- SHA3-1 内部线声明 ---
 logic           [7 : 0]     dout1; 
 logic                       dout_valid1;
@@ -157,6 +173,10 @@ assign ready_keygen               = pau_ready;
 assign con_coeff_keygen           = pau_con_coeff;
 assign con_coeff_valid_keygen     = pau_con_coeff_valid;
 
+// --- MAC_Pool 回传给 KeyGen ---
+assign mac_valid_out_keygen = mac_valid_out;
+assign mac_data_out_keygen  = mac_data_out;
+
 // SHA3-1 回传给 KeyGen
 assign done1_keygen           = done1;
 assign done_out1_keygen       = done_out1;
@@ -193,6 +213,13 @@ always_comb begin
     pau_ext_operand     = 'd0;
     pau_mode_config     = 'd0;
 
+    mac_valid_in = 1'b0;
+    mac_data_in2 = 'd0;
+    for (int i=0; i<K; i++) begin
+        mac_data_in1[i] = 'd0;
+        mac_data_in3[i] = 'd0;
+    end
+
     dout1       = 'd0;
     dout_valid1 = 1'b0;
     dout_len1   = 'd0;
@@ -226,6 +253,13 @@ always_comb begin
             pau_request         = request_keygen;
             pau_ext_operand     = ext_operand_keygen;
             pau_mode_config     = mode_config_keygen;
+
+            mac_valid_in = mac_valid_in_keygen;
+            mac_data_in2 = mac_data_in2_keygen;
+            for (int i=0; i<K; i++) begin
+                mac_data_in1[i] = mac_data_in1_keygen[i];
+                mac_data_in3[i] = mac_data_in3_keygen[i];
+            end
 
             dout1                       = dout1_keygen;
             dout_valid1                 = dout_valid1_keygen;
@@ -293,6 +327,18 @@ Poly_PAU u_Poly_PAU(
     .con_coeff_valid        ( pau_con_coeff_valid     )
 );
 
+MAC_Array_Pool #(
+    .K ( K )
+) u_MAC_Array_Pool(
+    .clk        ( clk          ),
+    .rstn       ( rstn         ),
+    .valid_in   ( mac_valid_in ),
+    .data_in1   ( mac_data_in1 ),
+    .data_in2   ( mac_data_in2 ),
+    .data_in3   ( mac_data_in3 ),
+    .valid_out  ( mac_valid_out),
+    .data_out   ( mac_data_out )
+);
 
 sha3 u_sha3_1(
     .clk                ( clk             ),
