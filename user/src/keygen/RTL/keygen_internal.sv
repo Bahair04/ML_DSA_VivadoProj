@@ -823,14 +823,14 @@ generate
 		wire [12 : 0] t0_out_prime;
 		wire [12 : 0] t0_out = 4096 - t0_out_prime;
         power2round u_power2round(
-            .clk        ( clk 					),
-            .rstn       ( rstn 					),
-            .t          ( t_in 					),
-            .t_valid    ( t_valid_in 			),
-            .t1         ( t1_out 				), 
-            .t1_valid   ( t1_valid_out_vec[i] 	),
-            .t0         ( t0_out_prime 			),  
-            .t0_valid   ( t0_valid_out_vec[i] 	)
+            .clk            ( clk 					),
+            .rstn           ( rstn 					),
+            .t_input        ( t_in 					),
+            .t_valid_input  ( t_valid_in 			),
+            .t1             ( t1_out 				), 
+            .t1_valid       ( t1_valid_out_vec[i] 	),
+            .t0             ( t0_out_prime 			),  
+            .t0_valid       ( t0_valid_out_vec[i] 	)
         );  
 		assign t0_out_comb[13 * i +: 13] = t0_out;
 		assign t1_out_comb[10 * i +: 10] = t1_out;

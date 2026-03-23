@@ -6,8 +6,8 @@ module power2round(
     input       logic               rstn,
 
     // --- 数据输入接口 ---
-    input       logic   [22 : 0]    t,
-    input       logic               t_valid,
+    input       logic   [22 : 0]    t_input,
+    input       logic               t_valid_input,
 
     // --- 数据输出接口 ---
     output      logic   [9 : 0]     t1,             // 无符号   10位
@@ -27,6 +27,20 @@ logic           [22 : 0]            t_d1, t_d2;
 
 logic           [9 : 0]             shift;
 logic           [9 : 0]             shift_d [2 : 0];
+
+logic           [22 : 0]            t;
+logic                               t_valid;
+
+always_ff @(posedge clk or negedge rstn) begin      // 寄存一拍优化时序
+    if (!rstn) begin
+        t <= 'd0;
+        t_valid <= 'd0;
+    end
+    else begin
+        t <= t_input;
+        t_valid <= t_valid_input;
+    end
+end
 
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
