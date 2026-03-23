@@ -5,8 +5,8 @@ verilog fifo_generator_v13_2_5  \
 
 verilog xil_defaultlib  \
 "../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
-"../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
 "../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
+"../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
 "../../../../proj.gen/sources_1/ip/ExpandS_sipo_1/sim/ExpandS_sipo_1.v" \
 
 sv xil_defaultlib  \

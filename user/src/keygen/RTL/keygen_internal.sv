@@ -63,6 +63,18 @@ module keygen_internal
     output      logic           [63 : 0]    st_64bit_ExpandA,       // SHA3 挤出8字节数据
     output      logic                       st_64bit_valid_ExpandA, // SHA3 挤出8字节数据有效信号
 
+    // --- Poly_PAU 输入输出接口 ---
+    output      logic           [91 : 0]    ori_coeff,					// 向Poly_PAU填充原始系数
+    output      logic                       ori_coeff_valid,			// 原始系数有效信号
+    output      logic                       request,                    // 上游请求信号
+    output      logic           [91 : 0]    ext_operand,                // 外部输入的计算数
+    input       logic                       ext_operand_request,        // 请求获取外部输入的计算数
+    output      logic           [4 : 0]     mode_config,                // 模式选择 0: NTT 1: INTT 2: 模乘 3: 模加 4: 模减
+
+    input       logic                       ready,                      // 下游准备信号
+    input       logic           [91 : 0]    con_coeff,					// NTT/INTT 结果输出
+    input       logic                       con_coeff_valid,			// NTT/INTT 输出有效信号
+
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
     output      logic                       dout_valid1, 
@@ -167,17 +179,6 @@ logic           [8 : 0]             r_VectorT_Coeff_addr_INTT;
 logic           [8 : 0]             r_VectorT_Coeff_addr_INTT_d;
 
 // --- NTT/INTT (Poly_PAU) 信号 ---
-logic           [91 : 0]            ori_coeff;					// 向Poly_PAU填充原始系数
-logic                               ori_coeff_valid;			// 原始系数有效信号
-logic                               request;                    // 上游请求信号
-logic           [91 : 0]            ext_operand;                // 外部输入的计算数
-logic                               ext_operand_request;        // 请求获取外部输入的计算数
-logic           [4 : 0]             mode_config;                // 模式选择 0: NTT 1: INTT 2: 模乘 3: 模加 4: 模减
-
-logic                               ready;                      // 下游准备信号
-logic           [91 : 0]            con_coeff;					// NTT/INTT 结果输出
-logic                               con_coeff_valid;			// NTT/INTT 输出有效信号
-
 logic           [8 : 0]             con_coeff_cnt;              // 输出系数计数器 (NTT输出个数为`l * 64，INTT输出个数为`k * 64)
 logic           [8 : 0]             con_coeff_cnt_d;			// 同时作为矩阵 A 和向量 S2 的读取地址 由于存在一个时钟周期的读延迟
 																// 所以转换结果con_coeff以及有效信号需要延迟一个时钟周期
@@ -705,20 +706,7 @@ always_ff @(posedge clk) begin
         con_coeff_cnt_d <= con_coeff_cnt;
 end
 
-Poly_PAU u_Poly_PAU(
-    .clk                    ( clk                  ),
-    .rstn                   ( rstn                 ),
-    .ori_coeff              ( ori_coeff            ),
-    .ori_coeff_valid        ( ori_coeff_valid      ),
-    .request                ( request              ),
-    .ext_operand            ( ext_operand          ),
-    .ext_operand_request    ( ext_operand_request  ),
-    .mode_config            ( mode_config          ),
-    .ready                  ( ready                ),
-    .con_coeff              ( con_coeff            ),
-    .con_coeff_valid        ( con_coeff_valid      )
-);
-
+//* Poly_PAU 放到顶层便于复用
 
 // ==========================================================
 // 8. 矩阵乘加网络 (ModuleMAC 阵列)

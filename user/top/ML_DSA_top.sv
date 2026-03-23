@@ -75,6 +75,17 @@ logic                       done_out_ExpandA_keygen;       // SHA3 挤出数据�
 logic           [63 : 0]    st_64bit_ExpandA_keygen;       // SHA3 挤出8字节数据
 logic                       st_64bit_valid_ExpandA_keygen; // SHA3 挤出8字节数据有效信号
 
+// --- Poly_PAU 信号 ---
+logic           [91 : 0]    ori_coeff_keygen;				
+logic                       ori_coeff_valid_keygen;		
+logic                       request_keygen;                
+logic           [91 : 0]    ext_operand_keygen;            
+logic                       ext_operand_request_keygen;    
+logic           [4 : 0]     mode_config_keygen;            
+logic                       ready_keygen;                  
+logic           [91 : 0]    con_coeff_keygen;				
+logic                       con_coeff_valid_keygen;		
+
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_keygen; 
 logic                       dout_valid1_keygen; 
@@ -156,6 +167,16 @@ u_keygen_internal(
     .done_out_ExpandA           ( done_out_ExpandA_keygen        ),             
     .st_64bit_ExpandA           ( st_64bit_ExpandA_keygen        ),             
     .st_64bit_valid_ExpandA     ( st_64bit_valid_ExpandA_keygen  ),            
+
+    .ori_coeff                  ( ori_coeff_keygen               ),
+    .ori_coeff_valid            ( ori_coeff_valid_keygen         ),
+    .request                    ( request_keygen                 ),
+    .ext_operand                ( ext_operand_keygen             ),
+    .ext_operand_request        ( ext_operand_request_keygen     ),
+    .mode_config                ( mode_config_keygen             ),
+    .ready                      ( ready_keygen                   ),
+    .con_coeff                  ( con_coeff_keygen               ),
+    .con_coeff_valid            ( con_coeff_valid_keygen         ),
 
 	.dout1                  	( dout1_keygen                   ),
 	.dout_valid1            	( dout_valid1_keygen             ),
@@ -240,6 +261,16 @@ GlobalComputeArbitration #(
     .st_64bit_ExpandA_keygen        (st_64bit_ExpandA_keygen         ),      
     .st_64bit_valid_ExpandA_keygen  (st_64bit_valid_ExpandA_keygen   ),
     
+    .ori_coeff_keygen               ( ori_coeff_keygen               ),				
+    .ori_coeff_valid_keygen         ( ori_coeff_valid_keygen         ),		
+    .request_keygen                 ( request_keygen                 ),                
+    .ext_operand_keygen             ( ext_operand_keygen             ),            
+    .ext_operand_request_keygen     ( ext_operand_request_keygen     ),    
+    .mode_config_keygen             ( mode_config_keygen             ),            
+    .ready_keygen                   ( ready_keygen                   ),                  
+    .con_coeff_keygen               ( con_coeff_keygen               ),				
+    .con_coeff_valid_keygen         ( con_coeff_valid_keygen         ),	
+
     .dout1_keygen                   ( dout1_keygen                   ), 
     .dout_valid1_keygen             ( dout_valid1_keygen             ), 
     .dout_len1_keygen               ( dout_len1_keygen               ), 

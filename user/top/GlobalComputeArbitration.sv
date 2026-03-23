@@ -33,6 +33,17 @@ module GlobalComputeArbitration
     input       logic           [63 : 0]    st_64bit_ExpandA_keygen,      
     input       logic                       st_64bit_valid_ExpandA_keygen,
 
+    // --- Poly_PAU 信号 ---
+    input       logic           [91 : 0]    ori_coeff_keygen,				
+    input       logic                       ori_coeff_valid_keygen,		
+    input       logic                       request_keygen,                
+    input       logic           [91 : 0]    ext_operand_keygen,            
+    output      logic                       ext_operand_request_keygen,    
+    input       logic           [4 : 0]     mode_config_keygen,            
+    output      logic                       ready_keygen,                  
+    output      logic           [91 : 0]    con_coeff_keygen,				
+    output      logic                       con_coeff_valid_keygen,	
+
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_keygen, 
     input       logic                       dout_valid1_keygen, 
@@ -61,9 +72,7 @@ module GlobalComputeArbitration
     output      logic           [63 : 0]    st_64bit2_keygen, 
     output      logic                       st_64bit_valid2_keygen
 
-    // 未来在这里增加 Sign 和 Verify 的输入输出引脚...
 );
-
 
 // ==========================================
 // 1. 状态流回传：一对多 (广播机制)
@@ -90,110 +99,16 @@ logic                       done_out_ExpandA;
 logic           [63 : 0]    st_64bit_ExpandA;       
 logic                       st_64bit_valid_ExpandA; 
 
-// --- ExpandA 回传给 KeyGen ---
-assign coeff_ExpandA_keygen          = coeff_ExpandA;
-assign coeff_valid_ExpandA_keygen    = coeff_valid_ExpandA;
-assign expand_done_ExpandA_keygen    = expand_done_ExpandA;
-assign dout_ExpandA_keygen           = dout_ExpandA;
-assign dout_valid_ExpandA_keygen     = dout_valid_ExpandA;
-assign dout_len_ExpandA_keygen       = dout_len_ExpandA;
-assign mdlen_ExpandA_keygen          = mdlen_ExpandA;
-assign init_ExpandA_keygen           = init_ExpandA;
-assign start_ExpandA_keygen          = start_ExpandA;
-assign start_out_ExpandA_keygen      = start_out_ExpandA;
-assign out_len_ExpandA_keygen        = out_len_ExpandA;
-
-// SHA3-1 回传给 KeyGen
-assign done1_keygen           = done1;
-assign done_out1_keygen       = done_out1;
-assign st_64bit1_keygen       = st_64bit1;
-assign st_64bit_valid1_keygen = st_64bit_valid1;
-
-// SHA3-2 回传给 KeyGen
-assign done2_keygen           = done2;
-assign done_out2_keygen       = done_out2;
-assign st_64bit2_keygen       = st_64bit2;
-assign st_64bit_valid2_keygen = st_64bit_valid2;
-
-// 以后加了 Sign:
-// assign done1_sign = done1;
-// ...
-
-
-// ==========================================
-// 2. 指令与数据下发：多合一 (MUX仲裁)
-// ==========================================
-always_comb begin
-    // 🌟 第一步：全局打底，防止产生 Latch！
-    // 核心规则：所有的 valid、init、start 等使能信号必须默认为 0
-
-    rho_ExpandA                 = 'd0;
-    start_expand_ExpandA        = 1'b0;
-    done_ExpandA                = 1'b0;
-    done_out_ExpandA            = 1'b0;
-    st_64bit_ExpandA            = 'd0;
-    st_64bit_valid_ExpandA      = 1'b0;
-
-    dout1       = 'd0;
-    dout_valid1 = 1'b0;
-    dout_len1   = 'd0;
-    mdlen1      = 'd0;
-    init1       = 1'b0;
-    start1      = 1'b0;
-    start_out1  = 1'b0;
-    out_len1    = 'd0;
-
-    dout2       = 'd0;
-    dout_valid2 = 1'b0;
-    dout_len2   = 'd0;
-    mdlen2      = 'd0;
-    init2       = 1'b0;
-    start2      = 1'b0;
-    start_out2  = 1'b0;
-    out_len2    = 'd0;
-
-    // 🌟 第二步：根据 mode_config，让对应的控制器接管 SHA3 阵列
-    case (mode_config)
-        2'd0: begin             // --- KeyGen 获取控制权 ---
-            rho_ExpandA                 = rho_ExpandA_keygen;
-            start_expand_ExpandA        = start_expand_ExpandA_keygen;
-            done_ExpandA                = done_ExpandA_keygen;
-            done_out_ExpandA            = done_out_ExpandA_keygen;
-            st_64bit_ExpandA            = st_64bit_ExpandA_keygen;
-            st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_keygen;
-
-            dout1                       = dout1_keygen;
-            dout_valid1                 = dout_valid1_keygen;
-            dout_len1                   = dout_len1_keygen;
-            mdlen1                      = mdlen1_keygen;
-            init1                       = init1_keygen;
-            start1                      = start1_keygen;
-            start_out1                  = start_out1_keygen;
-            out_len1                    = out_len1_keygen;
-
-            dout2                       = dout2_keygen;
-            dout_valid2                 = dout_valid2_keygen;
-            dout_len2                   = dout_len2_keygen;
-            mdlen2                      = mdlen2_keygen;
-            init2                       = init2_keygen;
-            start2                      = start2_keygen;
-            start_out2                  = start_out2_keygen;
-            out_len2                    = out_len2_keygen;
-        end
-        
-        // 2'd1: begin          // --- Sign 获取控制权 ---
-        //     dout1       = dout1_sign;
-        //     ...
-        // end
-        
-        default: ; // 默认所有控制信号为0，保持 SHA3 空闲
-    endcase
-end
-
-
-// ==========================================
-// 3. 例化算力池 (保持原样)
-// ==========================================
+// --- Poly_PAU 内部线声明 ---
+logic           [91 : 0]    pau_ori_coeff;
+logic                       pau_ori_coeff_valid;
+logic                       pau_request;
+logic           [91 : 0]    pau_ext_operand;
+logic           [4 : 0]     pau_mode_config;
+logic                       pau_ext_operand_request;
+logic                       pau_ready;
+logic           [91 : 0]    pau_con_coeff;
+logic                       pau_con_coeff_valid;
 
 // --- SHA3-1 内部线声明 ---
 logic           [7 : 0]     dout1; 
@@ -223,6 +138,123 @@ logic                       done_out2;
 logic           [63 : 0]    st_64bit2; 
 logic                       st_64bit_valid2;
 
+// --- ExpandA 回传给 KeyGen ---
+assign coeff_ExpandA_keygen          = coeff_ExpandA;
+assign coeff_valid_ExpandA_keygen    = coeff_valid_ExpandA;
+assign expand_done_ExpandA_keygen    = expand_done_ExpandA;
+assign dout_ExpandA_keygen           = dout_ExpandA;
+assign dout_valid_ExpandA_keygen     = dout_valid_ExpandA;
+assign dout_len_ExpandA_keygen       = dout_len_ExpandA;
+assign mdlen_ExpandA_keygen          = mdlen_ExpandA;
+assign init_ExpandA_keygen           = init_ExpandA;
+assign start_ExpandA_keygen          = start_ExpandA;
+assign start_out_ExpandA_keygen      = start_out_ExpandA;
+assign out_len_ExpandA_keygen        = out_len_ExpandA;
+
+// --- Poly_PAU 回传给 KeyGen ---
+assign ext_operand_request_keygen = pau_ext_operand_request;
+assign ready_keygen               = pau_ready;
+assign con_coeff_keygen           = pau_con_coeff;
+assign con_coeff_valid_keygen     = pau_con_coeff_valid;
+
+// SHA3-1 回传给 KeyGen
+assign done1_keygen           = done1;
+assign done_out1_keygen       = done_out1;
+assign st_64bit1_keygen       = st_64bit1;
+assign st_64bit_valid1_keygen = st_64bit_valid1;
+
+// SHA3-2 回传给 KeyGen
+assign done2_keygen           = done2;
+assign done_out2_keygen       = done_out2;
+assign st_64bit2_keygen       = st_64bit2;
+assign st_64bit_valid2_keygen = st_64bit_valid2;
+
+// 以后加了 Sign:
+// assign done1_sign = done1;
+// ...
+
+
+// ==========================================
+// 2. 指令与数据下发：多合一 (MUX仲裁)
+// ==========================================
+always_comb begin
+    // 所有的 valid、init、start 等使能信号必须默认为 0
+
+    rho_ExpandA                 = 'd0;
+    start_expand_ExpandA        = 1'b0;
+    done_ExpandA                = 1'b0;
+    done_out_ExpandA            = 1'b0;
+    st_64bit_ExpandA            = 'd0;
+    st_64bit_valid_ExpandA      = 1'b0;
+
+    pau_ori_coeff       = 'd0;
+    pau_ori_coeff_valid = 1'b0;
+    pau_request         = 1'b0;
+    pau_ext_operand     = 'd0;
+    pau_mode_config     = 'd0;
+
+    dout1       = 'd0;
+    dout_valid1 = 1'b0;
+    dout_len1   = 'd0;
+    mdlen1      = 'd0;
+    init1       = 1'b0;
+    start1      = 1'b0;
+    start_out1  = 1'b0;
+    out_len1    = 'd0;
+
+    dout2       = 'd0;
+    dout_valid2 = 1'b0;
+    dout_len2   = 'd0;
+    mdlen2      = 'd0;
+    init2       = 1'b0;
+    start2      = 1'b0;
+    start_out2  = 1'b0;
+    out_len2    = 'd0;
+
+    // 根据 mode_config，让对应的控制器接管 SHA3 阵列
+    case (mode_config)
+        2'd0: begin             // --- KeyGen 获取控制权 ---
+            rho_ExpandA                 = rho_ExpandA_keygen;
+            start_expand_ExpandA        = start_expand_ExpandA_keygen;
+            done_ExpandA                = done_ExpandA_keygen;
+            done_out_ExpandA            = done_out_ExpandA_keygen;
+            st_64bit_ExpandA            = st_64bit_ExpandA_keygen;
+            st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_keygen;
+
+            pau_ori_coeff       = ori_coeff_keygen;
+            pau_ori_coeff_valid = ori_coeff_valid_keygen;
+            pau_request         = request_keygen;
+            pau_ext_operand     = ext_operand_keygen;
+            pau_mode_config     = mode_config_keygen;
+
+            dout1                       = dout1_keygen;
+            dout_valid1                 = dout_valid1_keygen;
+            dout_len1                   = dout_len1_keygen;
+            mdlen1                      = mdlen1_keygen;
+            init1                       = init1_keygen;
+            start1                      = start1_keygen;
+            start_out1                  = start_out1_keygen;
+            out_len1                    = out_len1_keygen;
+
+            dout2                       = dout2_keygen;
+            dout_valid2                 = dout_valid2_keygen;
+            dout_len2                   = dout_len2_keygen;
+            mdlen2                      = mdlen2_keygen;
+            init2                       = init2_keygen;
+            start2                      = start2_keygen;
+            start_out2                  = start_out2_keygen;
+            out_len2                    = out_len2_keygen;
+        end
+        
+        default: ; // 默认所有控制信号为0，保持 SHA3 空闲
+    endcase
+end
+
+
+// ==========================================
+// 3. 例化算力池 (保持原样)
+// ==========================================
+
 ExpandA u_ExpandA(
     .clk                ( clk                     ),
     .rstn               ( rstn                    ),
@@ -244,6 +276,21 @@ ExpandA u_ExpandA(
     .done_out           ( done_out_ExpandA        ),
     .st_64bit           ( st_64bit_ExpandA        ),
     .st_64bit_valid     ( st_64bit_valid_ExpandA  )
+);
+
+assign ext_operand              = 'd0;
+Poly_PAU u_Poly_PAU(
+    .clk                    ( clk                     ),
+    .rstn                   ( rstn                    ),
+    .ori_coeff              ( pau_ori_coeff           ),
+    .ori_coeff_valid        ( pau_ori_coeff_valid     ),
+    .request                ( pau_request             ),
+    .ext_operand            ( pau_ext_operand         ),
+    .ext_operand_request    ( pau_ext_operand_request ),
+    .mode_config            ( pau_mode_config         ),
+    .ready                  ( pau_ready               ),
+    .con_coeff              ( pau_con_coeff           ),
+    .con_coeff_valid        ( pau_con_coeff_valid     )
 );
 
 
