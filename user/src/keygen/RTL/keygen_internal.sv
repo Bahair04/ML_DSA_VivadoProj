@@ -1,60 +1,80 @@
 `include "../../param_conf.v"
-module keygen_internal(
+module keygen_internal
+#(
+    parameter           K = `k,
+    parameter           L = `l
+)(
     // --- Ê±ÖÓºÍ¸´Î»ÐÅºÅ ---
-	input       logic               clk,
-    input       logic               rstn,
+	input       logic                       clk,
+    input       logic                       rstn,
 
 	// --- ¿ØÖÆ±êÖ¾Î» ---
-	input       logic               start,          // Æô¶¯±êÖ¾
-	output      logic               key_ready,      // ×¼±¸±êÖ¾
-	output      logic               done,           // Íê³É±êÖ¾
+	input       logic                       start,          // Æô¶¯±êÖ¾
+	output      logic                       key_ready,      // ×¼±¸±êÖ¾
+	output      logic                       done,           // Íê³É±êÖ¾
 
 	// --- ÊäÈëÊä³öÊý¾Ý ---
-	input       logic   [255 : 0]   zeta,           // 32×Ö½Ú ÖÖ×Ó
-	output      logic   [7 : 0]     pk,             // µ¥×Ö½Ú ¹«Ô¿
-	output      logic   [7 : 0]     sk,             // µ¥×Ö½Ú Ë½Ô¿
+	input       logic           [255 : 0]   zeta,           // 32×Ö½Ú ÖÖ×Ó
+	output      logic           [7 : 0]     pk,             // µ¥×Ö½Ú ¹«Ô¿
+	output      logic           [7 : 0]     sk,             // µ¥×Ö½Ú Ë½Ô¿
 
-	output      logic   [91 : 0]    coeff_rho_ExpandA,          // 4*23bit ÓÐÐ§²ÉÑùÏµÊý
-    output      logic               coeff_valid_rho_ExpandA,    // 4*23bit ÓÐÐ§²ÉÑùÏµÊýÐÅºÅ
+    // --- BRAM ×ÜÏßÐÅºÅ ---
+    output      logic           [91 : 0]    w_MatrixA_Coeff,
+    output      logic                       w_MatrixA_Coeff_valid,
+    output      logic           [11 : 0]    w_MatrixA_Coeff_addr,
+    input       logic           [91 : 0]    r_MatrixA_Coeff [0 : K - 1],
+    output      logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
 
-    output      logic   [15 : 0]    coeff_rho_ExpandS,          // 4*4bit ÓÐÐ§²ÉÑùÏµÊý
-    output      logic               coeff_valid_rho_ExpandS,    // 4*4bit ÓÐÐ§²ÉÑùÏµÊýÐÅºÅ
+    output      logic   signed  [15 : 0]    w_VectorS1_Coeff,                   // 4*4bitÓÐ·ûºÅÊý
+    output      logic                       w_VectorS1_Coeff_valid,
+    output      logic           [8 : 0]     w_VectorS1_Coeff_addr,
+    input       logic           [91 : 0]    r_VectorS1_Coeff,                   // ¶ÔqÈ¡Ä£ ÎÞ·ûºÅ
+    output      logic           [8 : 0]     r_VectorS1_Coeff_addr,
+
+    output      logic   signed  [15 : 0]    w_VectorS2_Coeff,                   // 4*4bitÓÐ·ûºÅÊý
+    output      logic                       w_VectorS2_Coeff_valid,
+    output      logic           [8 : 0]     w_VectorS2_Coeff_addr,
+    input       logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1],       // ¶ÔqÈ¡Ä£ ÎÞ·ûºÅ
+    output      logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1],
+
+    output      logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1],
+    output      logic                       w_VectorT_Coeff_valid [0 : K - 1],
+    output      logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1],
+    input       logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
+    output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
 
     // --- SHA3-1 ¿ØÖÆ½Ó¿Ú ---
-    output      logic   [7 : 0]     dout1, 
-    output      logic               dout_valid1, 
-    output      logic   [31 : 0]    dout_len1, 
-    output      logic   [7 : 0]     mdlen1, 
-    output      logic               init1, 
-    output      logic               start1, 
-    input       logic               done1, 
-    output      logic               start_out1, 
-    output      logic   [31 : 0]    out_len1, 
-    input       logic               done_out1, 
-    input       logic   [63 : 0]    st_64bit1, 
-    input       logic               st_64bit_valid1,
+    output      logic           [7 : 0]     dout1, 
+    output      logic                       dout_valid1, 
+    output      logic           [31 : 0]    dout_len1, 
+    output      logic           [7 : 0]     mdlen1, 
+    output      logic                       init1, 
+    output      logic                       start1, 
+    input       logic                       done1, 
+    output      logic                       start_out1, 
+    output      logic           [31 : 0]    out_len1, 
+    input       logic                       done_out1, 
+    input       logic           [63 : 0]    st_64bit1, 
+    input       logic                       st_64bit_valid1,
 
     // --- SHA3-2 ¿ØÖÆ½Ó¿Ú ---
-    output      logic   [7 : 0]     dout2, 
-    output      logic               dout_valid2, 
-    output      logic   [31 : 0]    dout_len2, 
-    output      logic   [7 : 0]     mdlen2, 
-    output      logic               init2, 
-    output      logic               start2, 
-    input       logic               done2, 
-    output      logic               start_out2, 
-    output      logic   [31 : 0]    out_len2, 
-    input       logic               done_out2, 
-    input       logic   [63 : 0]    st_64bit2, 
-    input       logic               st_64bit_valid2
+    output      logic           [7 : 0]     dout2, 
+    output      logic                       dout_valid2, 
+    output      logic           [31 : 0]    dout_len2, 
+    output      logic           [7 : 0]     mdlen2, 
+    output      logic                       init2, 
+    output      logic                       start2, 
+    input       logic                       done2, 
+    output      logic                       start_out2, 
+    output      logic           [31 : 0]    out_len2, 
+    input       logic                       done_out2, 
+    input       logic           [63 : 0]    st_64bit2, 
+    input       logic                       st_64bit_valid2
 );
 
 // ==========================================================
 // 1. ²ÎÊýÓë×´Ì¬¶¨Òå
 // ==========================================================
-localparam                          K = `k;
-localparam                          L = `l;
-
 typedef enum logic [4 : 0] {  
     S_IDLE,             // ¿ÕÏÐµÈ´ý
     S_INIT,             // ³õÊ¼»¯ ´æ´¢ÖÖ×Ó[seed, `k, `l]
@@ -141,37 +161,7 @@ logic           [63 : 0]            st_64bit_ExpandS;       // SHA3 ¼·³ö8×Ö½ÚÊý¾
 logic                               st_64bit_valid_ExpandS; // SHA3 ¼·³ö8×Ö½ÚÊý¾ÝÓÐÐ§ÐÅºÅ
 
 // --- BRAM ×ÜÏßÐÅºÅ ---
-logic           [91 : 0]            w_MatrixA_Coeff;
-logic                               w_MatrixA_Coeff_valid;
-logic           [11 : 0]            w_MatrixA_Coeff_addr;
-logic           [91 : 0]            r_MatrixA_Coeff [0 : K - 1];
-logic           [8 : 0]             r_MatrixA_Coeff_addr [0 : K - 1];
-
-logic   signed  [15 : 0]            w_VectorS1_Coeff;                   // 4*4bitÓÐ·ûºÅÊý
-logic                               w_VectorS1_Coeff_valid;
-logic           [8 : 0]             w_VectorS1_Coeff_addr;
-logic           [91 : 0]            r_VectorS1_Coeff;                   // ¶ÔqÈ¡Ä£ ÎÞ·ûºÅ
-logic           [8 : 0]             r_VectorS1_Coeff_addr;
-
-logic   signed  [15 : 0]            w_VectorS2_Coeff;                   // 4*4bitÓÐ·ûºÅÊý
-logic                               w_VectorS2_Coeff_valid;
-logic           [8 : 0]             w_VectorS2_Coeff_addr;
-logic           [91 : 0]            r_VectorS2_Coeff [0 : K - 1];       // ¶ÔqÈ¡Ä£ ÎÞ·ûºÅ
-logic           [5 : 0]             r_VectorS2_Coeff_addr [0 : K - 1];
-
-logic   signed  [79 : 0]            w_VectorY_Coeff;                    // 4*20bitÓÐ·ûºÅÊý
-logic                               w_VectorY_Coeff_valid;
-logic           [5 : 0]             w_VectorY_Coeff_addr;
-logic           [91 : 0]            r_VectorY_Coeff;                    // ¶ÔqÈ¡Ä£ ÎÞ·ûºÅ
-logic           [5 : 0]             r_VectorY_Coeff_addr;
-
-logic           [91 : 0]            w_VectorT_Coeff [0 : K - 1];
-logic                               w_VectorT_Coeff_valid [0 : K - 1];
 logic                               w_VectorT_Coeff_valid_d [0 : K - 1];
-logic           [5 : 0]             w_VectorT_Coeff_addr [0 : K - 1];
-logic           [91 : 0]            r_VectorT_Coeff [0 : K - 1];
-logic           [5 : 0]             r_VectorT_Coeff_addr [0 : K - 1];
-
 logic           [91 : 0]            r_VectorT_Coeff_INTT;
 logic           [8 : 0]             r_VectorT_Coeff_addr_INTT;
 logic           [8 : 0]             r_VectorT_Coeff_addr_INTT_d;
@@ -492,8 +482,6 @@ end
 // 5. À©Õ¹Ä£¿é (ExpandA / ExpandS)
 // ==========================================================
 assign rho_ExpandA = {<<8{seed_expand[1023 : 768]}};		// ÖÖ×Ó°´×Ö½Úµ¹È¡ 32Byte
-assign coeff_rho_ExpandA = coeff_ExpandA;					// Êä³öÀ©Õ¹½á¹ûµ½Íâ²¿¶Ë¿Ú
-assign coeff_valid_rho_ExpandA = coeff_valid_ExpandA;		// Êä³öÀ©Õ¹ÓÐÐ§ÐÅºÅµ½Íâ²¿¶Ë¿Ú
 
 ExpandA u_ExpandA(
     .clk                ( clk                     ),
@@ -518,9 +506,7 @@ ExpandA u_ExpandA(
     .st_64bit_valid     ( st_64bit_valid_ExpandA  )
 );
 
-assign rho_ExpandS = {<<8{seed_expand[767 : 256]}};			// ÖÖ×Ó°´×Ö½Úµ¹È¡ 64Byte		
-assign coeff_rho_ExpandS = coeff_raw;						// Êä³öÀ©Õ¹½á¹ûµ½Íâ²¿¶Ë¿Ú
-assign coeff_valid_rho_ExpandS = coeff_valid_ExpandS;		// Êä³öÀ©Õ¹ÓÐÐ§ÐÅºÅµ½Íâ²¿¶Ë¿Ú
+assign rho_ExpandS = {<<8{seed_expand[767 : 256]}};			// ÖÖ×Ó°´×Ö½Úµ¹È¡ 64Byte	
 
 ExpandS u_ExpandS(
     .clk                ( clk                     ),
@@ -628,49 +614,6 @@ always_ff @(posedge clk) begin : vector_t_write_control
             w_VectorT_Coeff_addr[i] <= w_VectorT_Coeff_addr[i];
     end
 end
-
-CoeffBlockRAM #(
-    .K  ( K  ),
-    .L  ( L  )
-)u_CoeffBlockRAM(
-    // --- Ê±ÖÓºÍ¸´Î»ÐÅºÅ ---
-    .clk                            (clk                        ),
-
-    // --- Matrix A ---
-    .w_MatrixA_Coeff                (w_MatrixA_Coeff            ),
-    .w_MatrixA_Coeff_valid          (w_MatrixA_Coeff_valid      ),
-    .w_MatrixA_Coeff_addr           (w_MatrixA_Coeff_addr       ),
-    .r_MatrixA_Coeff                (r_MatrixA_Coeff            ),
-    .r_MatrixA_Coeff_addr           (r_MatrixA_Coeff_addr       ),
-
-    // --- Vector S ---
-    .w_VectorS1_Coeff               (w_VectorS1_Coeff           ),
-    .w_VectorS1_Coeff_valid         (w_VectorS1_Coeff_valid     ),
-    .w_VectorS1_Coeff_addr          (w_VectorS1_Coeff_addr      ),
-    .r_VectorS1_Coeff               (r_VectorS1_Coeff           ),
-    .r_VectorS1_Coeff_addr          (r_VectorS1_Coeff_addr      ),
-
-    .w_VectorS2_Coeff               (w_VectorS2_Coeff           ),
-    .w_VectorS2_Coeff_valid         (w_VectorS2_Coeff_valid     ),
-    .w_VectorS2_Coeff_addr          (w_VectorS2_Coeff_addr      ),
-    .r_VectorS2_Coeff               (r_VectorS2_Coeff           ),
-    .r_VectorS2_Coeff_addr          (r_VectorS2_Coeff_addr      ),
-
-    // --- Vector Y ---
-    .w_VectorY_Coeff                (w_VectorY_Coeff            ),
-    .w_VectorY_Coeff_valid          (w_VectorY_Coeff_valid      ),
-    .w_VectorY_Coeff_addr           (w_VectorY_Coeff_addr       ),
-    .r_VectorY_Coeff                (r_VectorY_Coeff            ),
-    .r_VectorY_Coeff_addr           (r_VectorY_Coeff_addr       ),
-
-    // --- Vector T ---
-    .w_VectorT_Coeff                (w_VectorT_Coeff            ),
-    .w_VectorT_Coeff_valid          (w_VectorT_Coeff_valid      ),
-    .w_VectorT_Coeff_addr           (w_VectorT_Coeff_addr       ),
-    .r_VectorT_Coeff                (r_VectorT_Coeff            ),
-    .r_VectorT_Coeff_addr           (r_VectorT_Coeff_addr       )
-);
-
 
 // ==========================================================
 // 7. NTT/INTT (Poly_PAU ¿ØÖÆÓëÀý»¯)

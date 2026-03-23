@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="synth_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1774152214">
   <File Type="PA-TCL" Name="keygen_internal.tcl"/>
-  <File Type="RDS-PROPCONSTRS" Name="keygen_internal_drc_synth.rpt"/>
   <File Type="REPORTS-TCL" Name="keygen_internal_reports.tcl"/>
   <File Type="RDS-RDS" Name="keygen_internal.vds"/>
   <File Type="RDS-UTIL" Name="keygen_internal_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="keygen_internal_utilization_synth.pb"/>
   <File Type="RDS-DCP" Name="keygen_internal.dcp"/>
-  <File Type="VDS-TIMINGSUMMARY" Name="keygen_internal_timing_summary_synth.rpt"/>
-  <File Type="VDS-TIMING-PB" Name="keygen_internal_timing_summary_synth.pb"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PSRCDIR/sources_1/ip/ExpandA_sipo/ExpandA_sipo.xci">

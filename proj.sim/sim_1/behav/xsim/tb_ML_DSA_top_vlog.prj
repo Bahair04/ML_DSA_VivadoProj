@@ -15,7 +15,10 @@ sv xil_defaultlib  \
 "../../../../user/src/Sampler/RTL/ExpandA.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA_sipo96.sv" \
 "../../../../user/src/Sampler/RTL/ExpandS.sv" \
+"../../../../user/top/GlobalBRAMArbitration.sv" \
+"../../../../user/top/GlobalComputeArbitration.sv" \
 "../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
+"../../../../user/top/ML_DSA_top.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/MatrixA.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleAdd.sv" \
 "../../../../user/src/Polynomials/RTL/ModuleDiv2.sv" \
@@ -26,6 +29,7 @@ sv xil_defaultlib  \
 "../../../../user/src/Polynomials/RTL/Poly_PAU.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigCompute.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigComputeUnit.sv" \
+"../../../../user/top/SharedBRAMPool.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorS1.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorS2.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorT.sv" \
@@ -36,7 +40,7 @@ sv xil_defaultlib  \
 "../../../../user/src/keygen/RTL/keygen_internal.sv" \
 "../../../../user/src/En_Decoder/power2round.sv" \
 "../../../../user/src/Hash/RTL/sha3.sv" \
-"../../../../user/src/keygen/SIM/tb_keygen_interval.sv" \
+"../../../../user/top/simulation/tb_ML_DSA_top.sv" \
 
 # compile glbl module
 verilog xil_defaultlib "glbl.v"
