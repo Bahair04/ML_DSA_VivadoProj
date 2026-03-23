@@ -55,6 +55,26 @@ logic           [5 : 0]     r_VectorT_Coeff_addr_keygen [0 : K - 1];
 // Compute
 // --------------------------------
 
+// --- ExpandA 信号 ---
+logic           [255 : 0]   rho_ExpandA_keygen;            // 256位随机种子
+logic                       start_expand_ExpandA_keygen;   // 开始扩展A矩阵信号
+logic           [91 : 0]    coeff_ExpandA_keygen;          // 4*23bit 有效采样系数
+logic                       coeff_valid_ExpandA_keygen;    // 4*23bit 有效采样系数信号
+logic                       expand_done_ExpandA_keygen;    // 扩展完成信号
+
+logic           [7 : 0]     dout_ExpandA_keygen;           // SHA3 串行输入字节数据
+logic                       dout_valid_ExpandA_keygen;     // SHA3 串行输入字节有效信号
+logic           [31 : 0]    dout_len_ExpandA_keygen;       // SHA3 串行输入字节长度
+logic           [7 : 0]     mdlen_ExpandA_keygen;          // SHA3 Hash长度
+logic                       init_ExpandA_keygen;           // SHA3 初始化信号
+logic                       start_ExpandA_keygen;          // SHA3 开始装载数据
+logic                       done_ExpandA_keygen;           // SHA3 数据装载完成
+logic                       start_out_ExpandA_keygen;      // SHA3 开始挤出数据
+logic           [31 : 0]    out_len_ExpandA_keygen;        // SHA3 挤出数据长度
+logic                       done_out_ExpandA_keygen;       // SHA3 挤出数据完成
+logic           [63 : 0]    st_64bit_ExpandA_keygen;       // SHA3 挤出8字节数据
+logic                       st_64bit_valid_ExpandA_keygen; // SHA3 挤出8字节数据有效信号
+
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_keygen; 
 logic                       dout_valid1_keygen; 
@@ -117,6 +137,25 @@ u_keygen_internal(
 	.w_VectorT_Coeff_addr   	( w_VectorT_Coeff_addr_keygen    ),
 	.r_VectorT_Coeff        	( r_VectorT_Coeff_keygen         ),
 	.r_VectorT_Coeff_addr   	( r_VectorT_Coeff_addr_keygen    ),
+
+    .rho_ExpandA                ( rho_ExpandA_keygen             ),             
+    .start_expand_ExpandA       ( start_expand_ExpandA_keygen    ),             
+    .coeff_ExpandA              ( coeff_ExpandA_keygen           ),             
+    .coeff_valid_ExpandA        ( coeff_valid_ExpandA_keygen     ),             
+    .expand_done_ExpandA        ( expand_done_ExpandA_keygen     ),             
+
+    .dout_ExpandA               ( dout_ExpandA_keygen            ),             
+    .dout_valid_ExpandA         ( dout_valid_ExpandA_keygen      ),             
+    .dout_len_ExpandA           ( dout_len_ExpandA_keygen        ),             
+    .mdlen_ExpandA              ( mdlen_ExpandA_keygen           ),             
+    .init_ExpandA               ( init_ExpandA_keygen            ),             
+    .start_ExpandA              ( start_ExpandA_keygen           ),             
+    .done_ExpandA               ( done_ExpandA_keygen            ),             
+    .start_out_ExpandA          ( start_out_ExpandA_keygen       ),             
+    .out_len_ExpandA            ( out_len_ExpandA_keygen         ),             
+    .done_out_ExpandA           ( done_out_ExpandA_keygen        ),             
+    .st_64bit_ExpandA           ( st_64bit_ExpandA_keygen        ),             
+    .st_64bit_valid_ExpandA     ( st_64bit_valid_ExpandA_keygen  ),            
 
 	.dout1                  	( dout1_keygen                   ),
 	.dout_valid1            	( dout_valid1_keygen             ),
@@ -182,7 +221,25 @@ GlobalComputeArbitration #(
     .rstn                           ( rstn                           ),
     .mode_config                    ( mode_config                    ), // 听从最高长官
     
-    // KeyGen 数据流对接
+    .rho_ExpandA_keygen             (rho_ExpandA_keygen              ),            
+    .start_expand_ExpandA_keygen    (start_expand_ExpandA_keygen     ),   
+    .coeff_ExpandA_keygen           (coeff_ExpandA_keygen            ),          
+    .coeff_valid_ExpandA_keygen     (coeff_valid_ExpandA_keygen      ),    
+    .expand_done_ExpandA_keygen     (expand_done_ExpandA_keygen      ),    
+
+    .dout_ExpandA_keygen            (dout_ExpandA_keygen             ),          
+    .dout_valid_ExpandA_keygen      (dout_valid_ExpandA_keygen       ),    
+    .dout_len_ExpandA_keygen        (dout_len_ExpandA_keygen         ),      
+    .mdlen_ExpandA_keygen           (mdlen_ExpandA_keygen            ),         
+    .init_ExpandA_keygen            (init_ExpandA_keygen             ),          
+    .start_ExpandA_keygen           (start_ExpandA_keygen            ),         
+    .done_ExpandA_keygen            (done_ExpandA_keygen             ),          
+    .start_out_ExpandA_keygen       (start_out_ExpandA_keygen        ),     
+    .out_len_ExpandA_keygen         (out_len_ExpandA_keygen          ),       
+    .done_out_ExpandA_keygen        (done_out_ExpandA_keygen         ),      
+    .st_64bit_ExpandA_keygen        (st_64bit_ExpandA_keygen         ),      
+    .st_64bit_valid_ExpandA_keygen  (st_64bit_valid_ExpandA_keygen   ),
+    
     .dout1_keygen                   ( dout1_keygen                   ), 
     .dout_valid1_keygen             ( dout_valid1_keygen             ), 
     .dout_len1_keygen               ( dout_len1_keygen               ), 

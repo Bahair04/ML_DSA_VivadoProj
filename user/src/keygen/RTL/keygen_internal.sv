@@ -43,6 +43,26 @@ module keygen_internal
     input       logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
 
+    // --- ExpandA 信号 ---
+    output      logic           [255 : 0]   rho_ExpandA,            // 256位随机种子
+    output      logic                       start_expand_ExpandA,   // 开始扩展A矩阵信号
+    input       logic           [91 : 0]    coeff_ExpandA,          // 4*23bit 有效采样系数
+    input       logic                       coeff_valid_ExpandA,    // 4*23bit 有效采样系数信号
+    input       logic                       expand_done_ExpandA,    // 扩展完成信号
+
+    input       logic           [7 : 0]     dout_ExpandA,           // SHA3 串行输入字节数据
+    input       logic                       dout_valid_ExpandA,     // SHA3 串行输入字节有效信号
+    input       logic           [31 : 0]    dout_len_ExpandA,       // SHA3 串行输入字节长度
+    input       logic           [7 : 0]     mdlen_ExpandA,          // SHA3 Hash长度
+    input       logic                       init_ExpandA,           // SHA3 初始化信号
+    input       logic                       start_ExpandA,          // SHA3 开始装载数据
+    output      logic                       done_ExpandA,           // SHA3 数据装载完成
+    input       logic                       start_out_ExpandA,      // SHA3 开始挤出数据
+    input       logic           [31 : 0]    out_len_ExpandA,        // SHA3 挤出数据长度
+    output      logic                       done_out_ExpandA,       // SHA3 挤出数据完成
+    output      logic           [63 : 0]    st_64bit_ExpandA,       // SHA3 挤出8字节数据
+    output      logic                       st_64bit_valid_ExpandA, // SHA3 挤出8字节数据有效信号
+
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
     output      logic                       dout_valid1, 
@@ -117,26 +137,6 @@ logic           [31 : 0]            out_len_seed;        // SHA3 挤出数据长度
 logic                               done_out_seed;       // SHA3 挤出数据完成
 logic           [63 : 0]            st_64bit_seed;       // SHA3 挤出8字节数据
 logic                               st_64bit_valid_seed; // SHA3 挤出8字节数据有效信号
-
-// --- ExpandA 信号 ---
-logic           [255 : 0]           rho_ExpandA;            // 256位随机种子
-logic                               start_expand_ExpandA;   // 开始扩展A矩阵信号
-logic           [91 : 0]            coeff_ExpandA;          // 4*23bit 有效采样系数
-logic                               coeff_valid_ExpandA;    // 4*23bit 有效采样系数信号
-logic                               expand_done_ExpandA;    // 扩展完成信号
-
-logic           [7 : 0]             dout_ExpandA;           // SHA3 串行输入字节数据
-logic                               dout_valid_ExpandA;     // SHA3 串行输入字节有效信号
-logic           [31 : 0]            dout_len_ExpandA;       // SHA3 串行输入字节长度
-logic           [7 : 0]             mdlen_ExpandA;          // SHA3 Hash长度
-logic                               init_ExpandA;           // SHA3 初始化信号
-logic                               start_ExpandA;          // SHA3 开始装载数据
-logic                               done_ExpandA;           // SHA3 数据装载完成
-logic                               start_out_ExpandA;      // SHA3 开始挤出数据
-logic           [31 : 0]            out_len_ExpandA;        // SHA3 挤出数据长度
-logic                               done_out_ExpandA;       // SHA3 挤出数据完成
-logic           [63 : 0]            st_64bit_ExpandA;       // SHA3 挤出8字节数据
-logic                               st_64bit_valid_ExpandA; // SHA3 挤出8字节数据有效信号
 
 // --- ExpandS 信号 ---
 logic           [511 : 0]           rho_ExpandS;            // 256位随机种子
@@ -483,28 +483,7 @@ end
 // ==========================================================
 assign rho_ExpandA = {<<8{seed_expand[1023 : 768]}};		// 种子按字节倒取 32Byte
 
-ExpandA u_ExpandA(
-    .clk                ( clk                     ),
-    .rstn               ( rstn                    ),
-    .rho                ( rho_ExpandA             ),
-    .start_expand       ( start_expand_ExpandA    ),
-    .coeff              ( coeff_ExpandA           ),
-    .coeff_valid        ( coeff_valid_ExpandA     ),
-    .expand_done        ( expand_done_ExpandA     ),
-
-    .dout               ( dout_ExpandA            ),
-    .dout_valid         ( dout_valid_ExpandA      ),
-    .dout_len           ( dout_len_ExpandA        ),
-    .mdlen              ( mdlen_ExpandA           ),
-    .init               ( init_ExpandA            ),
-    .start              ( start_ExpandA           ),
-    .done               ( done_ExpandA            ),
-    .start_out          ( start_out_ExpandA       ),
-    .out_len            ( out_len_ExpandA         ),
-    .done_out           ( done_out_ExpandA        ),
-    .st_64bit           ( st_64bit_ExpandA        ),
-    .st_64bit_valid     ( st_64bit_valid_ExpandA  )
-);
+//* ExpandA 放到顶层便于复用
 
 assign rho_ExpandS = {<<8{seed_expand[767 : 256]}};			// 种子按字节倒取 64Byte	
 
@@ -614,6 +593,8 @@ always_ff @(posedge clk) begin : vector_t_write_control
             w_VectorT_Coeff_addr[i] <= w_VectorT_Coeff_addr[i];
     end
 end
+
+//* CoeffBlockRAM 放到顶层便于复用
 
 // ==========================================================
 // 7. NTT/INTT (Poly_PAU 控制与例化)

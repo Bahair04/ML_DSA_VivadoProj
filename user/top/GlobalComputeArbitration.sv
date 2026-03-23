@@ -12,6 +12,27 @@ module GlobalComputeArbitration
     // ==========================================
     // KeyGen 控制器接口
     // ==========================================    
+
+    // --- ExpandA 信号 ---
+    input       logic           [255 : 0]   rho_ExpandA_keygen,            
+    input       logic                       start_expand_ExpandA_keygen,   
+    output      logic           [91 : 0]    coeff_ExpandA_keygen,          
+    output      logic                       coeff_valid_ExpandA_keygen,    
+    output      logic                       expand_done_ExpandA_keygen,    
+
+    output      logic           [7 : 0]     dout_ExpandA_keygen,          
+    output      logic                       dout_valid_ExpandA_keygen,    
+    output      logic           [31 : 0]    dout_len_ExpandA_keygen,      
+    output      logic           [7 : 0]     mdlen_ExpandA_keygen,         
+    output      logic                       init_ExpandA_keygen,          
+    output      logic                       start_ExpandA_keygen,         
+    input       logic                       done_ExpandA_keygen,          
+    output      logic                       start_out_ExpandA_keygen,     
+    output      logic           [31 : 0]    out_len_ExpandA_keygen,       
+    input       logic                       done_out_ExpandA_keygen,      
+    input       logic           [63 : 0]    st_64bit_ExpandA_keygen,      
+    input       logic                       st_64bit_valid_ExpandA_keygen,
+
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_keygen, 
     input       logic                       dout_valid1_keygen, 
@@ -49,6 +70,39 @@ module GlobalComputeArbitration
 // 物理上没有延时，直接把 SHA3 吐出的结果广播给所有控制器
 // ==========================================
 
+// --- ExpandA 内部线声明 ---
+logic           [255 : 0]   rho_ExpandA;            
+logic                       start_expand_ExpandA;   
+logic           [91 : 0]    coeff_ExpandA;          
+logic                       coeff_valid_ExpandA;    
+logic                       expand_done_ExpandA;    
+
+logic           [7 : 0]     dout_ExpandA;           
+logic                       dout_valid_ExpandA;     
+logic           [31 : 0]    dout_len_ExpandA;       
+logic           [7 : 0]     mdlen_ExpandA;          
+logic                       init_ExpandA;           
+logic                       start_ExpandA;          
+logic                       done_ExpandA;           
+logic                       start_out_ExpandA;      
+logic           [31 : 0]    out_len_ExpandA;        
+logic                       done_out_ExpandA;       
+logic           [63 : 0]    st_64bit_ExpandA;       
+logic                       st_64bit_valid_ExpandA; 
+
+// --- ExpandA 回传给 KeyGen ---
+assign coeff_ExpandA_keygen          = coeff_ExpandA;
+assign coeff_valid_ExpandA_keygen    = coeff_valid_ExpandA;
+assign expand_done_ExpandA_keygen    = expand_done_ExpandA;
+assign dout_ExpandA_keygen           = dout_ExpandA;
+assign dout_valid_ExpandA_keygen     = dout_valid_ExpandA;
+assign dout_len_ExpandA_keygen       = dout_len_ExpandA;
+assign mdlen_ExpandA_keygen          = mdlen_ExpandA;
+assign init_ExpandA_keygen           = init_ExpandA;
+assign start_ExpandA_keygen          = start_ExpandA;
+assign start_out_ExpandA_keygen      = start_out_ExpandA;
+assign out_len_ExpandA_keygen        = out_len_ExpandA;
+
 // SHA3-1 回传给 KeyGen
 assign done1_keygen           = done1;
 assign done_out1_keygen       = done_out1;
@@ -72,6 +126,14 @@ assign st_64bit_valid2_keygen = st_64bit_valid2;
 always_comb begin
     // 🌟 第一步：全局打底，防止产生 Latch！
     // 核心规则：所有的 valid、init、start 等使能信号必须默认为 0
+
+    rho_ExpandA                 = 'd0;
+    start_expand_ExpandA        = 1'b0;
+    done_ExpandA                = 1'b0;
+    done_out_ExpandA            = 1'b0;
+    st_64bit_ExpandA            = 'd0;
+    st_64bit_valid_ExpandA      = 1'b0;
+
     dout1       = 'd0;
     dout_valid1 = 1'b0;
     dout_len1   = 'd0;
@@ -93,23 +155,30 @@ always_comb begin
     // 🌟 第二步：根据 mode_config，让对应的控制器接管 SHA3 阵列
     case (mode_config)
         2'd0: begin             // --- KeyGen 获取控制权 ---
-            dout1       = dout1_keygen;
-            dout_valid1 = dout_valid1_keygen;
-            dout_len1   = dout_len1_keygen;
-            mdlen1      = mdlen1_keygen;
-            init1       = init1_keygen;
-            start1      = start1_keygen;
-            start_out1  = start_out1_keygen;
-            out_len1    = out_len1_keygen;
+            rho_ExpandA                 = rho_ExpandA_keygen;
+            start_expand_ExpandA        = start_expand_ExpandA_keygen;
+            done_ExpandA                = done_ExpandA_keygen;
+            done_out_ExpandA            = done_out_ExpandA_keygen;
+            st_64bit_ExpandA            = st_64bit_ExpandA_keygen;
+            st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_keygen;
 
-            dout2       = dout2_keygen;
-            dout_valid2 = dout_valid2_keygen;
-            dout_len2   = dout_len2_keygen;
-            mdlen2      = mdlen2_keygen;
-            init2       = init2_keygen;
-            start2      = start2_keygen;
-            start_out2  = start_out2_keygen;
-            out_len2    = out_len2_keygen;
+            dout1                       = dout1_keygen;
+            dout_valid1                 = dout_valid1_keygen;
+            dout_len1                   = dout_len1_keygen;
+            mdlen1                      = mdlen1_keygen;
+            init1                       = init1_keygen;
+            start1                      = start1_keygen;
+            start_out1                  = start_out1_keygen;
+            out_len1                    = out_len1_keygen;
+
+            dout2                       = dout2_keygen;
+            dout_valid2                 = dout_valid2_keygen;
+            dout_len2                   = dout_len2_keygen;
+            mdlen2                      = mdlen2_keygen;
+            init2                       = init2_keygen;
+            start2                      = start2_keygen;
+            start_out2                  = start_out2_keygen;
+            out_len2                    = out_len2_keygen;
         end
         
         // 2'd1: begin          // --- Sign 获取控制权 ---
@@ -153,6 +222,30 @@ logic           [31 : 0]    out_len2;
 logic                       done_out2; 
 logic           [63 : 0]    st_64bit2; 
 logic                       st_64bit_valid2;
+
+ExpandA u_ExpandA(
+    .clk                ( clk                     ),
+    .rstn               ( rstn                    ),
+    .rho                ( rho_ExpandA             ),
+    .start_expand       ( start_expand_ExpandA    ),
+    .coeff              ( coeff_ExpandA           ),
+    .coeff_valid        ( coeff_valid_ExpandA     ),
+    .expand_done        ( expand_done_ExpandA     ),
+
+    .dout               ( dout_ExpandA            ),
+    .dout_valid         ( dout_valid_ExpandA      ),
+    .dout_len           ( dout_len_ExpandA        ),
+    .mdlen              ( mdlen_ExpandA           ),
+    .init               ( init_ExpandA            ),
+    .start              ( start_ExpandA           ),
+    .done               ( done_ExpandA            ),
+    .start_out          ( start_out_ExpandA       ),
+    .out_len            ( out_len_ExpandA         ),
+    .done_out           ( done_out_ExpandA        ),
+    .st_64bit           ( st_64bit_ExpandA        ),
+    .st_64bit_valid     ( st_64bit_valid_ExpandA  )
+);
+
 
 sha3 u_sha3_1(
     .clk                ( clk             ),
