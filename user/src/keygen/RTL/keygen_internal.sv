@@ -292,11 +292,11 @@ always_ff @(posedge clk) begin
                     state <= S_T_INTT_WAIT;
             end
             S_T_ADD_S2 : begin
-                state <= S_T_ADD_S2;
-            end
-            default : begin
-                state <= S_IDLE;
-            end
+                state <= S_T_ADD_S2;   //*  pack/sha3 思路：生成s1和s2的同时使用一个pack0模块(先s1再s2，二者不会同时)
+            end                        //*  t0和t1同时生成，分别用pack0和pack1模块生成字节流 存入BRAM
+            default : begin            //*  s1和s2生成完毕后的接下来的阶段 同时把pk装载到SHA3中 再生成t1的时候，由于相邻两组t1之间存在着间隙
+                state <= S_IDLE;       //*  可以再生成当前组t1的同时进行pack，pack的结果(8字节)存入FIFO 当FIFO非空时 从中取出单字节 装载入sha3
+            end                        //*  由于相邻两个t的时钟周期约为(19+64)*4=332  而装载256*10字节为320个时钟周期  所以时间上是允许的
         endcase
     end
 end
@@ -312,7 +312,7 @@ always_ff @(posedge clk) begin
     if (!rstn)
         key_ready <= 1'b1;
     else if (state == S_IDLE)
-        key_ready <= 1'b1;
+        key_ready <= 1'b1;G
     else 
         key_ready <= 1'b0;
 end
@@ -741,7 +741,7 @@ always_ff @(posedge clk) begin
 end
 
 // MAC-T = A * NTT(S1) + T
-logic                   valid_out [0 : K - 1] [0 : 3];
+logic                   valid_out [0 : K - 1];
 logic   [91 : 0]        mac_out_comb [0 : K - 1];
 
 assign mac_valid_in_keygen = con_coeff_valid_d;
@@ -754,7 +754,7 @@ always_comb begin
         mac_data_in3_keygen[i] = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 92'd0 : r_VectorT_Coeff[i];
         
         // 接收来自 MAC 的结果
-        valid_out[i][0] = mac_valid_out_keygen;
+        valid_out[i] = mac_valid_out_keygen;
         mac_out_comb[i] = mac_data_out_keygen[i];
     end
 end
@@ -789,7 +789,7 @@ always_comb begin
 	end
 	if (state <= S_MATRIX_MULT_WAIT) begin
 		for (int i = 0 ; i < K ; i = i + 1) begin
-			w_VectorT_Coeff_valid[i] = valid_out[i][0];
+			w_VectorT_Coeff_valid[i] = valid_out[i];
 			w_VectorT_Coeff[i] = mac_out_comb[i];
  		end
 	end
