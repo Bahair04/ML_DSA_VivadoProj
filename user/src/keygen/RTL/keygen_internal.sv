@@ -2,7 +2,12 @@
 module keygen_internal
 #(
     parameter           K = `k,
-    parameter           L = `l
+    parameter           L = `l,
+    parameter T1_BIT_LEN = $clog2(`q - 1) - `d,                     // default : 10
+    parameter S1_S2_BIT_LEN = $clog2(2 * `eta) + 1,                 // default : 3
+    parameter T0_BIT_LEN = `d,                                      // default : 13
+    parameter Z_BIT_LEN = `bit_count,                               // default : 18
+    parameter H_BIT_LEN = 'd1         
 )(
     // --- 时钟和复位信号 ---
 	input       logic                       clk,
@@ -43,6 +48,18 @@ module keygen_internal
     input       logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
 
+    output      logic           [63 : 0]    w_EncodePK_Coeff,       
+    output      logic                       w_EncodePK_Coeff_valid,
+    output      logic           [8 : 0]     w_EncodePK_Coeff_addr,
+    input       logic           [63 : 0]    r_EncodePK_Coeff,           
+    output      logic           [8 : 0]     r_EncodePK_Coeff_addr,
+
+    output      logic           [63 : 0]    w_EncodeSK_Coeff,       
+    output      logic                       w_EncodeSK_Coeff_valid,
+    output      logic           [9 : 0]     w_EncodeSK_Coeff_addr,
+    input       logic           [63 : 0]    r_EncodeSK_Coeff,           
+    output      logic           [9 : 0]     r_EncodeSK_Coeff_addr,
+
     // --- ExpandA 信号 ---
     output      logic           [255 : 0]   rho_ExpandA,            // 256位随机种子
     output      logic                       start_expand_ExpandA,   // 开始扩展A矩阵信号
@@ -82,6 +99,36 @@ module keygen_internal
     output      logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1],
     input       logic                       mac_valid_out_keygen,
     input       logic           [91 : 0]    mac_data_out_keygen [0 : K - 1],
+
+    // --- Encoder-0 ---
+    output      logic                                   system_done_0,
+    output      logic   [4 * T1_BIT_LEN - 1 : 0]        t1_0,         
+    output      logic                                   t1_valid_0,
+    output      logic   [4 * 23 - 1 : 0]                s1_0,         
+    output      logic                                   s1_valid_0,
+    output      logic   [4 * 23 - 1 : 0]                s2_0,         
+    output      logic                                   s2_valid_0,
+    output      logic   [4 * T0_BIT_LEN - 1 : 0]        t0_0,         
+    output      logic                                   t0_valid_0,
+    output      logic   [4 * Z_BIT_LEN - 1 : 0]         z_0,
+    output      logic                                   z_valid_0,  
+    input       logic   [63 : 0]                        encode_0,
+    input       logic                                   encoder_valid_0,
+
+    // --- Encoder-1 ---
+    output      logic                                   system_done_1,
+    output      logic   [4 * T1_BIT_LEN - 1 : 0]        t1_1,        
+    output      logic                                   t1_valid_1,
+    output      logic   [4 * 23 - 1 : 0]                s1_1,        
+    output      logic                                   s1_valid_1,
+    output      logic   [4 * 23 - 1 : 0]                s2_1,        
+    output      logic                                   s2_valid_1,
+    output      logic   [4 * T0_BIT_LEN - 1 : 0]        t0_1,        
+    output      logic                                   t0_valid_1,
+    output      logic   [4 * Z_BIT_LEN - 1 : 0]         z_1,
+    output      logic                                   z_valid_1,
+    input       logic   [63 : 0]                        encode_1,
+    input       logic                                   encoder_valid_1,
 
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
@@ -200,6 +247,9 @@ logic           [22 : 0]            temp0, temp1, temp2, temp3;	// 临时变量 用于
 // --- ADD 阵列信号 ---
 logic			[22 : 0]			S2 [0 : 3];
 
+// --- Encode ---
+logic                               system_done_0_d, system_done_1_d;
+
 // ==========================================================
 // 3. 状态机
 // ==========================================================
@@ -312,7 +362,7 @@ always_ff @(posedge clk) begin
     if (!rstn)
         key_ready <= 1'b1;
     else if (state == S_IDLE)
-        key_ready <= 1'b1;G
+        key_ready <= 1'b1;
     else 
         key_ready <= 1'b0;
 end
@@ -838,5 +888,71 @@ generate
 endgenerate
 
 wire final_t_valid = t1_valid_out_vec[0] & state > S_MATRIX_MULT_WAIT;
+
+// ==========================================================
+// 10. Encoder
+// ==========================================================
+always_comb begin
+    //* Encoder-0
+    t1_0            =   'd0;
+    t1_valid_0      =   1'b0;
+    s1_0            =   'd0;
+    s1_valid_0      =   1'b0;
+    s2_0            =   'd0;
+    s2_valid_0      =   1'b0;
+    t0_0            =   'd0;
+    t0_valid_0      =   1'b0;
+    z_0             =   'd0;
+    z_valid_0       =   1'b0;
+
+    w_EncodeSK_Coeff        = 'd0;
+    w_EncodeSK_Coeff_valid  = 1'b0;
+
+    if (state == S_STORE || system_done_0_d) begin          // 使用Encoder-0分时生成s1和s2的pack
+        s1_0 = coeff_ExpandS;
+        s1_valid_0 = w_VectorS1_Coeff_valid;
+        s2_0 = coeff_ExpandS;
+        s2_valid_0 = w_VectorS2_Coeff_valid;
+        w_EncodeSK_Coeff = {<<8{encode_0}};
+        w_EncodeSK_Coeff_valid = encoder_valid_0;
+    end
+end
+
+always_ff @(posedge clk) begin                              // 根据有效信号存储地址 地址从低到高 分别是 [S0, S1, T]
+    if (!rstn) begin
+        w_EncodeSK_Coeff_addr <= 'd0;
+    end
+    else if (state == S_STORE) begin
+        if (system_done_0_d)
+            w_EncodeSK_Coeff_addr <= 'd0;
+        else if (w_EncodeSK_Coeff_valid)
+            w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr + 1;
+        else 
+            w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr;
+    end
+end
+
+always_ff @(posedge clk) begin                              // pack结束阶段指示信号 避免缓冲区中存在不足64bit的数据没输出  给定一个指示信号 输出剩余数据并清空缓冲区
+    if (!rstn) begin
+        system_done_0 <= 1'b0;
+    end
+    else if (expand_done_ExpandS) begin
+        system_done_0 <= 1'b1;
+    end
+    else 
+        system_done_0 <= 1'b0;
+end
+
+always_ff @(posedge clk) begin                              // 延时1拍
+    if (!rstn) begin
+        system_done_0_d <= 1'b0;
+        system_done_1_d <= 1'b0;
+    end
+    else begin
+        system_done_0_d <= system_done_0;
+        system_done_1_d <= system_done_1;
+    end
+end
+
 
 endmodule

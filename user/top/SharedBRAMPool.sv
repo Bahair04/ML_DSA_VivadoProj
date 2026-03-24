@@ -37,7 +37,19 @@ module SharedBRAMPool
     input       logic                       w_VectorT_Coeff_valid [0 : K - 1],
     input       logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1],
     output      logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
-    input       logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1]
+    input       logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
+
+    input       logic           [63 : 0]    w_EncodePK_Coeff,       
+    input       logic                       w_EncodePK_Coeff_valid,
+    input       logic           [8 : 0]     w_EncodePK_Coeff_addr,
+    output      logic           [63 : 0]    r_EncodePK_Coeff,           
+    input       logic           [8 : 0]     r_EncodePK_Coeff_addr,
+
+    input       logic           [63 : 0]    w_EncodeSK_Coeff,       
+    input       logic                       w_EncodeSK_Coeff_valid,
+    input       logic           [9 : 0]     w_EncodeSK_Coeff_addr,
+    output      logic           [63 : 0]    r_EncodeSK_Coeff,           
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr
 
 );
 
@@ -80,7 +92,21 @@ CoeffBlockRAM #(
     .w_VectorT_Coeff_valid          (w_VectorT_Coeff_valid      ),
     .w_VectorT_Coeff_addr           (w_VectorT_Coeff_addr       ),
     .r_VectorT_Coeff                (r_VectorT_Coeff            ),
-    .r_VectorT_Coeff_addr           (r_VectorT_Coeff_addr       )
+    .r_VectorT_Coeff_addr           (r_VectorT_Coeff_addr       ),
+
+     // --- Encode PK ---
+	.w_EncodePK_Coeff       	    ( w_EncodePK_Coeff          ),
+	.w_EncodePK_Coeff_valid 	    ( w_EncodePK_Coeff_valid    ),
+	.w_EncodePK_Coeff_addr  	    ( w_EncodePK_Coeff_addr     ),
+	.r_EncodePK_Coeff       	    ( r_EncodePK_Coeff          ),
+	.r_EncodePK_Coeff_addr  	    ( r_EncodePK_Coeff_addr     ),
+
+    // --- Encode SK ---
+    .w_EncodeSK_Coeff       	    ( w_EncodeSK_Coeff          ),
+	.w_EncodeSK_Coeff_valid 	    ( w_EncodeSK_Coeff_valid    ),
+	.w_EncodeSK_Coeff_addr  	    ( w_EncodeSK_Coeff_addr     ),
+	.r_EncodeSK_Coeff       	    ( r_EncodeSK_Coeff          ),
+	.r_EncodeSK_Coeff_addr  	    ( r_EncodeSK_Coeff_addr     )
 );
 
 endmodule

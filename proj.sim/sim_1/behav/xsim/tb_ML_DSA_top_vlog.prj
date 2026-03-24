@@ -12,6 +12,10 @@ verilog xil_defaultlib  \
 sv xil_defaultlib  \
 "../../../../user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv" \
 "../../../../user/src/Polynomials/RTL/DSP_MultPipe.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/EncodePK.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/EncodeSK.sv" \
+"../../../../user/src/En_Decoder/Encoder.sv" \
+"../../../../user/src/En_Decoder/Encoder_single_channel.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA_sipo96.sv" \
 "../../../../user/src/Sampler/RTL/ExpandS.sv" \

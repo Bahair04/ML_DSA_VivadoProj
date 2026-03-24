@@ -2,7 +2,12 @@
 module ML_DSA_top
 #(
     parameter           K = `k,
-    parameter           L = `l
+    parameter           L = `l,
+    parameter T1_BIT_LEN = $clog2(`q - 1) - `d,                     // default : 10
+    parameter S1_S2_BIT_LEN = $clog2(2 * `eta) + 1,                 // default : 3
+    parameter T0_BIT_LEN = `d,                                      // default : 13
+    parameter Z_BIT_LEN = `bit_count,                               // default : 18
+    parameter H_BIT_LEN = 'd1       
 )(
     // --- 时钟和复位信号 ---
 	input       logic                       clk,
@@ -52,6 +57,18 @@ logic           [5 : 0]     w_VectorT_Coeff_addr_keygen [0 : K - 1];
 logic           [91 : 0]    r_VectorT_Coeff_keygen [0 : K - 1];
 logic           [5 : 0]     r_VectorT_Coeff_addr_keygen [0 : K - 1];
 
+logic           [63 : 0]    w_EncodePK_Coeff_keygen;       
+logic                       w_EncodePK_Coeff_valid_keygen;
+logic           [8 : 0]     w_EncodePK_Coeff_addr_keygen;
+logic           [63 : 0]    r_EncodePK_Coeff_keygen;           
+logic           [8 : 0]     r_EncodePK_Coeff_addr_keygen;
+
+logic           [63 : 0]    w_EncodeSK_Coeff_keygen;       
+logic                       w_EncodeSK_Coeff_valid_keygen;
+logic           [9 : 0]     w_EncodeSK_Coeff_addr_keygen;
+logic           [63 : 0]    r_EncodeSK_Coeff_keygen;           
+logic           [9 : 0]     r_EncodeSK_Coeff_addr_keygen;
+
 // --------------------------------
 // Compute
 // --------------------------------
@@ -95,6 +112,35 @@ logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1];
 logic                       mac_valid_out_keygen;
 logic           [91 : 0]    mac_data_out_keygen [0 : K - 1];
 
+// --- Encoder 接口 ---
+
+logic                                           system_done_0_keygen;
+logic           [4 * T1_BIT_LEN - 1 : 0]        t1_0_keygen;         
+logic                                           t1_valid_0_keygen;
+logic           [4 * 23 - 1 : 0]                s1_0_keygen;         
+logic                                           s1_valid_0_keygen;
+logic           [4 * 23 - 1 : 0]                s2_0_keygen;        
+logic                                           s2_valid_0_keygen;
+logic           [4 * T0_BIT_LEN - 1 : 0]        t0_0_keygen;         
+logic                                           t0_valid_0_keygen;
+logic           [4 * Z_BIT_LEN - 1 : 0]         z_0_keygen;
+logic                                           z_valid_0_keygen;
+logic           [63 : 0]                        encode_0_keygen;
+logic                                           encoder_valid_0_keygen;
+
+logic                                           system_done_1_keygen;
+logic           [4 * T1_BIT_LEN - 1 : 0]        t1_1_keygen;         
+logic                                           t1_valid_1_keygen;
+logic           [4 * 23 - 1 : 0]                s1_1_keygen;         
+logic                                           s1_valid_1_keygen;
+logic           [4 * 23 - 1 : 0]                s2_1_keygen;        
+logic                                           s2_valid_1_keygen;
+logic           [4 * T0_BIT_LEN - 1 : 0]        t0_1_keygen;         
+logic                                           t0_valid_1_keygen;
+logic           [4 * Z_BIT_LEN - 1 : 0]         z_1_keygen;
+logic                                           z_valid_1_keygen;
+logic           [63 : 0]                        encode_1_keygen;
+logic                                           encoder_valid_1_keygen;
 
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_keygen; 
@@ -159,6 +205,18 @@ u_keygen_internal(
 	.r_VectorT_Coeff        	( r_VectorT_Coeff_keygen         ),
 	.r_VectorT_Coeff_addr   	( r_VectorT_Coeff_addr_keygen    ),
 
+    .w_EncodePK_Coeff           ( w_EncodePK_Coeff_keygen        ),       
+    .w_EncodePK_Coeff_valid     ( w_EncodePK_Coeff_valid_keygen  ),
+    .w_EncodePK_Coeff_addr      ( w_EncodePK_Coeff_addr_keygen   ),
+    .r_EncodePK_Coeff           ( r_EncodePK_Coeff_keygen        ),          
+    .r_EncodePK_Coeff_addr      ( r_EncodePK_Coeff_addr_keygen   ),
+
+    .w_EncodeSK_Coeff           ( w_EncodeSK_Coeff_keygen        ),       
+    .w_EncodeSK_Coeff_valid     ( w_EncodeSK_Coeff_valid_keygen  ),
+    .w_EncodeSK_Coeff_addr      ( w_EncodeSK_Coeff_addr_keygen   ),
+    .r_EncodeSK_Coeff           ( r_EncodeSK_Coeff_keygen        ),          
+    .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr_keygen   ),
+
     .rho_ExpandA                ( rho_ExpandA_keygen             ),             
     .start_expand_ExpandA       ( start_expand_ExpandA_keygen    ),             
     .coeff_ExpandA              ( coeff_ExpandA_keygen           ),             
@@ -195,6 +253,34 @@ u_keygen_internal(
     .mac_valid_out_keygen       ( mac_valid_out_keygen           ),
     .mac_data_out_keygen        ( mac_data_out_keygen            ),
 
+    .system_done_0              ( system_done_0_keygen           ),
+    .t1_0                       ( t1_0_keygen                    ),        
+    .t1_valid_0                 ( t1_valid_0_keygen              ),
+    .s1_0                       ( s1_0_keygen                    ),        
+    .s1_valid_0                 ( s1_valid_0_keygen              ),
+    .s2_0                       ( s2_0_keygen                    ),        
+    .s2_valid_0                 ( s2_valid_0_keygen              ),
+    .t0_0                       ( t0_0_keygen                    ),        
+    .t0_valid_0                 ( t0_valid_0_keygen              ),
+    .z_0                        ( z_0_keygen                     ),
+    .z_valid_0                  ( z_valid_0_keygen               ),
+    .encode_0                   ( encode_0_keygen                ),
+    .encoder_valid_0            ( encoder_valid_0_keygen         ),
+
+    .system_done_1              ( system_done_1_keygen           ),
+    .t1_1                       ( t1_1_keygen                    ),        
+    .t1_valid_1                 ( t1_valid_1_keygen              ),
+    .s1_1                       ( s1_1_keygen                    ),        
+    .s1_valid_1                 ( s1_valid_1_keygen              ),
+    .s2_1                       ( s2_1_keygen                    ),        
+    .s2_valid_1                 ( s2_valid_1_keygen              ),
+    .t0_1                       ( t0_1_keygen                    ),        
+    .t0_valid_1                 ( t0_valid_1_keygen              ),
+    .z_1                        ( z_1_keygen                     ),
+    .z_valid_1                  ( z_valid_1_keygen               ),
+    .encode_1                   ( encode_1_keygen                ),
+    .encoder_valid_1            ( encoder_valid_1_keygen         ),
+
 	.dout1                  	( dout1_keygen                   ),
 	.dout_valid1            	( dout_valid1_keygen             ),
 	.dout_len1              	( dout_len1_keygen               ),
@@ -229,26 +315,42 @@ u_GlobalBRAMArbitration(
     .clk                           	(clk                            ),
     .rstn                          	(rstn                           ),
     .mode_config                   	(mode_config                    ),
+    
     .w_MatrixA_Coeff_keygen        	(w_MatrixA_Coeff_keygen         ),
     .w_MatrixA_Coeff_valid_keygen  	(w_MatrixA_Coeff_valid_keygen   ),
     .w_MatrixA_Coeff_addr_keygen   	(w_MatrixA_Coeff_addr_keygen    ),
     .r_MatrixA_Coeff_keygen        	(r_MatrixA_Coeff_keygen         ),
     .r_MatrixA_Coeff_addr_keygen   	(r_MatrixA_Coeff_addr_keygen    ),
+    
     .w_VectorS1_Coeff_keygen       	(w_VectorS1_Coeff_keygen        ),
     .w_VectorS1_Coeff_valid_keygen 	(w_VectorS1_Coeff_valid_keygen  ),
     .w_VectorS1_Coeff_addr_keygen  	(w_VectorS1_Coeff_addr_keygen   ),
     .r_VectorS1_Coeff_keygen       	(r_VectorS1_Coeff_keygen        ),
     .r_VectorS1_Coeff_addr_keygen  	(r_VectorS1_Coeff_addr_keygen   ),
+    
     .w_VectorS2_Coeff_keygen       	(w_VectorS2_Coeff_keygen        ),
     .w_VectorS2_Coeff_valid_keygen 	(w_VectorS2_Coeff_valid_keygen  ),
     .w_VectorS2_Coeff_addr_keygen  	(w_VectorS2_Coeff_addr_keygen   ),
     .r_VectorS2_Coeff_keygen       	(r_VectorS2_Coeff_keygen        ),
     .r_VectorS2_Coeff_addr_keygen  	(r_VectorS2_Coeff_addr_keygen   ),
+    
     .w_VectorT_Coeff_keygen        	(w_VectorT_Coeff_keygen         ),
     .w_VectorT_Coeff_valid_keygen  	(w_VectorT_Coeff_valid_keygen   ),
     .w_VectorT_Coeff_addr_keygen   	(w_VectorT_Coeff_addr_keygen    ),
     .r_VectorT_Coeff_keygen        	(r_VectorT_Coeff_keygen         ),
-    .r_VectorT_Coeff_addr_keygen   	(r_VectorT_Coeff_addr_keygen    )
+    .r_VectorT_Coeff_addr_keygen   	(r_VectorT_Coeff_addr_keygen    ),
+
+    .w_EncodePK_Coeff_keygen        (w_EncodePK_Coeff_keygen        ),       
+    .w_EncodePK_Coeff_valid_keygen  (w_EncodePK_Coeff_valid_keygen  ),
+    .w_EncodePK_Coeff_addr_keygen   (w_EncodePK_Coeff_addr_keygen   ),
+    .r_EncodePK_Coeff_keygen        (r_EncodePK_Coeff_keygen        ),           
+    .r_EncodePK_Coeff_addr_keygen   (r_EncodePK_Coeff_addr_keygen   ),
+
+    .w_EncodeSK_Coeff_keygen        (w_EncodeSK_Coeff_keygen        ),       
+    .w_EncodeSK_Coeff_valid_keygen  (w_EncodeSK_Coeff_valid_keygen  ),
+    .w_EncodeSK_Coeff_addr_keygen   (w_EncodeSK_Coeff_addr_keygen   ),
+    .r_EncodeSK_Coeff_keygen        (r_EncodeSK_Coeff_keygen        ),           
+    .r_EncodeSK_Coeff_addr_keygen   (r_EncodeSK_Coeff_addr_keygen   )
 );
 
 GlobalComputeArbitration #(
@@ -294,6 +396,35 @@ GlobalComputeArbitration #(
     .mac_data_in3_keygen            ( mac_data_in3_keygen            ),
     .mac_valid_out_keygen           ( mac_valid_out_keygen           ),
     .mac_data_out_keygen            ( mac_data_out_keygen            ),
+
+    // --- Encoder 接口 ---
+    .system_done_0_keygen           ( system_done_0_keygen           ),
+    .t1_0_keygen                    ( t1_0_keygen                    ),
+    .t1_valid_0_keygen              ( t1_valid_0_keygen              ),
+    .s1_0_keygen                    ( s1_0_keygen                    ),
+    .s1_valid_0_keygen              ( s1_valid_0_keygen              ),
+    .s2_0_keygen                    ( s2_0_keygen                    ),
+    .s2_valid_0_keygen              ( s2_valid_0_keygen              ),
+    .t0_0_keygen                    ( t0_0_keygen                    ),
+    .t0_valid_0_keygen              ( t0_valid_0_keygen              ),
+    .z_0_keygen                     ( z_0_keygen                     ),
+    .z_valid_0_keygen               ( z_valid_0_keygen               ),
+    .encode_0_keygen                ( encode_0_keygen                ),
+    .encoder_valid_0_keygen         ( encoder_valid_0_keygen         ),
+
+    .system_done_1_keygen           ( system_done_1_keygen           ),
+    .t1_1_keygen                    ( t1_1_keygen                    ),
+    .t1_valid_1_keygen              ( t1_valid_1_keygen              ),
+    .s1_1_keygen                    ( s1_1_keygen                    ),
+    .s1_valid_1_keygen              ( s1_valid_1_keygen              ),
+    .s2_1_keygen                    ( s2_1_keygen                    ),
+    .s2_valid_1_keygen              ( s2_valid_1_keygen              ),
+    .t0_1_keygen                    ( t0_1_keygen                    ),
+    .t0_valid_1_keygen              ( t0_valid_1_keygen              ),
+    .z_1_keygen                     ( z_1_keygen                     ),
+    .z_valid_1_keygen               ( z_valid_1_keygen               ),
+    .encode_1_keygen                ( encode_1_keygen                ),
+    .encoder_valid_1_keygen         ( encoder_valid_1_keygen         ),
 
     .dout1_keygen                   ( dout1_keygen                   ), 
     .dout_valid1_keygen             ( dout_valid1_keygen             ), 

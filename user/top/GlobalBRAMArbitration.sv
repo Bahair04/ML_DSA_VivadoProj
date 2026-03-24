@@ -34,7 +34,20 @@ module GlobalBRAMArbitration
     input       logic                       w_VectorT_Coeff_valid_keygen [0 : K - 1],
     input       logic           [5 : 0]     w_VectorT_Coeff_addr_keygen [0 : K - 1],
     output      logic           [91 : 0]    r_VectorT_Coeff_keygen [0 : K - 1],
-    input       logic           [5 : 0]     r_VectorT_Coeff_addr_keygen [0 : K - 1]
+    input       logic           [5 : 0]     r_VectorT_Coeff_addr_keygen [0 : K - 1],
+
+
+    input       logic           [63 : 0]    w_EncodePK_Coeff_keygen,       
+    input       logic                       w_EncodePK_Coeff_valid_keygen,
+    input       logic           [8 : 0]     w_EncodePK_Coeff_addr_keygen,
+    output      logic           [63 : 0]    r_EncodePK_Coeff_keygen,           
+    input       logic           [8 : 0]     r_EncodePK_Coeff_addr_keygen,
+
+    input       logic           [63 : 0]    w_EncodeSK_Coeff_keygen,       
+    input       logic                       w_EncodeSK_Coeff_valid_keygen,
+    input       logic           [9 : 0]     w_EncodeSK_Coeff_addr_keygen,
+    output      logic           [63 : 0]    r_EncodeSK_Coeff_keygen,           
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_keygen
 
 );
 
@@ -71,11 +84,24 @@ logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1];
 logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1];
 logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1];
 
+logic           [63 : 0]    w_EncodePK_Coeff;       
+logic                       w_EncodePK_Coeff_valid;
+logic           [8 : 0]     w_EncodePK_Coeff_addr;
+logic           [63 : 0]    r_EncodePK_Coeff;           
+logic           [8 : 0]     r_EncodePK_Coeff_addr;
+
+logic           [63 : 0]    w_EncodeSK_Coeff;       
+logic                       w_EncodeSK_Coeff_valid;
+logic           [9 : 0]     w_EncodeSK_Coeff_addr;
+logic           [63 : 0]    r_EncodeSK_Coeff;           
+logic           [9 : 0]     r_EncodeSK_Coeff_addr;
 
 assign r_MatrixA_Coeff_keygen = r_MatrixA_Coeff;
 assign r_VectorS1_Coeff_keygen = r_VectorS1_Coeff;
 assign r_VectorS2_Coeff_keygen = r_VectorS2_Coeff;
 assign r_VectorT_Coeff_keygen = r_VectorT_Coeff;
+assign r_EncodePK_Coeff_keygen = r_EncodePK_Coeff;
+assign r_EncodeSK_Coeff_keygen = r_EncodeSK_Coeff;
 
 always_comb begin
 
@@ -83,6 +109,9 @@ always_comb begin
     w_VectorS1_Coeff_valid = 1'b0;
     w_VectorS2_Coeff_valid = 1'b0;
     w_VectorY_Coeff_valid  = 1'b0;
+    w_EncodePK_Coeff_valid = 1'b0;
+    w_EncodeSK_Coeff_valid = 1'b0;
+
     for (int i=0; i<K; i++) w_VectorT_Coeff_valid[i] = 1'b0;
 
     w_MatrixA_Coeff       = 'd0;
@@ -95,6 +124,12 @@ always_comb begin
     w_VectorY_Coeff_addr  = 'd0;
     r_VectorS1_Coeff_addr = 'd0;
     r_VectorY_Coeff_addr  = 'd0;
+    w_EncodePK_Coeff      = 'd0;
+    w_EncodePK_Coeff_addr = 'd0;
+    r_EncodePK_Coeff_addr = 'd0;
+    w_EncodeSK_Coeff      = 'd0;
+    w_EncodeSK_Coeff_addr = 'd0;
+    r_EncodeSK_Coeff_addr = 'd0;
 
     for (int i = 0; i < K; i++) begin
         r_MatrixA_Coeff_addr[i]  = 'd0;
@@ -125,6 +160,16 @@ always_comb begin
             w_VectorT_Coeff_valid   = w_VectorT_Coeff_valid_keygen;
             w_VectorT_Coeff_addr    = w_VectorT_Coeff_addr_keygen;
             r_VectorT_Coeff_addr    = r_VectorT_Coeff_addr_keygen;
+            
+            w_EncodePK_Coeff        = w_EncodePK_Coeff_keygen;
+            w_EncodePK_Coeff_valid  = w_EncodePK_Coeff_valid_keygen;
+            w_EncodePK_Coeff_addr   = w_EncodePK_Coeff_addr_keygen;
+            r_EncodePK_Coeff_addr   = r_EncodePK_Coeff_addr_keygen;
+
+            w_EncodeSK_Coeff        = w_EncodeSK_Coeff_keygen;
+            w_EncodeSK_Coeff_valid  = w_EncodeSK_Coeff_valid_keygen;
+            w_EncodeSK_Coeff_addr   = w_EncodeSK_Coeff_addr_keygen;
+            r_EncodeSK_Coeff_addr   = r_EncodeSK_Coeff_addr_keygen;
         end
     endcase
 end
@@ -164,7 +209,19 @@ u_SharedBRAMPool(
     .w_VectorT_Coeff_valid  	(w_VectorT_Coeff_valid   ),
     .w_VectorT_Coeff_addr   	(w_VectorT_Coeff_addr    ),
     .r_VectorT_Coeff        	(r_VectorT_Coeff         ),
-    .r_VectorT_Coeff_addr   	(r_VectorT_Coeff_addr    )
+    .r_VectorT_Coeff_addr   	(r_VectorT_Coeff_addr    ),
+
+	.w_EncodePK_Coeff       	( w_EncodePK_Coeff       ),
+	.w_EncodePK_Coeff_valid 	( w_EncodePK_Coeff_valid ),
+	.w_EncodePK_Coeff_addr  	( w_EncodePK_Coeff_addr  ),
+	.r_EncodePK_Coeff       	( r_EncodePK_Coeff       ),
+	.r_EncodePK_Coeff_addr  	( r_EncodePK_Coeff_addr  ),
+
+    .w_EncodeSK_Coeff       	( w_EncodeSK_Coeff       ),
+	.w_EncodeSK_Coeff_valid 	( w_EncodeSK_Coeff_valid ),
+	.w_EncodeSK_Coeff_addr  	( w_EncodeSK_Coeff_addr  ),
+	.r_EncodeSK_Coeff       	( r_EncodeSK_Coeff       ),
+	.r_EncodeSK_Coeff_addr  	( r_EncodeSK_Coeff_addr  )
 );
 
 

@@ -11,13 +11,13 @@ module Encoder
     input       logic                                   clk,
     input       logic                                   rstn,
 
+    input       logic                                   system_done,
+
     // --- 公钥(pk) 编码信号 ---
-    input       logic   [255 : 0]                       rho,        // 256 位随机种子
     input       logic   [4 * T1_BIT_LEN - 1 : 0]        t1,         // t 的高位
     input       logic                                   t1_valid,
 
     // --- 私钥(sk) 编码信号 ---
-    input       logic   [255 : 0]                       K,          // 256 位随机种子
     input       logic   [4 * 23 - 1 : 0]                s1,         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
     input       logic                                   s1_valid,
     input       logic   [4 * 23 - 1 : 0]                s2,         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
@@ -163,22 +163,13 @@ always_ff @(posedge clk or negedge rstn) begin
                 buffer     <= buffer >> 64;
                 buffer_len <= buffer_len - 9'd64;
             end
+            else if (system_done && buffer_len > 0) begin
+                encode <= buffer[63:0]; // 高位天然为0
+                encoder_valid <= 1'b1;
+                buffer_len <= 'd0;
+            end
         end
     end
 end
-
-// ------------------------------------------------------------------
-// ?? 注意：最后结束（Done）时的强制清空逻辑
-// ------------------------------------------------------------------
-// 在完整的系统里，你需要一根来自 KeyGen 或 Sign 控制器的 `done` 信号。
-// 当整个算法结束时，如果 buffer_len 里还剩下 1~63 个比特（不足 64 位），
-// 你必须强制把它们吐出来（高位补零），否则你的签名/密钥末尾会少几个字节！
-// 
-// 伪代码参考：
-// else if (system_done && buffer_len > 0) begin
-//     encode <= buffer[63:0]; // 高位天然为0
-//     encoder_valid <= 1'b1;
-//     buffer_len <= 'd0;
-// end
 
 endmodule

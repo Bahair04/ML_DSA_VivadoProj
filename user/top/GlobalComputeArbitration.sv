@@ -2,7 +2,12 @@
 module GlobalComputeArbitration
 #(
     parameter           K = `k,
-    parameter           L = `l
+    parameter           L = `l,
+    parameter T1_BIT_LEN = $clog2(`q - 1) - `d,                     // default : 10
+    parameter S1_S2_BIT_LEN = $clog2(2 * `eta) + 1,                 // default : 3
+    parameter T0_BIT_LEN = `d,                                      // default : 13
+    parameter Z_BIT_LEN = `bit_count,                               // default : 18
+    parameter H_BIT_LEN = 'd1                             
 )(
     // --- 时钟和复位信号 ---
     input       logic                       clk,
@@ -51,6 +56,41 @@ module GlobalComputeArbitration
     input       logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1],
     output      logic                       mac_valid_out_keygen,
     output      logic           [91 : 0]    mac_data_out_keygen [0 : K - 1],
+
+    // --- Encoder 接口 ---
+    input       logic                                           system_done_0_keygen,
+    input       logic           [4 * T1_BIT_LEN - 1 : 0]        t1_0_keygen,         // t 的高位
+    input       logic                                           t1_valid_0_keygen,
+
+    input       logic           [4 * 23 - 1 : 0]                s1_0_keygen,         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+    input       logic                                           s1_valid_0_keygen,
+    input       logic           [4 * 23 - 1 : 0]                s2_0_keygen,        // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+    input       logic                                           s2_valid_0_keygen,
+    input       logic           [4 * T0_BIT_LEN - 1 : 0]        t0_0_keygen,         // t 的低位
+    input       logic                                           t0_valid_0_keygen,
+
+    input       logic           [4 * Z_BIT_LEN - 1 : 0]         z_0_keygen,
+    input       logic                                           z_valid_0_keygen,
+
+    output      logic           [63 : 0]    encode_0_keygen,
+    output      logic                       encoder_valid_0_keygen,
+    
+    input       logic                                           system_done_1_keygen,
+    input       logic           [4 * T1_BIT_LEN - 1 : 0]        t1_1_keygen,         // t 的高位
+    input       logic                                           t1_valid_1_keygen,
+
+    input       logic           [4 * 23 - 1 : 0]                s1_1_keygen,         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+    input       logic                                           s1_valid_1_keygen,
+    input       logic           [4 * 23 - 1 : 0]                s2_1_keygen,        // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+    input       logic                                           s2_valid_1_keygen,
+    input       logic           [4 * T0_BIT_LEN - 1 : 0]        t0_1_keygen,         // t 的低位
+    input       logic                                           t0_valid_1_keygen,
+
+    input       logic           [4 * Z_BIT_LEN - 1 : 0]         z_1_keygen,
+    input       logic                                           z_valid_1_keygen,
+
+    output      logic           [63 : 0]    encode_1_keygen,
+    output      logic                       encoder_valid_1_keygen,
 
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_keygen, 
@@ -126,6 +166,44 @@ logic           [91 : 0]    mac_data_in3 [0 : K - 1];
 logic                       mac_valid_out;
 logic           [91 : 0]    mac_data_out [0 : K - 1];
 
+// --- Encoder-0 内部线声明 ---
+
+logic           [4 * T1_BIT_LEN - 1 : 0]        t1_0;         // t 的高位
+logic                                           system_done_0;
+logic                                           t1_valid_0;
+
+logic           [4 * 23 - 1 : 0]                s1_0;         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+logic                                           s1_valid_0;
+logic           [4 * 23 - 1 : 0]                s2_0;         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+logic                                           s2_valid_0;
+logic           [4 * T0_BIT_LEN - 1 : 0]        t0_0;         // t 的低位
+logic                                           t0_valid_0;
+
+logic           [4 * Z_BIT_LEN - 1 : 0]         z_0;
+logic                                           z_valid_0;
+
+logic           [63 : 0]                        encode_0;
+logic                                           encoder_valid_0;
+
+// --- Encoder-1 内部线声明 ---
+
+logic           [4 * T1_BIT_LEN - 1 : 0]        t1_1;         // t 的高位
+logic                                           system_done_1;
+logic                                           t1_valid_1;
+
+logic           [4 * 23 - 1 : 0]                s1_1;         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+logic                                           s1_valid_1;
+logic           [4 * 23 - 1 : 0]                s2_1;         // ExpandS 中使用`q进行归约 因此位宽为23 实际位宽远少于23
+logic                                           s2_valid_1;
+logic           [4 * T0_BIT_LEN - 1 : 0]        t0_1;         // t 的低位
+logic                                           t0_valid_1;
+
+logic           [4 * Z_BIT_LEN - 1 : 0]         z_1;
+logic                                           z_valid_1;
+
+logic           [63 : 0]                        encode_1;
+logic                                           encoder_valid_1;
+
 // --- SHA3-1 内部线声明 ---
 logic           [7 : 0]     dout1; 
 logic                       dout_valid1;
@@ -177,6 +255,12 @@ assign con_coeff_valid_keygen     = pau_con_coeff_valid;
 assign mac_valid_out_keygen = mac_valid_out;
 assign mac_data_out_keygen  = mac_data_out;
 
+// --- Encoder 回传给 KeyGen ---
+assign encode_0_keygen      = encode_0;
+assign encoder_valid_0_keygen = encoder_valid_0;
+assign encode_1_keygen      = encode_1;
+assign encoder_valid_1_keygen = encoder_valid_1;
+
 // SHA3-1 回传给 KeyGen
 assign done1_keygen           = done1;
 assign done_out1_keygen       = done_out1;
@@ -188,11 +272,6 @@ assign done2_keygen           = done2;
 assign done_out2_keygen       = done_out2;
 assign st_64bit2_keygen       = st_64bit2;
 assign st_64bit_valid2_keygen = st_64bit_valid2;
-
-// 以后加了 Sign:
-// assign done1_sign = done1;
-// ...
-
 
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
@@ -219,6 +298,30 @@ always_comb begin
         mac_data_in1[i] = 'd0;
         mac_data_in3[i] = 'd0;
     end
+
+    system_done_0 = 1'b0;
+    t1_0        = 'd0;
+    t1_valid_0  = 1'b0;
+    s1_0        = 'd0;
+    s1_valid_0  = 1'b0;
+    s2_0        = 'd0;
+    s2_valid_0  = 1'b0;
+    t0_0        = 'd0;
+    t0_valid_0  = 1'b0;
+    z_0         = 'd0;
+    z_valid_0   = 1'b0;
+
+    system_done_1 = 1'b0;
+    t1_1        = 'd0;
+    t1_valid_1  = 1'b0;
+    s1_1        = 'd0;
+    s1_valid_1  = 1'b0;
+    s2_1        = 'd0;
+    s2_valid_1  = 1'b0;
+    t0_1        = 'd0;
+    t0_valid_1  = 1'b0;
+    z_1         = 'd0;
+    z_valid_1   = 1'b0;
 
     dout1       = 'd0;
     dout_valid1 = 1'b0;
@@ -260,6 +363,30 @@ always_comb begin
                 mac_data_in1[i] = mac_data_in1_keygen[i];
                 mac_data_in3[i] = mac_data_in3_keygen[i];
             end
+
+            system_done_0 = system_done_0_keygen;
+            t1_0        = t1_0_keygen;
+            t1_valid_0  = t1_valid_0_keygen;
+            s1_0        = s1_0_keygen;
+            s1_valid_0  = s1_valid_0_keygen;
+            s2_0        = s2_0_keygen;
+            s2_valid_0  = s2_valid_0_keygen;
+            t0_0        = t0_0_keygen;
+            t0_valid_0  = t0_valid_0_keygen;
+            z_0         = z_0_keygen;
+            z_valid_0   = z_valid_0_keygen;
+
+            system_done_1 = system_done_1_keygen;
+            t1_1        = t1_1_keygen;
+            t1_valid_1  = t1_valid_1_keygen;
+            s1_1        = s1_1_keygen;
+            s1_valid_1  = s1_valid_1_keygen;
+            s2_1        = s2_1_keygen;
+            s2_valid_1  = s2_valid_1_keygen;
+            t0_1        = t0_1_keygen;
+            t0_valid_1  = t0_valid_1_keygen;
+            z_1         = z_1_keygen;
+            z_valid_1   = z_valid_1_keygen;
 
             dout1                       = dout1_keygen;
             dout_valid1                 = dout_valid1_keygen;
@@ -339,6 +466,43 @@ MAC_Array_Pool #(
     .valid_out  ( mac_valid_out),
     .data_out   ( mac_data_out )
 );
+
+Encoder u_Encoder_0(
+	.clk           	( clk              ),
+	.rstn          	( rstn             ),
+    .system_done    ( system_done_0    ),
+	.t1            	( t1_0             ),
+	.t1_valid      	( t1_valid_0       ),
+	.s1            	( s1_0             ),
+	.s1_valid      	( s1_valid_0       ),
+	.s2            	( s2_0             ),
+	.s2_valid      	( s2_valid_0       ),
+	.t0            	( t0_0             ),
+	.t0_valid      	( t0_valid_0       ),
+	.z             	( z_0              ),
+	.z_valid       	( z_valid_0        ),
+	.encode        	( encode_0         ),
+	.encoder_valid 	( encoder_valid_0  )
+);
+
+Encoder u_Encoder_1(
+	.clk           	( clk              ),
+	.rstn          	( rstn             ),
+    .system_done    ( system_done_1    ),
+	.t1            	( t1_1             ),
+	.t1_valid      	( t1_valid_1       ),
+	.s1            	( s1_1             ),
+	.s1_valid      	( s1_valid_1       ),
+	.s2            	( s2_1             ),
+	.s2_valid      	( s2_valid_1       ),
+	.t0            	( t0_1             ),
+	.t0_valid      	( t0_valid_1       ),
+	.z             	( z_1              ),
+	.z_valid       	( z_valid_1        ),
+	.encode        	( encode_1         ),
+	.encoder_valid 	( encoder_valid_1  )
+);
+
 
 sha3 u_sha3_1(
     .clk                ( clk             ),
