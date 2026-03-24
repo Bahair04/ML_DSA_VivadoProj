@@ -97,7 +97,7 @@ logic                       st_64bit_valid_ExpandA_keygen; // SHA3 挤出8字节
 logic           [91 : 0]    ori_coeff_keygen;				
 logic                       ori_coeff_valid_keygen;		
 logic                       request_keygen;                
-logic           [91 : 0]    ext_operand_keygen;            
+logic           [91 : 0]    ext_operand_keygen = 'd0;            
 logic                       ext_operand_request_keygen;    
 logic           [4 : 0]     mode_config_keygen;            
 logic                       ready_keygen;                  
@@ -181,8 +181,6 @@ u_keygen_internal(
 	.key_ready              	( key_ready_keygen               ),
 	.done                   	( done_keygen                    ),
 	.zeta                   	( zeta_keygen                    ),
-	.pk                     	( pk_keygen                      ),
-	.sk                     	( sk_keygen                      ),
 
 	.w_MatrixA_Coeff        	( w_MatrixA_Coeff_keygen         ),
 	.w_MatrixA_Coeff_valid  	( w_MatrixA_Coeff_valid_keygen   ),

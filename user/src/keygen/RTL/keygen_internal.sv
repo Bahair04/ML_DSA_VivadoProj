@@ -20,8 +20,6 @@ module keygen_internal
 
 	// --- 输入输出数据 ---
 	input       logic           [255 : 0]   zeta,           // 32字节 种子
-	output      logic           [7 : 0]     pk,             // 单字节 公钥
-	output      logic           [7 : 0]     sk,             // 单字节 私钥
 
     // --- BRAM 总线信号 ---
     output      logic           [91 : 0]    w_MatrixA_Coeff,
@@ -180,8 +178,9 @@ typedef enum logic [4 : 0] {
     S_T_ADD_END,        // 等待T+S2结束
     S_DUMMY0,           // 占位
     S_DUMMY1,           // 占位
-    S_WAIT_LOAD_END,
-    S_WAIT_SQUEEZE_END
+    S_WAIT_LOAD_END,    // 等待t1 装载结束
+    S_WAIT_SQUEEZE_END, // 等待挤出完成（生成64字节tr）
+    S_SAVE_RHO_K        // 保存RHO 和 K
 } state_t;
 
 state_t                             state, state_d;
@@ -272,6 +271,8 @@ logic                               full;
 logic                               empty;
 logic           [12 : 0]            rd_data_count;
 logic           [9 : 0]             wr_data_count;
+logic           [5 : 0]             save_rho_k_cnt;
+logic           [511 : 0]           rho_k;
 
 // ==========================================================
 // 3. 状态机
@@ -384,9 +385,15 @@ always_ff @(posedge clk) begin
             end
             S_WAIT_SQUEEZE_END : begin
                 if (substate_d == S_SUB_SQUEEZE && substate == S_SUB_IDLE)
-                    state <= S_IDLE;
+                    state <= S_SAVE_RHO_K;
                 else 
                     state <= S_WAIT_SQUEEZE_END;
+            end
+            S_SAVE_RHO_K : begin
+                if (save_rho_k_cnt == 'd7)
+                    state <= S_IDLE;
+                else 
+                    state <= S_SAVE_RHO_K;
             end
             default : begin           
                 state <= S_IDLE;      
@@ -1052,7 +1059,7 @@ always_comb begin
 
     w_EncodeSK_Coeff        = 'd0;
     w_EncodeSK_Coeff_valid  = 1'b0;
-
+    r_EncodeSK_Coeff_addr   = 'd0;
     if (state == S_STORE || system_done_0_d) begin          // 使用Encoder-0分时生成s1和s2的pack
         s1_0 = coeff_ExpandS;
         s1_valid_0 = w_VectorS1_Coeff_valid;
@@ -1061,12 +1068,44 @@ always_comb begin
         w_EncodeSK_Coeff = {<<8{encode_0}};
         w_EncodeSK_Coeff_valid = encoder_valid_0;
     end
-    else if (state > S_MATRIX_MULT_WAIT || system_done_0_d) begin  // 使用Encoder-0生成t0的pack 存到s2的后面
+    else if (S_WAIT_SQUEEZE_END > state && state > S_MATRIX_MULT_WAIT || system_done_0_d) begin  // 使用Encoder-0生成t0的pack 存到s2的后面
         t0_0 = t0_out_comb;
         t0_valid_0 = final_t_valid;
         w_EncodeSK_Coeff = {<<8{encode_0}};
         w_EncodeSK_Coeff_valid = encoder_valid_0;
     end
+    else if (state == S_WAIT_SQUEEZE_END || system_done_0_d) begin         // 存储tr
+        w_EncodeSK_Coeff = st_64bit_seed;
+        w_EncodeSK_Coeff_valid = st_64bit_valid_seed;
+    end
+    else if (state == S_SAVE_RHO_K) begin
+        w_EncodeSK_Coeff = rho_k[511 : 448];
+        w_EncodeSK_Coeff_valid = 1'b1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        rho_k <= 'd0;
+    else if (state == S_SQUEEZE && done_out_seed)
+        rho_k <= {seed_expand[1023 : 768], seed_expand[255 : 0]};
+    else if (state == S_SAVE_RHO_K && w_EncodeSK_Coeff_valid)    
+        rho_k <= rho_k << 64;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        save_rho_k_cnt <= 'd0;
+    else if (state == S_IDLE)
+        save_rho_k_cnt <= 'd0;
+    else if (w_EncodeSK_Coeff_valid) begin
+        if (save_rho_k_cnt == 'd7)
+            save_rho_k_cnt <= 'd0;
+        else 
+            save_rho_k_cnt <= save_rho_k_cnt + 1;
+    end
+    else 
+        save_rho_k_cnt <= save_rho_k_cnt;
 end
 
 always_comb begin
@@ -1084,12 +1123,16 @@ always_comb begin
 
     w_EncodePK_Coeff        = 'd0;
     w_EncodePK_Coeff_valid  = 1'b0;
-
-    if (state > S_MATRIX_MULT_WAIT || system_done_0_d) begin           // 使用Encoder-1生成t1的pack 同时存到BRAM和FIFO中
-        t1_1 = t1_out_comb;                                        // 存到FIFO中是为了转换位宽(64->8)以便于注入SHA3
+    r_EncodePK_Coeff_addr   = 'd0;
+    if (S_WAIT_SQUEEZE_END > state && state > S_MATRIX_MULT_WAIT || system_done_0_d) begin 
+        t1_1 = t1_out_comb;    // 使用Encoder-1生成t1的pack 同时存到BRAM和FIFO中存到FIFO中是为了转换位宽(64->8)以便于注入SHA3
         t1_valid_1 = final_t_valid;
         w_EncodePK_Coeff = {<<8{encode_1}};
         w_EncodePK_Coeff_valid = encoder_valid_1;
+    end
+    else if (state == S_SAVE_RHO_K) begin
+        w_EncodePK_Coeff = rho_k[511 : 448];
+        w_EncodePK_Coeff_valid = save_rho_k_cnt <= 'd3;
     end
 end
 

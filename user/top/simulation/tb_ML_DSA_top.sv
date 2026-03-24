@@ -32,7 +32,7 @@ begin
 end
 initial begin
     repeat (60) @(posedge clk);
-    zeta_keygen <= 256'h5d1161f226b4d13ad6f9b3c5a728e33511398979911afafbe0d8c5396a576290;
+    zeta_keygen <= 256'hb6746c9c0fc51a34bee20406a62b8ce8ba4d3db1cbdbce824062c3ab24450775;
     start_keygen <= 1'b1;
     @(posedge clk);
     start_keygen <= 1'b0;
