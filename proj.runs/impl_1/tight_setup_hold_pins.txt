@@ -1,0 +1,40 @@
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+
+|       Launch Clock       |      Capture Clock       |                                                 Pin                                                      |
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[76]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[27]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[159]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[160]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[188]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[116]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[223]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[221]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[96]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[216]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[222]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[214]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[255]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[254]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[190]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[215]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[191]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[209]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[109]/D|
+|                  sys_clk |                  sys_clk |                                                    u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[3]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[125]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[47]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[239]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[157]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[156]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[77]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[45]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[25]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[124]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[217]/D|
+|                  sys_clk |                  sys_clk |                                                    u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[2]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[189]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[111]/D|
+|                  sys_clk |                  sys_clk |                                                   u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[28]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[175]/D|
+|                  sys_clk |                  sys_clk |                                                  u_GlobalComputeArbitration/u_Encoder_1/buffer_reg[219]/D|
++--------------------------+--------------------------+----------------------------------------------------------------------------------------------------------+

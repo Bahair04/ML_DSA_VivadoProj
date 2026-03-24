@@ -40,4 +40,4 @@ EAStep()
      fi
 }
 
-EAStep vivado -log keygen_internal.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source keygen_internal.tcl
+EAStep vivado -log ML_DSA_top.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source ML_DSA_top.tcl

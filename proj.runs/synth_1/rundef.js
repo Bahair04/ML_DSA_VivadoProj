@@ -23,7 +23,7 @@ eval( EAInclude(ISEJScriptLib) );
 
 
 ISEStep( "vivado",
-         "-log keygen_internal.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source keygen_internal.tcl" );
+         "-log ML_DSA_top.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source ML_DSA_top.tcl" );
 
 
 
