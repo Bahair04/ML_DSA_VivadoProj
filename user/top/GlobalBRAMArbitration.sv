@@ -1,3 +1,4 @@
+`include "../src/param_conf.v"
 module GlobalBRAMArbitration
 #(
     parameter           K = `k,

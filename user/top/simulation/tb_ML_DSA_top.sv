@@ -32,13 +32,14 @@ begin
 end
 initial begin
     repeat (60) @(posedge clk);
-    zeta_keygen <= 256'h97f6417e77255b94ad8061521705ac9cb89f7781645c4bcd52fe2838c415fc5b;
+    zeta_keygen <= 256'h5d1161f226b4d13ad6f9b3c5a728e33511398979911afafbe0d8c5396a576290;
     start_keygen <= 1'b1;
     @(posedge clk);
     start_keygen <= 1'b0;
-    while (u_ML_DSA_top.u_keygen_internal.state != 8) begin
+    while (u_ML_DSA_top.u_keygen_internal.state != 15) begin
         @(posedge clk);
     end
+    repeat (1000) @(posedge clk);
     $finish;
 end
 

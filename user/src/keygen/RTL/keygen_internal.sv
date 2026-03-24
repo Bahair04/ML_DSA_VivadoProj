@@ -177,10 +177,24 @@ typedef enum logic [4 : 0] {
     S_T_INTT_ACK,       // 当前模块与 Poly_PAU 模块的握手状态
     S_T_INTT,           // 从存储空间中获得一组 T（256个系数） 存入 Poly_PAU 当中 并启动 INTT 变换
     S_T_INTT_WAIT,      // 等待 INTT 转换完成 输出 64 个 92bits数据 (共 `k * 64 个系数)
-    S_T_ADD_S2          // 在系数与 T + S2 获得最终的 T 同时给到 power_2_bound 获得 t0 和 t1
+    S_T_ADD_END,        // 等待T+S2结束
+    S_DUMMY0,           // 占位
+    S_DUMMY1,           // 占位
+    S_WAIT_LOAD_END,
+    S_WAIT_SQUEEZE_END
 } state_t;
 
 state_t                             state, state_d;
+
+typedef enum logic [2 : 0] { 
+    S_SUB_IDLE,
+    S_SUB_INIT,
+    S_SUB_LOAD_RHO,
+    S_SUB_LOAD_T1,
+    S_SUB_SQUEEZE
+} substate_t;
+
+substate_t                          substate, substate_d;
 
 // ==========================================================
 // 2. 内部信号统一定义
@@ -246,9 +260,18 @@ logic           [22 : 0]            temp0, temp1, temp2, temp3;	// 临时变量 用于
 
 // --- ADD 阵列信号 ---
 logic			[22 : 0]			S2 [0 : 3];
+logic                               final_t_valid, final_t_valid_d;
 
 // --- Encode ---
 logic                               system_done_0_d, system_done_1_d;
+logic           [63 : 0]            din;
+logic                               wr_en;
+logic                               rd_en;
+logic           [7 : 0]             dout;
+logic                               full;
+logic                               empty;
+logic           [12 : 0]            rd_data_count;
+logic           [9 : 0]             wr_data_count;
 
 // ==========================================================
 // 3. 状态机
@@ -334,28 +357,92 @@ always_ff @(posedge clk) begin
             S_T_INTT_WAIT : begin				// 一组(256个系数)的INTT变换输出 同时从存储矩阵中取出S2与INTT(T)做加法运算再存回T的存储矩阵中
                 if (con_coeff_cnt[5 : 0] == 'd63) begin
                     if (con_coeff_cnt == `k * 64 - 1)	// 一共`k组 全部转换完成后进入下一状态
-                        state <= S_T_ADD_S2;			
+                        state <= S_T_ADD_END;			
                     else 								// 否则就回到握手状态 准备下一组INTT变换
                         state <= S_T_INTT_ACK;
                 end
                 else 
                     state <= S_T_INTT_WAIT;
             end
-            S_T_ADD_S2 : begin
-                state <= S_T_ADD_S2;   //*  pack/sha3 思路：生成s1和s2的同时使用一个pack0模块(先s1再s2，二者不会同时)
-            end                        //*  t0和t1同时生成，分别用pack0和pack1模块生成字节流 存入BRAM
-            default : begin            //*  s1和s2生成完毕后的接下来的阶段 同时把pk装载到SHA3中 再生成t1的时候，由于相邻两组t1之间存在着间隙
-                state <= S_IDLE;       //*  可以再生成当前组t1的同时进行pack，pack的结果(8字节)存入FIFO 当FIFO非空时 从中取出单字节 装载入sha3
-            end                        //*  由于相邻两个t的时钟周期约为(19+64)*4=332  而装载256*10字节为320个时钟周期  所以时间上是允许的
+            S_T_ADD_END : begin
+                if (final_t_valid_d && !final_t_valid)
+                    state <= S_DUMMY0;
+                else
+                    state <= S_T_ADD_END;  
+            end
+            S_DUMMY0 : begin
+                state <= S_DUMMY1;
+            end                        
+            S_DUMMY1 : begin            // 产生结束信号 促使gear输出不足64bit的数据
+                state <= S_WAIT_LOAD_END;
+            end
+            S_WAIT_LOAD_END : begin
+                if (empty)
+                    state <= S_WAIT_SQUEEZE_END;
+                else
+                    state <= S_WAIT_LOAD_END;
+            end
+            S_WAIT_SQUEEZE_END : begin
+                if (substate_d == S_SUB_SQUEEZE && substate == S_SUB_IDLE)
+                    state <= S_IDLE;
+                else 
+                    state <= S_WAIT_SQUEEZE_END;
+            end
+            default : begin           
+                state <= S_IDLE;      
+            end                       
         endcase
     end
 end
 
 always_ff @(posedge clk) begin
     if (!rstn)
+        substate <= S_SUB_IDLE;
+    else begin
+        case (substate) 
+            S_SUB_IDLE : begin
+                if (state == S_S1_NTT_ACK) 
+                    substate <= S_SUB_INIT;
+                else
+                    substate <= S_SUB_IDLE;
+            end
+            S_SUB_INIT : begin 
+                substate <= S_SUB_LOAD_RHO;
+            end
+            S_SUB_LOAD_RHO : begin
+                if (seed_load_cnt == 31)
+                    substate <= S_SUB_LOAD_T1;
+                else
+                    substate <= S_SUB_LOAD_RHO;
+            end
+            S_SUB_LOAD_T1 : begin 
+                if (done_seed)
+                    substate <= S_SUB_SQUEEZE;
+                else 
+                    substate <= S_SUB_LOAD_T1;
+            end
+            S_SUB_SQUEEZE : begin 
+                if (done_out_seed)
+                    substate <= S_SUB_IDLE;
+                else
+                    substate <= S_SUB_SQUEEZE;
+            end
+            default : begin
+                substate <= S_SUB_IDLE;
+            end
+        endcase
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
         state_d <= S_IDLE;
-    else 
+        substate_d <= S_SUB_IDLE;
+    end
+    else begin
         state_d <= state;
+        substate_d <= substate;
+    end
 end
 
 always_ff @(posedge clk) begin
@@ -370,7 +457,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         done <= 1'b0;
-    else if (expand_done_ExpandA)
+    else if (state_d == S_WAIT_SQUEEZE_END && state == S_IDLE)
         done <= 1'b1;
     else 
         done <= 1'b0;
@@ -380,20 +467,32 @@ end
 // ==========================================================
 // 4. SHA3 控制逻辑与数据路由
 // ==========================================================
-assign out_len_seed = 'd128;			// 原始种子扩展 扩展后为128Byte
-assign dout_len_seed = 'd34;			// 原始种子长度为 34Byte 需要按字节装载进SHA3
-assign mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
+always_comb begin
+    out_len_seed = out_len_seed;
+    dout_len_seed = dout_len_seed;
+    mdlen_seed = mdlen_seed;
+    if (state <= S_STORE) begin
+        out_len_seed = 'd128;			// 原始种子扩展 扩展后为128Byte
+        dout_len_seed = 'd34;			// 原始种子长度为 34Byte 需要按字节装载进SHA3
+        mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
+    end
+    else begin
+        out_len_seed = 'd64;			// 原始种子扩展 扩展后为64Byte
+        dout_len_seed = 32 + 320 * K;	// 原始种子长度为 32 + 320 * K Byte 需要按字节装载进SHA3
+        mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
+    end
+end
 
 always_ff @(posedge clk) begin
     if (!rstn)
         start_seed <= 1'b0;
-    else if (state == S_INIT)			// 起始信号 传递给SHA3
+    else if (state == S_INIT || substate == S_SUB_INIT)			// 起始信号 传递给SHA3
         start_seed <= 1'b1;
     else
         start_seed <= 1'b0;
 end
 
-assign init_seed = (state == S_INIT);	// 初始化信号 传递给SHA3 组合逻辑 比start_seedt提前一个时钟周期
+assign init_seed = (state == S_INIT) || (substate == S_SUB_INIT);	// 初始化信号 传递给SHA3 组合逻辑 比start_seedt提前一个时钟周期
 
 always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -408,7 +507,13 @@ always_ff @(posedge clk) begin
         seed_domain_sep <= {zeta, `k, `l};
         seed_load_cnt <= 'd0;
     end
-    else if (state == S_LOAD) begin		// 扩展种子装载过程
+    else if (substate == S_SUB_INIT) begin // pack rho
+        dout_seed <= 'd0;
+        dout_valid_seed <= 1'b0;
+        seed_domain_sep[271 : 16] <= seed_expand[1023 : 768];
+        seed_load_cnt <= 'd0;
+    end
+    else if (state == S_LOAD || substate == S_SUB_LOAD_RHO) begin		// 扩展种子装载过程
         if (done)
             seed_load_cnt <= 'd0;
         else if (seed_load_cnt == dout_len_seed)
@@ -426,6 +531,23 @@ always_ff @(posedge clk) begin
             seed_domain_sep <= seed_domain_sep << 8;
         end
     end
+    else if (substate == S_SUB_LOAD_T1) begin
+        if (done)
+            seed_load_cnt <= 'd0;
+        else if (seed_load_cnt == dout_len_seed)
+            seed_load_cnt <= dout_len_seed;
+        else
+            seed_load_cnt <= seed_load_cnt + 1'b1;
+        
+        if (seed_load_cnt == dout_len_seed) begin
+            dout_seed <= 'd0;
+            dout_valid_seed <= 1'b0;
+        end
+        else begin
+            dout_seed <= dout;
+            dout_valid_seed <= rd_en;
+        end
+    end
     else begin
         dout_seed <= 'd0;
         dout_valid_seed <= 1'b0;
@@ -437,12 +559,18 @@ always_ff @(posedge clk) begin
         start_out_seed <= 1'b0;
     else if (state_d == S_LOAD && state == S_SQUEEZE) 	// 开始挤出信号 传递给SHA3
         start_out_seed <= 1'b1;
+    else if (substate_d == S_SUB_LOAD_T1 && substate == S_SUB_SQUEEZE)
+        start_out_seed <= 1'b1;
     else 
         start_out_seed <= 1'b0;
 end
 
 always_ff @(posedge clk) begin			// 拼接扩展后的种子 一共128Byte，每次扩展输出8Byte
     if (!rstn) begin
+        seed_expand <= 'd0;
+        seed_expand_cnt <= 'd0;
+    end
+    else if (state == S_IDLE) begin
         seed_expand <= 'd0;
         seed_expand_cnt <= 'd0;
     end
@@ -590,6 +718,11 @@ always_ff @(posedge clk) begin													// 根据扩展模块输出的有效信号更新写地
         w_VectorS1_Coeff_addr <= 'd0;
         w_VectorS2_Coeff_addr <= 'd0;
     end
+    else if (state == S_IDLE) begin
+        w_MatrixA_Coeff_addr <= 'd0;
+        w_VectorS1_Coeff_addr <= 'd0;
+        w_VectorS2_Coeff_addr <= 'd0;
+    end
     else begin
         if (w_MatrixA_Coeff_valid)
             w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr + 1'b1;
@@ -636,6 +769,10 @@ end
 
 always_ff @(posedge clk) begin : vector_t_write_control
     if (!rstn) begin
+        for (int i = 0 ; i < K ; i = i + 1)
+            w_VectorT_Coeff_addr[i] <= 'd0;
+    end
+    else if (state == S_IDLE) begin   
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorT_Coeff_addr[i] <= 'd0;
     end
@@ -746,6 +883,8 @@ assign ori_coeff = (state <= S_MATRIX_MULT_WAIT) ? r_VectorS1_Coeff : r_VectorT_
 
 always_ff @(posedge clk) begin
     if (!rstn)
+        con_coeff_cnt <= 'd0;
+    else if (state == S_IDLE)         
         con_coeff_cnt <= 'd0;
     else if (con_coeff_valid) begin						// 转换完成系数计数器 同时作为读取T和S2的地址
         if (con_coeff_cnt == `l * 64 - 1)
@@ -887,7 +1026,13 @@ generate
     end
 endgenerate
 
-wire final_t_valid = t1_valid_out_vec[0] & state > S_MATRIX_MULT_WAIT;
+assign final_t_valid = t1_valid_out_vec[0] & state > S_MATRIX_MULT_WAIT;
+always_ff @(posedge clk) begin
+    if (!rstn)
+        final_t_valid_d <= 1'b0;
+    else 
+        final_t_valid_d <= final_t_valid;
+end
 
 // ==========================================================
 // 10. Encoder
@@ -916,31 +1061,75 @@ always_comb begin
         w_EncodeSK_Coeff = {<<8{encode_0}};
         w_EncodeSK_Coeff_valid = encoder_valid_0;
     end
+    else if (state > S_MATRIX_MULT_WAIT || system_done_0_d) begin  // 使用Encoder-0生成t0的pack 存到s2的后面
+        t0_0 = t0_out_comb;
+        t0_valid_0 = final_t_valid;
+        w_EncodeSK_Coeff = {<<8{encode_0}};
+        w_EncodeSK_Coeff_valid = encoder_valid_0;
+    end
 end
 
-always_ff @(posedge clk) begin                              // 根据有效信号存储地址 地址从低到高 分别是 [S0, S1, T]
+always_comb begin
+    //* Encoder-1
+    t1_1            =   'd0;
+    t1_valid_1      =   1'b0;
+    s1_1            =   'd0;
+    s1_valid_1      =   1'b0;
+    s2_1            =   'd0;
+    s2_valid_1      =   1'b0;
+    t0_1            =   'd0;
+    t0_valid_1      =   1'b0;
+    z_1             =   'd0;
+    z_valid_1       =   1'b0;
+
+    w_EncodePK_Coeff        = 'd0;
+    w_EncodePK_Coeff_valid  = 1'b0;
+
+    if (state > S_MATRIX_MULT_WAIT || system_done_0_d) begin           // 使用Encoder-1生成t1的pack 同时存到BRAM和FIFO中
+        t1_1 = t1_out_comb;                                        // 存到FIFO中是为了转换位宽(64->8)以便于注入SHA3
+        t1_valid_1 = final_t_valid;
+        w_EncodePK_Coeff = {<<8{encode_1}};
+        w_EncodePK_Coeff_valid = encoder_valid_1;
+    end
+end
+
+always_ff @(posedge clk) begin                              // 根据有效信号存储地址 地址从低到高 分别是 [S1, S2, T]
     if (!rstn) begin
         w_EncodeSK_Coeff_addr <= 'd0;
     end
-    else if (state == S_STORE) begin
-        if (system_done_0_d)
-            w_EncodeSK_Coeff_addr <= 'd0;
-        else if (w_EncodeSK_Coeff_valid)
-            w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr + 1;
-        else 
-            w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr;
+    else if (state == S_IDLE)
+        w_EncodeSK_Coeff_addr <= 'd0;
+    else if (w_EncodeSK_Coeff_valid)
+        w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr + 1;
+    else 
+        w_EncodeSK_Coeff_addr <= w_EncodeSK_Coeff_addr; 
+end
+
+always_ff @(posedge clk) begin                              // 根据有效信号存储地址 地址从低到高 分别是 [S1, S2, T]
+    if (!rstn) begin
+        w_EncodePK_Coeff_addr <= 'd0;
     end
+    else if (state == S_IDLE)
+        w_EncodePK_Coeff_addr <= 'd0;
+    else if (w_EncodePK_Coeff_valid)
+        w_EncodePK_Coeff_addr <= w_EncodePK_Coeff_addr + 1;
+    else 
+        w_EncodePK_Coeff_addr <= w_EncodePK_Coeff_addr; 
 end
 
 always_ff @(posedge clk) begin                              // pack结束阶段指示信号 避免缓冲区中存在不足64bit的数据没输出  给定一个指示信号 输出剩余数据并清空缓冲区
     if (!rstn) begin
         system_done_0 <= 1'b0;
+        system_done_1 <= 1'b0;
     end
-    else if (expand_done_ExpandS) begin
+    else if (state == S_DUMMY0) begin
         system_done_0 <= 1'b1;
+        system_done_1 <= 1'b1;
     end
-    else 
+    else begin
         system_done_0 <= 1'b0;
+        system_done_1 <= 1'b0;
+    end
 end
 
 always_ff @(posedge clk) begin                              // 延时1拍
@@ -954,5 +1143,31 @@ always_ff @(posedge clk) begin                              // 延时1拍
     end
 end
 
+assign din = w_EncodePK_Coeff;
+assign wr_en = w_EncodePK_Coeff_valid;
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        rd_en <= 1'b0;
+    else if (rd_data_count == 1)
+        rd_en <= 1'b0;
+    else if (rd_data_count > 0 && !empty)
+        rd_en <= 1'b1;
+    else 
+        rd_en <= 1'b0;
+end
+
+t1_load_fifo u_t1_load_fifo (
+  .clk                      (clk                    ),                      
+  .srst                     (~rstn | state == S_IDLE),                   
+  .din                      (din                    ),         
+  .wr_en                    (wr_en                  ), 
+  .rd_en                    (rd_en                  ),                  
+  .dout                     (dout                   ),                    
+  .full                     (full                   ),                    
+  .empty                    (empty                  ),                  
+  .rd_data_count            (rd_data_count          ),  
+  .wr_data_count            (wr_data_count          )  
+);
 
 endmodule
