@@ -88,12 +88,12 @@ module sign_internal
     input       logic                       con_coeff_valid,            // NTT/INTT 输出有效信号
 
     // --- MAC 阵列接口 ---
-    output      logic                       mac_valid_in_keygen,
-    output      logic           [91 : 0]    mac_data_in1_keygen [0 : K - 1],
-    output      logic           [91 : 0]    mac_data_in2_keygen,
-    output      logic           [91 : 0]    mac_data_in3_keygen [0 : K - 1],
-    input       logic                       mac_valid_out_keygen,
-    input       logic           [91 : 0]    mac_data_out_keygen [0 : K - 1],
+    output      logic                       mac_valid_in,
+    output      logic           [91 : 0]    mac_data_in1 [0 : K - 1],
+    output      logic           [91 : 0]    mac_data_in2,
+    output      logic           [91 : 0]    mac_data_in3 [0 : K - 1],
+    input       logic                       mac_valid_out,
+    input       logic           [91 : 0]    mac_data_out [0 : K - 1],
 
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
@@ -157,7 +157,11 @@ logic           [8 : 0]             con_coeff_cnt_d;
 logic                               ram_rd_en;
 logic                               coeff_valid_d;
 logic           [1 : 0]             current_coeff_type;
-
+logic           [22 : 0]            s[3 : 0];
+assign s[0] = con_coeff[23 * 0 +: 23];
+assign s[1] = con_coeff[23 * 1 +: 23];
+assign s[2] = con_coeff[23 * 2 +: 23];
+assign s[3] = con_coeff[23 * 3 +: 23];
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -257,11 +261,13 @@ always_ff @(posedge clk) begin
         coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK);
 end
 
+logic           [63 : 0]            reverse_temp;
+assign reverse_temp = {<<8{r_EncodeSK_Coeff}};
 coeffModq u_coeffModq(
     .clk                ( clk                                                               ),
     .rstn               ( rstn                                                              ),
     .ram_rd_en          ( ram_rd_en                                                         ),
-    .ori_coeff          ( r_EncodeSK_Coeff                                                  ),
+    .ori_coeff          ( reverse_temp                                                      ),
     .ori_coeff_valid    ( coeff_valid_d                                                     ),
     .coeff_type         ( current_coeff_type                                                ),
     .poly_start_pulse   ( state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1    ),
@@ -350,7 +356,6 @@ always_comb begin
                 end
             end
         end
-        
     end
 end
 

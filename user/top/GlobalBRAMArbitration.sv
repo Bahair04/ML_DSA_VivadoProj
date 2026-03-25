@@ -5,7 +5,7 @@ module GlobalBRAMArbitration
     parameter           L = `l
 )(
     // --- 时钟和复位信号 ---
-	input       logic                       clk,
+    input       logic                       clk,
     input       logic                       rstn,
     input       logic           [1 : 0]     mode_config,
 
@@ -48,7 +48,47 @@ module GlobalBRAMArbitration
     input       logic                       w_EncodeSK_Coeff_valid_keygen,
     input       logic           [9 : 0]     w_EncodeSK_Coeff_addr_keygen,
     output      logic           [63 : 0]    r_EncodeSK_Coeff_keygen,           
-    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_keygen
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_keygen,
+
+
+    // ==========================================
+    // Sign 控制器接口
+    // ==========================================
+    input       logic           [91 : 0]    w_MatrixA_Coeff_sign,
+    input       logic                       w_MatrixA_Coeff_valid_sign,
+    input       logic           [11 : 0]    w_MatrixA_Coeff_addr_sign,
+    output      logic           [91 : 0]    r_MatrixA_Coeff_sign [0 : K - 1],
+    input       logic           [8 : 0]     r_MatrixA_Coeff_addr_sign [0 : K - 1],
+    
+    input       logic   signed  [91 : 0]    w_VectorS1_Coeff_sign,
+    input       logic                       w_VectorS1_Coeff_valid_sign,
+    input       logic           [8 : 0]     w_VectorS1_Coeff_addr_sign,
+    output      logic           [91 : 0]    r_VectorS1_Coeff_sign,
+    input       logic           [8 : 0]     r_VectorS1_Coeff_addr_sign,
+    
+    input       logic   signed  [91 : 0]    w_VectorS2_Coeff_sign,
+    input       logic                       w_VectorS2_Coeff_valid_sign,
+    input       logic           [8 : 0]     w_VectorS2_Coeff_addr_sign,
+    output      logic           [91 : 0]    r_VectorS2_Coeff_sign [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorS2_Coeff_addr_sign [0 : K - 1],
+    
+    input       logic           [91 : 0]    w_VectorT_Coeff_sign [0 : K - 1],
+    input       logic                       w_VectorT_Coeff_valid_sign [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorT_Coeff_addr_sign [0 : K - 1],
+    output      logic           [91 : 0]    r_VectorT_Coeff_sign [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorT_Coeff_addr_sign [0 : K - 1],
+
+    input       logic           [63 : 0]    w_EncodePK_Coeff_sign,       
+    input       logic                       w_EncodePK_Coeff_valid_sign,
+    input       logic           [8 : 0]     w_EncodePK_Coeff_addr_sign,
+    output      logic           [63 : 0]    r_EncodePK_Coeff_sign,           
+    input       logic           [8 : 0]     r_EncodePK_Coeff_addr_sign,
+
+    input       logic           [63 : 0]    w_EncodeSK_Coeff_sign,       
+    input       logic                       w_EncodeSK_Coeff_valid_sign,
+    input       logic           [9 : 0]     w_EncodeSK_Coeff_addr_sign,
+    output      logic           [63 : 0]    r_EncodeSK_Coeff_sign,           
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign
 
 );
 
@@ -99,13 +139,28 @@ logic           [9 : 0]     w_EncodeSK_Coeff_addr;
 logic           [63 : 0]    r_EncodeSK_Coeff;           
 logic           [9 : 0]     r_EncodeSK_Coeff_addr;
 
-assign r_MatrixA_Coeff_keygen = r_MatrixA_Coeff;
+
+// ==========================================
+// 广播输出给 KeyGen 和 Sign
+// ==========================================
+assign r_MatrixA_Coeff_keygen  = r_MatrixA_Coeff;
 assign r_VectorS1_Coeff_keygen = r_VectorS1_Coeff;
 assign r_VectorS2_Coeff_keygen = r_VectorS2_Coeff;
-assign r_VectorT_Coeff_keygen = r_VectorT_Coeff;
+assign r_VectorT_Coeff_keygen  = r_VectorT_Coeff;
 assign r_EncodePK_Coeff_keygen = r_EncodePK_Coeff;
 assign r_EncodeSK_Coeff_keygen = r_EncodeSK_Coeff;
 
+assign r_MatrixA_Coeff_sign    = r_MatrixA_Coeff;
+assign r_VectorS1_Coeff_sign   = r_VectorS1_Coeff;
+assign r_VectorS2_Coeff_sign   = r_VectorS2_Coeff;
+assign r_VectorT_Coeff_sign    = r_VectorT_Coeff;
+assign r_EncodePK_Coeff_sign   = r_EncodePK_Coeff;
+assign r_EncodeSK_Coeff_sign   = r_EncodeSK_Coeff;
+
+
+// ==========================================
+// 模式仲裁
+// ==========================================
 always_comb begin
 
     w_MatrixA_Coeff_valid  = 1'b0;
@@ -146,7 +201,7 @@ always_comb begin
     ori_s2_coeff_en = 1'b0;
 
     case (mode_config)
-        'd0: begin              // keygen
+        2'd0: begin             // --- KeyGen 获取控制权 ---
             w_MatrixA_Coeff         = w_MatrixA_Coeff_keygen;
             w_MatrixA_Coeff_valid   = w_MatrixA_Coeff_valid_keygen;
             w_MatrixA_Coeff_addr    = w_MatrixA_Coeff_addr_keygen;
@@ -179,60 +234,93 @@ always_comb begin
             w_EncodeSK_Coeff_addr   = w_EncodeSK_Coeff_addr_keygen;
             r_EncodeSK_Coeff_addr   = r_EncodeSK_Coeff_addr_keygen;
         end
+        
+        2'd1: begin             // --- Sign 获取控制权 ---
+            w_MatrixA_Coeff         = w_MatrixA_Coeff_sign;
+            w_MatrixA_Coeff_valid   = w_MatrixA_Coeff_valid_sign;
+            w_MatrixA_Coeff_addr    = w_MatrixA_Coeff_addr_sign;
+            r_MatrixA_Coeff_addr    = r_MatrixA_Coeff_addr_sign;
+
+            w_VectorS1_Coeff        = w_VectorS1_Coeff_sign;
+            w_VectorS1_Coeff_valid  = w_VectorS1_Coeff_valid_sign;
+            w_VectorS1_Coeff_addr   = w_VectorS1_Coeff_addr_sign;
+            r_VectorS1_Coeff_addr   = r_VectorS1_Coeff_addr_sign;
+            ori_s1_coeff_en         = 1'b1;
+
+            w_VectorS2_Coeff        = w_VectorS2_Coeff_sign;
+            w_VectorS2_Coeff_valid  = w_VectorS2_Coeff_valid_sign;
+            w_VectorS2_Coeff_addr   = w_VectorS2_Coeff_addr_sign;
+            r_VectorS2_Coeff_addr   = r_VectorS2_Coeff_addr_sign;
+            ori_s2_coeff_en         = 1'b1;
+
+            w_VectorT_Coeff         = w_VectorT_Coeff_sign;
+            w_VectorT_Coeff_valid   = w_VectorT_Coeff_valid_sign;
+            w_VectorT_Coeff_addr    = w_VectorT_Coeff_addr_sign;
+            r_VectorT_Coeff_addr    = r_VectorT_Coeff_addr_sign;
+            
+            w_EncodePK_Coeff        = w_EncodePK_Coeff_sign;
+            w_EncodePK_Coeff_valid  = w_EncodePK_Coeff_valid_sign;
+            w_EncodePK_Coeff_addr   = w_EncodePK_Coeff_addr_sign;
+            r_EncodePK_Coeff_addr   = r_EncodePK_Coeff_addr_sign;
+
+            w_EncodeSK_Coeff        = w_EncodeSK_Coeff_sign;
+            w_EncodeSK_Coeff_valid  = w_EncodeSK_Coeff_valid_sign;
+            w_EncodeSK_Coeff_addr   = w_EncodeSK_Coeff_addr_sign;
+            r_EncodeSK_Coeff_addr   = r_EncodeSK_Coeff_addr_sign;
+        end
     endcase
 end
 
 SharedBRAMPool #(
-    .K 	(K  ),
-    .L 	(L  ))
+    .K  (K  ),
+    .L  (L  ))
 u_SharedBRAMPool(
-    .clk                    	(clk                     ),
-    .rstn                   	(rstn                    ),
+    .clk                        (clk                     ),
+    .rstn                       (rstn                    ),
 
-    .w_MatrixA_Coeff        	(w_MatrixA_Coeff         ),
-    .w_MatrixA_Coeff_valid  	(w_MatrixA_Coeff_valid   ),
-    .w_MatrixA_Coeff_addr   	(w_MatrixA_Coeff_addr    ),
-    .r_MatrixA_Coeff        	(r_MatrixA_Coeff         ),
-    .r_MatrixA_Coeff_addr   	(r_MatrixA_Coeff_addr    ),
+    .w_MatrixA_Coeff            (w_MatrixA_Coeff         ),
+    .w_MatrixA_Coeff_valid      (w_MatrixA_Coeff_valid   ),
+    .w_MatrixA_Coeff_addr       (w_MatrixA_Coeff_addr    ),
+    .r_MatrixA_Coeff            (r_MatrixA_Coeff         ),
+    .r_MatrixA_Coeff_addr       (r_MatrixA_Coeff_addr    ),
     
-    .w_VectorS1_Coeff       	(w_VectorS1_Coeff        ),
-    .w_VectorS1_Coeff_valid 	(w_VectorS1_Coeff_valid  ),
-    .w_VectorS1_Coeff_addr  	(w_VectorS1_Coeff_addr   ),
-    .r_VectorS1_Coeff       	(r_VectorS1_Coeff        ),
-    .r_VectorS1_Coeff_addr  	(r_VectorS1_Coeff_addr   ),
+    .w_VectorS1_Coeff           (w_VectorS1_Coeff        ),
+    .w_VectorS1_Coeff_valid     (w_VectorS1_Coeff_valid  ),
+    .w_VectorS1_Coeff_addr      (w_VectorS1_Coeff_addr   ),
+    .r_VectorS1_Coeff           (r_VectorS1_Coeff        ),
+    .r_VectorS1_Coeff_addr      (r_VectorS1_Coeff_addr   ),
     .ori_s1_coeff_en            (ori_s1_coeff_en         ),
 
-    .w_VectorS2_Coeff       	(w_VectorS2_Coeff        ),
-    .w_VectorS2_Coeff_valid 	(w_VectorS2_Coeff_valid  ),
-    .w_VectorS2_Coeff_addr  	(w_VectorS2_Coeff_addr   ),
-    .r_VectorS2_Coeff       	(r_VectorS2_Coeff        ),
-    .r_VectorS2_Coeff_addr  	(r_VectorS2_Coeff_addr   ),
+    .w_VectorS2_Coeff           (w_VectorS2_Coeff        ),
+    .w_VectorS2_Coeff_valid     (w_VectorS2_Coeff_valid  ),
+    .w_VectorS2_Coeff_addr      (w_VectorS2_Coeff_addr   ),
+    .r_VectorS2_Coeff           (r_VectorS2_Coeff        ),
+    .r_VectorS2_Coeff_addr      (r_VectorS2_Coeff_addr   ),
     .ori_s2_coeff_en            (ori_s2_coeff_en         ),
 
-    .w_VectorY_Coeff        	(w_VectorY_Coeff         ),
-    .w_VectorY_Coeff_valid  	(w_VectorY_Coeff_valid   ),
-    .w_VectorY_Coeff_addr   	(w_VectorY_Coeff_addr    ),
-    .r_VectorY_Coeff        	(r_VectorY_Coeff         ),
-    .r_VectorY_Coeff_addr   	(r_VectorY_Coeff_addr    ),
+    .w_VectorY_Coeff            (w_VectorY_Coeff         ),
+    .w_VectorY_Coeff_valid      (w_VectorY_Coeff_valid   ),
+    .w_VectorY_Coeff_addr       (w_VectorY_Coeff_addr    ),
+    .r_VectorY_Coeff            (r_VectorY_Coeff         ),
+    .r_VectorY_Coeff_addr       (r_VectorY_Coeff_addr    ),
     
-    .w_VectorT_Coeff        	(w_VectorT_Coeff         ),
-    .w_VectorT_Coeff_valid  	(w_VectorT_Coeff_valid   ),
-    .w_VectorT_Coeff_addr   	(w_VectorT_Coeff_addr    ),
-    .r_VectorT_Coeff        	(r_VectorT_Coeff         ),
-    .r_VectorT_Coeff_addr   	(r_VectorT_Coeff_addr    ),
+    .w_VectorT_Coeff            (w_VectorT_Coeff         ),
+    .w_VectorT_Coeff_valid      (w_VectorT_Coeff_valid   ),
+    .w_VectorT_Coeff_addr       (w_VectorT_Coeff_addr    ),
+    .r_VectorT_Coeff            (r_VectorT_Coeff         ),
+    .r_VectorT_Coeff_addr       (r_VectorT_Coeff_addr    ),
 
-	.w_EncodePK_Coeff       	( w_EncodePK_Coeff       ),
-	.w_EncodePK_Coeff_valid 	( w_EncodePK_Coeff_valid ),
-	.w_EncodePK_Coeff_addr  	( w_EncodePK_Coeff_addr  ),
-	.r_EncodePK_Coeff       	( r_EncodePK_Coeff       ),
-	.r_EncodePK_Coeff_addr  	( r_EncodePK_Coeff_addr  ),
+    .w_EncodePK_Coeff           ( w_EncodePK_Coeff       ),
+    .w_EncodePK_Coeff_valid     ( w_EncodePK_Coeff_valid ),
+    .w_EncodePK_Coeff_addr      ( w_EncodePK_Coeff_addr  ),
+    .r_EncodePK_Coeff           ( r_EncodePK_Coeff       ),
+    .r_EncodePK_Coeff_addr      ( r_EncodePK_Coeff_addr  ),
 
-    .w_EncodeSK_Coeff       	( w_EncodeSK_Coeff       ),
-	.w_EncodeSK_Coeff_valid 	( w_EncodeSK_Coeff_valid ),
-	.w_EncodeSK_Coeff_addr  	( w_EncodeSK_Coeff_addr  ),
-	.r_EncodeSK_Coeff       	( r_EncodeSK_Coeff       ),
-	.r_EncodeSK_Coeff_addr  	( r_EncodeSK_Coeff_addr  )
+    .w_EncodeSK_Coeff           ( w_EncodeSK_Coeff       ),
+    .w_EncodeSK_Coeff_valid     ( w_EncodeSK_Coeff_valid ),
+    .w_EncodeSK_Coeff_addr      ( w_EncodeSK_Coeff_addr  ),
+    .r_EncodeSK_Coeff           ( r_EncodeSK_Coeff       ),
+    .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr  )
 );
-
 
 endmodule

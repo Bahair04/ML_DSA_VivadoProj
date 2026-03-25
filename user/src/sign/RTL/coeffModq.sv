@@ -91,7 +91,7 @@ always_ff @(posedge clk or negedge rstn) begin
         end
 
         // 阶段 2: 出水 (自主判断：处于 Burst 状态且池子里水够)
-        if (is_bursting && next_buffer_len >= consume_len) begin
+        if (is_bursting && next_buffer_len >= consume_len && burst_cnt < 63) begin
             extracted_bits  <= next_buffer[127 : 0];
             extracted_valid <= 1'b1;
             // 剩余数据右移下沉

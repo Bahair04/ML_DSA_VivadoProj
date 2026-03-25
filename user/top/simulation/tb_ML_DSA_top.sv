@@ -20,6 +20,9 @@ logic                       done_keygen ;
 logic           [7 : 0]     pk_keygen ;
 logic           [7 : 0]     sk_keygen ;
 
+logic                       start_sign = 1'b0;       
+logic                       sign_ready;      
+logic                       done_sign;
 
 initial
 begin
@@ -34,7 +37,7 @@ end
 integer fid1, fid2, fid3;
 initial begin
     repeat (60) @(posedge clk);
-    zeta_keygen <= 256'hb6746c9c0fc51a34bee20406a62b8ce8ba4d3db1cbdbce824062c3ab24450775;
+    zeta_keygen <= 256'h9eece8a4160e8d5b60201f850c7244a85fc0e8645d60c850680e499c1ea2625d;
     start_keygen <= 1'b1;
     @(posedge clk);
     start_keygen <= 1'b0;
@@ -45,6 +48,10 @@ initial begin
     $fclose(fid1);
     $fclose(fid2);
     $fclose(fid3);
+    start_sign <= 1'b1;
+    @(posedge clk);
+    start_sign <= 1'b0;
+    repeat (6000) @(posedge clk);
     $finish;
 end
 
@@ -153,7 +160,10 @@ ML_DSA_top #(
     .key_ready_keygen  ( key_ready_keygen   ),
     .done_keygen       ( done_keygen        ),
     .pk_keygen         ( pk_keygen          ),
-    .sk_keygen         ( sk_keygen          )
+    .sk_keygen         ( sk_keygen          ),
+    .start_sign        (start_sign),
+    .sign_ready        (sign_ready),
+    .done_sign         (done_sign)
 );
 
 endmodule

@@ -41,11 +41,13 @@ sv xil_defaultlib  \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorT.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorY.sv" \
 "../../../../user/src/Polynomials/RTL/ZetaRomAddrGen.sv" \
+"../../../../user/src/sign/RTL/coeffModq.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/inferred_bram.sv" \
 "../../../../user/src/Hash/RTL/keccak.sv" \
 "../../../../user/src/keygen/RTL/keygen_internal.sv" \
 "../../../../user/src/En_Decoder/power2round.sv" \
 "../../../../user/src/Hash/RTL/sha3.sv" \
+"../../../../user/src/sign/RTL/sign_internal.sv" \
 "../../../../user/top/simulation/tb_ML_DSA_top.sv" \
 
 # compile glbl module
