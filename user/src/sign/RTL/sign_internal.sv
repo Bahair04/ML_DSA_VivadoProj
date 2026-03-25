@@ -18,6 +18,9 @@ module sign_internal
     output      logic                       sign_ready,     // 准备标志
     output      logic                       done,           // 完成标志
 
+    input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
+    input       logic           [255 : 0]   rnd,            // 32字节 随机数
+
     // --- BRAM 总线信号 ---
     output      logic           [91 : 0]    w_MatrixA_Coeff,
     output      logic                       w_MatrixA_Coeff_valid,
@@ -152,6 +155,7 @@ logic [4 : 0]   poly_cnt;
 //* ==========================================================
 
 // --- BRAM 信号 ---
+logic           [511 : 0]           tr_seed;
 logic           [255 : 0]           rho;
 logic           [255 : 0]           k_seed;     // 保存 k_seed (32 bytes = 256 bits)
 
@@ -161,13 +165,12 @@ localparam S2_RAM_LEN = K * 256 * S1_S2_BIT_LEN / 64;
 localparam T0_RAM_LEN = K * 256 * T0_BIT_LEN / 64;
 localparam TR_RAM_LEN = 8; // TR 是 64 bytes = 512 bits = 8 个 64-bit 块
 
-localparam RHO_START_ADDR = S1_RAM_LEN + S2_RAM_LEN + T0_RAM_LEN + TR_RAM_LEN;      // RHO 在 BRAM 中的起始物理地址
+localparam TR_START_ADDR = S1_RAM_LEN + S2_RAM_LEN + T0_RAM_LEN;
 
 // --- 读取 RHO 和 K_SEED 用的计数器 ---
-logic           [3 : 0]             fetch_cnt;
+logic           [4 : 0]             fetch_cnt;
 logic                               fetch_valid;
-logic                               fetch_valid_d;
-logic           [3 : 0]             save_cnt;
+logic           [4 : 0]             save_cnt;
 
 // --- NTT/INTT (Poly_PAU) 信号 ---
 logic           [8 : 0]             con_coeff_cnt;  
@@ -222,8 +225,8 @@ always_ff @(posedge clk) begin
                     state <= S_PREPROC_NTT_ACK;
                 end
             end
-            S_PREPROC_GET_RHO : begin           // 读取并保存完 8 个块 (4块rho + 4块k) 后进入下一步
-                if (save_cnt == 4'd8)
+            S_PREPROC_GET_RHO : begin           // 读取并保存完 16 个块 (4块tr + 4块rho + 4块k) 后进入下一步
+                if (save_cnt == 5'd16)
                     state <= S_EXPAND_A;
                 else
                     state <= S_PREPROC_GET_RHO;
@@ -279,14 +282,14 @@ always_ff @(posedge clk) begin
         r_EncodeSK_Coeff_addr <= 'd0;
     else if (state == S_INIT || state == S_IDLE)
         r_EncodeSK_Coeff_addr <= 'd0;
-    // NTT 预处理阶段，受 coeffModq 反控
+    // NTT 预处理阶段，受 coeffModq 反控 读取s1 s2 t0
     else if (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE)
         r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
-    // 多项式全部处理完的瞬间，地址直接飞跃到 RHO 的起点
+    // 多项式全部处理完的瞬间，地址直接飞跃到 RHO 的起点 跳过tr 直接读取rho和k
     else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1)
-        r_EncodeSK_Coeff_addr <= RHO_START_ADDR;
-    // 获取 RHO 和 K 时，连读 8 拍
-    else if (state == S_PREPROC_GET_RHO && fetch_cnt < 4'd8)
+        r_EncodeSK_Coeff_addr <= TR_START_ADDR;
+    // 获取 TR, RHO 和 K 时，连读 16 拍
+    else if (state == S_PREPROC_GET_RHO && fetch_cnt < 5'd16)
         r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
 end
 
@@ -349,7 +352,7 @@ always_ff @(posedge clk) begin
 end
 
 //* ==========================================================
-//* 6. NTT 结果回写分发 (Demux to BRAMs)
+//* 6. BRAM 回写分发 (Demux to BRAMs)
 //* ==========================================================
 
 logic [4:0] s2_idx;
@@ -395,6 +398,26 @@ always_comb begin
             end
         end
     end
+end
+
+always_comb begin
+    w_MatrixA_Coeff = 'd0;
+    w_MatrixA_Coeff_valid = 1'b0;
+    if (state == S_STORE_A) begin
+        w_MatrixA_Coeff = coeff_ExpandA;
+        w_MatrixA_Coeff_valid = coeff_valid_ExpandA;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        w_MatrixA_Coeff_addr <= 'd0;
+    else if (state == S_INIT)
+        w_MatrixA_Coeff_addr <= 'd0;
+    else if (state == S_STORE_A && coeff_valid_ExpandA)
+        w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr + 1'b1;
+    else 
+        w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr;
 end
 
 //* ==========================================================
@@ -453,20 +476,13 @@ always_ff @(posedge clk) begin
         fetch_valid <= 1'b0;
     end 
     else if (state == S_PREPROC_GET_RHO) begin
-        // 发出 8 个读取请求，计数器加到 9 是为了覆盖 BRAM 的 1 拍读出延迟
-        if (fetch_cnt < 4'd9) 
+        // 发出 16 个读取请求，计数器加到 17 是为了覆盖 BRAM 的 1 拍读出延迟
+        if (fetch_cnt < 5'd17) 
             fetch_cnt <= fetch_cnt + 1'b1;
             
         // 标记有效的数据接收窗口
-        fetch_valid <= (fetch_cnt < 4'd8);
+        fetch_valid <= (fetch_cnt < 5'd16);
     end
-end
-
-always_ff @(posedge clk) begin
-    if (!rstn) 
-        fetch_valid_d <= 1'b0;
-    else       
-        fetch_valid_d <= fetch_valid;
 end
 
 always_ff @(posedge clk) begin
@@ -480,8 +496,9 @@ always_ff @(posedge clk) begin
     end 
     else if (state == S_PREPROC_GET_RHO && fetch_valid) begin
         save_cnt <= save_cnt + 1'b1;
-        // BRAM 读回的数据，高位先写入（大端序移位拼接）
-        if (save_cnt < 4'd4)
+        if (save_cnt < 5'd8)
+            tr_seed <= {tr_seed[447:0], r_EncodeSK_Coeff};
+        else if (save_cnt < 5'd12)
             rho <= {rho[191:0], r_EncodeSK_Coeff};      // 前 4 块属于 rho
         else
             k_seed <= {k_seed[191:0], r_EncodeSK_Coeff};// 后 4 块属于 k_seed
