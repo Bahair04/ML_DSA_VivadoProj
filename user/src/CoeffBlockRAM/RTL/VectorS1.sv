@@ -9,7 +9,8 @@ module VectorS1(
     input       logic           [8 : 0]     w_VectorS1_Coeff_addr,
 
     output      logic           [91 : 0]    r_VectorS1_Coeff,            // 对q取模 无符号
-    input       logic           [8 : 0]     r_VectorS1_Coeff_addr
+    input       logic           [8 : 0]     r_VectorS1_Coeff_addr,
+    input       logic                       ori_s1_coeff_en
 );
 
 localparam                  			DATA_WIDTH = 'd92;
@@ -33,10 +34,15 @@ always_comb begin
     for (int i = 0 ; i < 4 ; i = i + 1) begin
         logic   [3 : 0]                raw_slice;
         raw_slice = rd_data[i * 23 +: 4];
-        if (raw_slice[3])
-            doutb[i] = {{19{raw_slice[3]}}, raw_slice} + `q;
-        else 
-            doutb[i] = {{19{raw_slice[3]}}, raw_slice};
+        if (!ori_s1_coeff_en) begin
+            if (raw_slice[3])
+                doutb[i] = {{19{raw_slice[3]}}, raw_slice} + `q;
+            else 
+                doutb[i] = {{19{raw_slice[3]}}, raw_slice};
+        end
+        else begin
+            doutb[i] = rd_data[i * 23 +: 23];
+        end
     end    
 end
 assign r_VectorS1_Coeff = {doutb[3], doutb[2], doutb[1], doutb[0]};

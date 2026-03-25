@@ -21,6 +21,7 @@ module CoeffBlockRAM
 
     output      logic           [91 : 0]    r_VectorS1_Coeff,                           // 对q取模 无符号
     input       logic           [8 : 0]     r_VectorS1_Coeff_addr,
+	input 		logic						ori_s1_coeff_en,
 
     input       logic   signed  [91 : 0]    w_VectorS2_Coeff,                           // 4*4bit有符号数
     input       logic                       w_VectorS2_Coeff_valid,
@@ -28,6 +29,7 @@ module CoeffBlockRAM
 
     output      logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1],               // 对q取模 无符号
     input       logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1],
+	input 		logic						ori_s2_coeff_en,
 
     // --- Vector Y ---
     input       logic   signed  [79 : 0]    w_VectorY_Coeff,                            // 4*20bit有符号数
@@ -77,7 +79,8 @@ VectorS1 u_VectorS1(
 	.w_VectorS1_Coeff_valid 	( w_VectorS1_Coeff_valid  ),
 	.w_VectorS1_Coeff_addr  	( w_VectorS1_Coeff_addr   ),
 	.r_VectorS1_Coeff       	( r_VectorS1_Coeff        ),
-	.r_VectorS1_Coeff_addr  	( r_VectorS1_Coeff_addr   )
+	.r_VectorS1_Coeff_addr  	( r_VectorS1_Coeff_addr   ),
+	.ori_s1_coeff_en			( ori_s1_coeff_en		  )
 );
 
 VectorS2 #(
@@ -88,7 +91,8 @@ u_VectorS2(
 	.w_VectorS2_Coeff_valid 	( w_VectorS2_Coeff_valid  ),
 	.w_VectorS2_Coeff_addr  	( w_VectorS2_Coeff_addr   ),
 	.r_VectorS2_Coeff       	( r_VectorS2_Coeff        ),
-	.r_VectorS2_Coeff_addr  	( r_VectorS2_Coeff_addr   )
+	.r_VectorS2_Coeff_addr  	( r_VectorS2_Coeff_addr   ),
+	.ori_s2_coeff_en			( ori_s2_coeff_en		  )
 );
 
 VectorY u_VectorY(

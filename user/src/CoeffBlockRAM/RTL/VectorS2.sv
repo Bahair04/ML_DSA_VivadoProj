@@ -11,7 +11,8 @@ module VectorS2 #(
     input       logic           [8 : 0]     w_VectorS2_Coeff_addr,
 
     output      logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1],            // 对q取模 无符号
-    input       logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1]
+    input       logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1],
+    input       logic                       ori_s2_coeff_en
 );
 
 logic           [91 : 0]            VectorS2_Coeff [0 : K - 1];            // 4*4bit有符号数
@@ -41,13 +42,18 @@ endgenerate
 
 always_comb begin
     for (int i = 0 ; i < K ; i = i + 1) begin
-        for (int j = 0 ; j < 4 ; j = j + 1) begin
-            logic   [3 : 0]                raw_slice;
-            raw_slice = VectorS2_Coeff[i][j * 23 +: 4];
-            if (raw_slice[3])
-                r_VectorS2_Coeff[i][j * 23 +: 23] = {{19{raw_slice[3]}}, raw_slice} + `q;
-            else
-                r_VectorS2_Coeff[i][j * 23 +: 23] = {{19{raw_slice[3]}}, raw_slice};
+        if (!ori_s2_coeff_en) begin
+            for (int j = 0 ; j < 4 ; j = j + 1) begin
+                logic   [3 : 0]                raw_slice;
+                raw_slice = VectorS2_Coeff[i][j * 23 +: 4];
+                if (raw_slice[3])
+                    r_VectorS2_Coeff[i][j * 23 +: 23] = {{19{raw_slice[3]}}, raw_slice} + `q;
+                else
+                    r_VectorS2_Coeff[i][j * 23 +: 23] = {{19{raw_slice[3]}}, raw_slice};
+            end
+        end
+        else begin
+            r_VectorS2_Coeff[i] = VectorS2_Coeff[i];
         end
     end    
 end

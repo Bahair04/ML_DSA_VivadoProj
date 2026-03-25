@@ -25,14 +25,12 @@ module sign_internal
     input       logic           [91 : 0]    r_MatrixA_Coeff [0 : K - 1],
     output      logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
 
-    // 【修改点1】：写位宽改为 92 位，以存储 NTT 变换后的结果
     output      logic           [91 : 0]    w_VectorS1_Coeff,                   
     output      logic                       w_VectorS1_Coeff_valid,
     output      logic           [8 : 0]     w_VectorS1_Coeff_addr,
     input       logic           [91 : 0]    r_VectorS1_Coeff,                   // 对q取模 无符号
     output      logic           [8 : 0]     r_VectorS1_Coeff_addr,
 
-    // 【修改点1】：写位宽改为 92 位，以存储 NTT 变换后的结果
     output      logic           [91 : 0]    w_VectorS2_Coeff,                   
     output      logic                       w_VectorS2_Coeff_valid,
     output      logic           [8 : 0]     w_VectorS2_Coeff_addr,
@@ -253,20 +251,22 @@ always_ff @(posedge clk) begin
 end
 
 always_ff @(posedge clk) begin
-    if (!rstn) coeff_valid_d <= 1'b0;
-    else coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK);
+    if (!rstn) 
+        coeff_valid_d <= 1'b0;
+    else 
+        coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK);
 end
 
 coeffModq u_coeffModq(
-    .clk                ( clk ),
-    .rstn               ( rstn ),
-    .ram_rd_en          ( ram_rd_en ),
-    .ori_coeff          ( r_EncodeSK_Coeff ),
-    .ori_coeff_valid    ( coeff_valid_d ),
-    .coeff_type         ( current_coeff_type ),
-    .poly_start_pulse   ( state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1 ),
-    .modq_coeff         ( ori_coeff ), 
-    .modq_coeff_valid   ( ori_coeff_valid )
+    .clk                ( clk                                                               ),
+    .rstn               ( rstn                                                              ),
+    .ram_rd_en          ( ram_rd_en                                                         ),
+    .ori_coeff          ( r_EncodeSK_Coeff                                                  ),
+    .ori_coeff_valid    ( coeff_valid_d                                                     ),
+    .coeff_type         ( current_coeff_type                                                ),
+    .poly_start_pulse   ( state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1    ),
+    .modq_coeff         ( ori_coeff                                                         ), 
+    .modq_coeff_valid   ( ori_coeff_valid                                                   )
 );
 
 //* ==========================================================
@@ -314,7 +314,6 @@ assign s2_idx = poly_cnt - L[4:0];
 assign t0_idx = poly_cnt - (L[4:0] + K[4:0]);
 
 always_comb begin
-    // 默认全零，防止产生锁存器
     w_VectorS1_Coeff       = 92'd0;
     w_VectorS1_Coeff_valid = 1'b0;
     w_VectorS1_Coeff_addr  = 9'd0;
