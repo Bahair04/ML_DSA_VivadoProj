@@ -24,7 +24,6 @@ module ML_DSA_top
 );
 
 logic           [1 : 0]     mode_config;
-assign                      mode_config = 'd0;
 
 // ==========================================================
 // keygen_internal
