@@ -133,7 +133,9 @@ typedef enum logic [4 : 0] {
     S_PREPROC_NTT_ACK,          
     S_PREPROC_NTT_WAIT,
     S_PREPROC_NTT_STORE,
-    S_EXPAND_A
+    S_PREPROC_GET_RHO,
+    S_EXPAND_A,
+    S_STORE_A
 } state_t;
 
 state_t                             state, state_d;
@@ -149,6 +151,24 @@ logic [4 : 0]   poly_cnt;
 //* 2. 内部信号统一定义
 //* ==========================================================
 
+// --- BRAM 信号 ---
+logic           [255 : 0]           rho;
+logic           [255 : 0]           k_seed;     // 保存 k_seed (32 bytes = 256 bits)
+
+// --- 用于计算地址偏移的本地参数 ---
+localparam S1_RAM_LEN = L * 256 * S1_S2_BIT_LEN / 64;
+localparam S2_RAM_LEN = K * 256 * S1_S2_BIT_LEN / 64;
+localparam T0_RAM_LEN = K * 256 * T0_BIT_LEN / 64;
+localparam TR_RAM_LEN = 8; // TR 是 64 bytes = 512 bits = 8 个 64-bit 块
+
+localparam RHO_START_ADDR = S1_RAM_LEN + S2_RAM_LEN + T0_RAM_LEN + TR_RAM_LEN;      // RHO 在 BRAM 中的起始物理地址
+
+// --- 读取 RHO 和 K_SEED 用的计数器 ---
+logic           [3 : 0]             fetch_cnt;
+logic                               fetch_valid;
+logic                               fetch_valid_d;
+logic           [3 : 0]             save_cnt;
+
 // --- NTT/INTT (Poly_PAU) 信号 ---
 logic           [8 : 0]             con_coeff_cnt;  
 logic           [8 : 0]             con_coeff_cnt_d;
@@ -157,11 +177,7 @@ logic           [8 : 0]             con_coeff_cnt_d;
 logic                               ram_rd_en;
 logic                               coeff_valid_d;
 logic           [1 : 0]             current_coeff_type;
-logic           [22 : 0]            s[3 : 0];
-assign s[0] = con_coeff[23 * 0 +: 23];
-assign s[1] = con_coeff[23 * 1 +: 23];
-assign s[2] = con_coeff[23 * 2 +: 23];
-assign s[3] = con_coeff[23 * 3 +: 23];
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -199,15 +215,27 @@ always_ff @(posedge clk) begin
             end
             S_PREPROC_NTT_STORE : begin
                 if (poly_cnt == TOTAL_POLYS - 1) begin
-                    state <= S_EXPAND_A;
+                    state <= S_PREPROC_GET_RHO;
                 end 
                 else begin
                     poly_cnt <= poly_cnt + 1'b1;
                     state <= S_PREPROC_NTT_ACK;
                 end
             end
+            S_PREPROC_GET_RHO : begin           // 读取并保存完 8 个块 (4块rho + 4块k) 后进入下一步
+                if (save_cnt == 4'd8)
+                    state <= S_EXPAND_A;
+                else
+                    state <= S_PREPROC_GET_RHO;
+            end
             S_EXPAND_A : begin
-                // 占位，留给后续扩展矩阵 A 等逻辑
+                state <= S_STORE_A;
+            end
+            S_STORE_A : begin
+                if (expand_done_ExpandA)
+                    state <= S_IDLE;
+                else 
+                    state <= S_STORE_A;
             end
             default : begin
                 state <= S_IDLE;
@@ -245,20 +273,30 @@ always_comb begin
         current_coeff_type = 2'd2; // t0
 end
 
+// 1. 核心读地址 MUX 仲裁
 always_ff @(posedge clk) begin
     if (!rstn)
         r_EncodeSK_Coeff_addr <= 'd0;
     else if (state == S_INIT || state == S_IDLE)
         r_EncodeSK_Coeff_addr <= 'd0;
-    else if (ram_rd_en && state >= S_PREPROC_NTT_ACK)
-        r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1;
+    // NTT 预处理阶段，受 coeffModq 反控
+    else if (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE)
+        r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
+    // 多项式全部处理完的瞬间，地址直接飞跃到 RHO 的起点
+    else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1)
+        r_EncodeSK_Coeff_addr <= RHO_START_ADDR;
+    // 获取 RHO 和 K 时，连读 8 拍
+    else if (state == S_PREPROC_GET_RHO && fetch_cnt < 4'd8)
+        r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
 end
 
+// 2. 严格屏蔽 coeffModq 的有效信号，防止读取 RHO 时把数据误喂给多项式解包器
 always_ff @(posedge clk) begin
     if (!rstn) 
         coeff_valid_d <= 1'b0;
     else 
-        coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK);
+        // 只有在 NTT 处理阶段才允许给 coeffModq 发送 valid
+        coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE);
 end
 
 logic           [63 : 0]            reverse_temp;
@@ -358,5 +396,102 @@ always_comb begin
         end
     end
 end
+
+//* ==========================================================
+//* 7. SHA3 控制逻辑
+//* ==========================================================
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_expand_ExpandA <= 1'b0;
+    else if (state == S_EXPAND_A)  
+        start_expand_ExpandA <= 1'b1;
+    else 
+        start_expand_ExpandA <= 1'b0;
+end
+
+always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用端口 此处对端口进行分配 分配依据为状态机变量
+    dout1 = 'd0; dout_valid1 = 'd0; dout_len1 = 'd0; mdlen1 = 'd0;
+    init1 = 'd0; start1 = 'd0; start_out1 = 'd0; out_len1 = 'd0;
+    
+    dout2 = 'd0; dout_valid2 = 'd0; dout_len2 = 'd0; mdlen2 = 'd0;
+    init2 = 'd0; start2 = 'd0; start_out2 = 'd0; out_len2 = 'd0;
+
+    done_ExpandA = 'd0; done_out_ExpandA = 'd0; st_64bit_ExpandA = 'd0; st_64bit_valid_ExpandA = 'd0;
+
+    if (state == S_EXPAND_A || state == S_STORE_A) begin
+        // ==========================================
+        // 状态为 EXPAND_A 时，SHA3-1 分配给 ExpandA
+        // ==========================================
+        dout1       = dout_ExpandA; 
+        dout_valid1 = dout_valid_ExpandA; 
+        dout_len1   = dout_len_ExpandA; 
+        mdlen1      = mdlen_ExpandA; 
+        init1       = init_ExpandA; 
+        start1      = start_ExpandA; 
+        start_out1  = start_out_ExpandA; 
+        out_len1    = out_len_ExpandA; 
+        
+        done_ExpandA           = done1; 
+        done_out_ExpandA       = done_out1; 
+        st_64bit_ExpandA       = st_64bit1; 
+        st_64bit_valid_ExpandA = st_64bit_valid1; 
+    
+    end
+end
+
+//* ==========================================================
+//* 8. 独立读取 RHO 和 K 种子的逻辑
+//* ==========================================================
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        fetch_cnt <= 'd0;
+        fetch_valid <= 1'b0;
+    end 
+    else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1) begin
+        fetch_cnt <= 'd0;
+        fetch_valid <= 1'b0;
+    end 
+    else if (state == S_PREPROC_GET_RHO) begin
+        // 发出 8 个读取请求，计数器加到 9 是为了覆盖 BRAM 的 1 拍读出延迟
+        if (fetch_cnt < 4'd9) 
+            fetch_cnt <= fetch_cnt + 1'b1;
+            
+        // 标记有效的数据接收窗口
+        fetch_valid <= (fetch_cnt < 4'd8);
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) 
+        fetch_valid_d <= 1'b0;
+    else       
+        fetch_valid_d <= fetch_valid;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        rho <= 'd0;
+        k_seed <= 'd0;
+        save_cnt <= 'd0;
+    end 
+    else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1) begin
+        save_cnt <= 'd0;
+    end 
+    else if (state == S_PREPROC_GET_RHO && fetch_valid) begin
+        save_cnt <= save_cnt + 1'b1;
+        // BRAM 读回的数据，高位先写入（大端序移位拼接）
+        if (save_cnt < 4'd4)
+            rho <= {rho[191:0], r_EncodeSK_Coeff};      // 前 4 块属于 rho
+        else
+            k_seed <= {k_seed[191:0], r_EncodeSK_Coeff};// 后 4 块属于 k_seed
+    end
+end
+
+//* ==========================================================
+//* 9. ExpandA 控制逻辑
+//* ==========================================================
+assign rho_ExpandA = {<<8{rho}};
+
 
 endmodule
