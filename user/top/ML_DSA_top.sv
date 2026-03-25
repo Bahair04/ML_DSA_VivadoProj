@@ -24,7 +24,7 @@ module ML_DSA_top
 );
 
 logic           [1 : 0]     mode_config;
-
+assign                      mode_config = 'd0;
 // ==========================================================
 // keygen_internal
 // ==========================================================
@@ -38,13 +38,13 @@ logic           [11 : 0]    w_MatrixA_Coeff_addr_keygen;
 logic           [91 : 0]    r_MatrixA_Coeff_keygen [0 : K - 1];
 logic           [8 : 0]     r_MatrixA_Coeff_addr_keygen [0 : K - 1];
 
-logic   signed  [15 : 0]    w_VectorS1_Coeff_keygen;                   // 4*4bit有符号数
+logic   signed  [91 : 0]    w_VectorS1_Coeff_keygen;                   // 4*4bit有符号数
 logic                       w_VectorS1_Coeff_valid_keygen;
 logic           [8 : 0]     w_VectorS1_Coeff_addr_keygen;
 logic           [91 : 0]    r_VectorS1_Coeff_keygen;                   // 对q取模 无符号
 logic           [8 : 0]     r_VectorS1_Coeff_addr_keygen;
 
-logic   signed  [15 : 0]    w_VectorS2_Coeff_keygen;                   // 4*4bit有符号数
+logic   signed  [91 : 0]    w_VectorS2_Coeff_keygen;                   // 4*4bit有符号数
 logic                       w_VectorS2_Coeff_valid_keygen;
 logic           [8 : 0]     w_VectorS2_Coeff_addr_keygen;
 logic           [91 : 0]    r_VectorS2_Coeff_keygen [0 : K - 1];       // 对q取模 无符号

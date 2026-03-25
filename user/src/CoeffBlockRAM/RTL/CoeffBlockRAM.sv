@@ -15,14 +15,14 @@ module CoeffBlockRAM
     input       logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
 
     // --- Vector S ---
-    input       logic   signed  [15 : 0]    w_VectorS1_Coeff,                           // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS1_Coeff,                           // 4*4bit有符号数
     input       logic                       w_VectorS1_Coeff_valid,
     input       logic           [8 : 0]     w_VectorS1_Coeff_addr,
 
     output      logic           [91 : 0]    r_VectorS1_Coeff,                           // 对q取模 无符号
     input       logic           [8 : 0]     r_VectorS1_Coeff_addr,
 
-    input       logic   signed  [15 : 0]    w_VectorS2_Coeff,                           // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS2_Coeff,                           // 4*4bit有符号数
     input       logic                       w_VectorS2_Coeff_valid,
     input       logic           [8 : 0]     w_VectorS2_Coeff_addr,
 

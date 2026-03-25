@@ -19,13 +19,13 @@ module GlobalBRAMArbitration
     output      logic           [91 : 0]    r_MatrixA_Coeff_keygen [0 : K - 1],
     input       logic           [8 : 0]     r_MatrixA_Coeff_addr_keygen [0 : K - 1],
 
-    input       logic   signed  [15 : 0]    w_VectorS1_Coeff_keygen,                   // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS1_Coeff_keygen,                   // 4*4bit有符号数
     input       logic                       w_VectorS1_Coeff_valid_keygen,
     input       logic           [8 : 0]     w_VectorS1_Coeff_addr_keygen,
     output      logic           [91 : 0]    r_VectorS1_Coeff_keygen,                   // 对q取模 无符号
     input       logic           [8 : 0]     r_VectorS1_Coeff_addr_keygen,
 
-    input       logic   signed  [15 : 0]    w_VectorS2_Coeff_keygen,                   // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS2_Coeff_keygen,                   // 4*4bit有符号数
     input       logic                       w_VectorS2_Coeff_valid_keygen,
     input       logic           [8 : 0]     w_VectorS2_Coeff_addr_keygen,
     output      logic           [91 : 0]    r_VectorS2_Coeff_keygen [0 : K - 1],       // 对q取模 无符号
@@ -61,13 +61,13 @@ logic           [11 : 0]    w_MatrixA_Coeff_addr;
 logic           [91 : 0]    r_MatrixA_Coeff [0 : K - 1];
 logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1];
 
-logic   signed  [15 : 0]    w_VectorS1_Coeff;                   // 4*4bit有符号数
+logic   signed  [91 : 0]    w_VectorS1_Coeff;                   // 4*4bit有符号数
 logic                       w_VectorS1_Coeff_valid;
 logic           [8 : 0]     w_VectorS1_Coeff_addr;
 logic           [91 : 0]    r_VectorS1_Coeff;                   // 对q取模 无符号
 logic           [8 : 0]     r_VectorS1_Coeff_addr;
 
-logic   signed  [15 : 0]    w_VectorS2_Coeff;                   // 4*4bit有符号数
+logic   signed  [91 : 0]    w_VectorS2_Coeff;                   // 4*4bit有符号数
 logic                       w_VectorS2_Coeff_valid;
 logic           [8 : 0]     w_VectorS2_Coeff_addr;
 logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1];       // 对q取模 无符号

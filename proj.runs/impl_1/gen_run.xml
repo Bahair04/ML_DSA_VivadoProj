@@ -2,79 +2,61 @@
 <GenRun Id="impl_1" LaunchPart="xc7a200tfbg484-2L" LaunchTime="1774360134">
   <File Type="ROUTE-PWR" Name="ML_DSA_top_power_routed.rpt"/>
   <File Type="PA-TCL" Name="ML_DSA_top.tcl"/>
-  <File Type="BITSTR-MMI" Name="ML_DSA_top.mmi"/>
-  <File Type="OPT-METHODOLOGY-DRC" Name="ML_DSA_top_methodology_drc_opted.rpt"/>
-  <File Type="INIT-TIMING" Name="ML_DSA_top_timing_summary_init.rpt"/>
   <File Type="ROUTE-PWR-SUM" Name="ML_DSA_top_power_summary_routed.pb"/>
   <File Type="REPORTS-TCL" Name="ML_DSA_top_reports.tcl"/>
-  <File Type="OPT-TIMING" Name="ML_DSA_top_timing_summary_opted.rpt"/>
-  <File Type="OPT-DCP" Name="ML_DSA_top_opt.dcp"/>
+  <File Type="BITSTR-MSK" Name="ML_DSA_top.msk"/>
+  <File Type="ROUTE-CLK" Name="ML_DSA_top_clock_utilization_routed.rpt"/>
+  <File Type="RDI-RDI" Name="ML_DSA_top.vdi"/>
+  <File Type="BG-BIT" Name="ML_DSA_top.bit"/>
+  <File Type="BG-DRC" Name="ML_DSA_top.drc"/>
+  <File Type="BG-BGN" Name="ML_DSA_top.bgn"/>
+  <File Type="BG-BIN" Name="ML_DSA_top.bin"/>
+  <File Type="BITSTR-RBT" Name="ML_DSA_top.rbt"/>
+  <File Type="BITSTR-NKY" Name="ML_DSA_top.nky"/>
+  <File Type="BITSTR-BMM" Name="ML_DSA_top_bd.bmm"/>
+  <File Type="BITSTR-MMI" Name="ML_DSA_top.mmi"/>
+  <File Type="ROUTE-METHODOLOGY-DRC" Name="ML_DSA_top_methodology_drc_routed.rpt"/>
+  <File Type="BITSTR-SYSDEF" Name="ML_DSA_top.sysdef"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-PB" Name="ML_DSA_top_methodology_drc_routed.pb"/>
+  <File Type="BITSTR-LTX" Name="debug_nets.ltx"/>
+  <File Type="BITSTR-LTX" Name="ML_DSA_top.ltx"/>
+  <File Type="WBT-USG" Name="usage_statistics_webtalk.html"/>
   <File Type="OPT-DRC" Name="ML_DSA_top_drc_opted.rpt"/>
   <File Type="OPT-HWDEF" Name="ML_DSA_top.hwdef"/>
-  <File Type="PWROPT-DCP" Name="ML_DSA_top_pwropt.dcp"/>
-  <File Type="PWROPT-DRC" Name="ML_DSA_top_drc_pwropted.rpt"/>
-  <File Type="PWROPT-TIMING" Name="ML_DSA_top_timing_summary_pwropted.rpt"/>
-  <File Type="PLACE-DCP" Name="ML_DSA_top_placed.dcp"/>
   <File Type="PLACE-IO" Name="ML_DSA_top_io_placed.rpt"/>
-  <File Type="PLACE-CLK" Name="ML_DSA_top_clock_utilization_placed.rpt"/>
   <File Type="PLACE-UTIL" Name="ML_DSA_top_utilization_placed.rpt"/>
   <File Type="PLACE-UTIL-PB" Name="ML_DSA_top_utilization_placed.pb"/>
   <File Type="PLACE-CTRL" Name="ML_DSA_top_control_sets_placed.rpt"/>
-  <File Type="PLACE-SIMILARITY" Name="ML_DSA_top_incremental_reuse_placed.rpt"/>
   <File Type="PLACE-PRE-SIMILARITY" Name="ML_DSA_top_incremental_reuse_pre_placed.rpt"/>
-  <File Type="BG-BIN" Name="ML_DSA_top.bin"/>
-  <File Type="PLACE-TIMING" Name="ML_DSA_top_timing_summary_placed.rpt"/>
-  <File Type="POSTPLACE-PWROPT-DCP" Name="ML_DSA_top_postplace_pwropt.dcp"/>
-  <File Type="BITSTR-MSK" Name="ML_DSA_top.msk"/>
-  <File Type="POSTPLACE-PWROPT-TIMING" Name="ML_DSA_top_timing_summary_postplace_pwropted.rpt"/>
-  <File Type="PHYSOPT-DCP" Name="ML_DSA_top_physopt.dcp"/>
-  <File Type="PHYSOPT-DRC" Name="ML_DSA_top_drc_physopted.rpt"/>
-  <File Type="BITSTR-RBT" Name="ML_DSA_top.rbt"/>
-  <File Type="PHYSOPT-TIMING" Name="ML_DSA_top_timing_summary_physopted.rpt"/>
-  <File Type="ROUTE-ERROR-DCP" Name="ML_DSA_top_routed_error.dcp"/>
-  <File Type="ROUTE-DCP" Name="ML_DSA_top_routed.dcp"/>
-  <File Type="ROUTE-BLACKBOX-DCP" Name="ML_DSA_top_routed_bb.dcp"/>
   <File Type="ROUTE-DRC" Name="ML_DSA_top_drc_routed.rpt"/>
   <File Type="ROUTE-DRC-PB" Name="ML_DSA_top_drc_routed.pb"/>
-  <File Type="ROUTE-DRC-RPX" Name="ML_DSA_top_drc_routed.rpx"/>
-  <File Type="ROUTE-METHODOLOGY-DRC" Name="ML_DSA_top_methodology_drc_routed.rpt"/>
-  <File Type="ROUTE-METHODOLOGY-DRC-RPX" Name="ML_DSA_top_methodology_drc_routed.rpx"/>
-  <File Type="ROUTE-METHODOLOGY-DRC-PB" Name="ML_DSA_top_methodology_drc_routed.pb"/>
   <File Type="ROUTE-PWR-RPX" Name="ML_DSA_top_power_routed.rpx"/>
   <File Type="ROUTE-STATUS" Name="ML_DSA_top_route_status.rpt"/>
   <File Type="ROUTE-STATUS-PB" Name="ML_DSA_top_route_status.pb"/>
+  <File Type="ROUTE-DCP" Name="ML_DSA_top_routed.dcp"/>
+  <File Type="ROUTE-ERROR-DCP" Name="ML_DSA_top_routed_error.dcp"/>
+  <File Type="ROUTE-BLACKBOX-DCP" Name="ML_DSA_top_routed_bb.dcp"/>
   <File Type="ROUTE-TIMINGSUMMARY" Name="ML_DSA_top_timing_summary_routed.rpt"/>
   <File Type="ROUTE-TIMING-PB" Name="ML_DSA_top_timing_summary_routed.pb"/>
   <File Type="ROUTE-TIMING-RPX" Name="ML_DSA_top_timing_summary_routed.rpx"/>
-  <File Type="ROUTE-SIMILARITY" Name="ML_DSA_top_incremental_reuse_routed.rpt"/>
-  <File Type="ROUTE-CLK" Name="ML_DSA_top_clock_utilization_routed.rpt"/>
   <File Type="ROUTE-BUS-SKEW" Name="ML_DSA_top_bus_skew_routed.rpt"/>
   <File Type="ROUTE-BUS-SKEW-PB" Name="ML_DSA_top_bus_skew_routed.pb"/>
   <File Type="ROUTE-BUS-SKEW-RPX" Name="ML_DSA_top_bus_skew_routed.rpx"/>
+  <File Type="OPT-DCP" Name="ML_DSA_top_opt.dcp"/>
+  <File Type="PLACE-DCP" Name="ML_DSA_top_placed.dcp"/>
+  <File Type="PWROPT-DCP" Name="ML_DSA_top_pwropt.dcp"/>
+  <File Type="POSTPLACE-PWROPT-DCP" Name="ML_DSA_top_postplace_pwropt.dcp"/>
+  <File Type="PHYSOPT-DCP" Name="ML_DSA_top_physopt.dcp"/>
   <File Type="POSTROUTE-PHYSOPT-DCP" Name="ML_DSA_top_postroute_physopt.dcp"/>
   <File Type="POSTROUTE-PHYSOPT-BLACKBOX-DCP" Name="ML_DSA_top_postroute_physopt_bb.dcp"/>
-  <File Type="POSTROUTE-PHYSOPT-TIMING" Name="ML_DSA_top_timing_summary_postroute_physopted.rpt"/>
-  <File Type="POSTROUTE-PHYSOPT-TIMING-PB" Name="ML_DSA_top_timing_summary_postroute_physopted.pb"/>
-  <File Type="POSTROUTE-PHYSOPT-TIMING-RPX" Name="ML_DSA_top_timing_summary_postroute_physopted.rpx"/>
-  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW" Name="ML_DSA_top_bus_skew_postroute_physopted.rpt"/>
-  <File Type="BG-BIT" Name="ML_DSA_top.bit"/>
-  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW-PB" Name="ML_DSA_top_bus_skew_postroute_physopted.pb"/>
-  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW-RPX" Name="ML_DSA_top_bus_skew_postroute_physopted.rpx"/>
-  <File Type="BITSTR-NKY" Name="ML_DSA_top.nky"/>
-  <File Type="BITSTR-BMM" Name="ML_DSA_top_bd.bmm"/>
+  <File Type="ROUTE-DRC-RPX" Name="ML_DSA_top_drc_routed.rpx"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-RPX" Name="ML_DSA_top_methodology_drc_routed.rpx"/>
   <File Type="PDI-FILE" Name="ML_DSA_top.pdi"/>
   <File Type="RCFI_FILE" Name="ML_DSA_top.rcfi"/>
   <File Type="CFI_FILE" Name="ML_DSA_top.cfi"/>
   <File Type="RNPI_FILE" Name="ML_DSA_top.rnpi"/>
   <File Type="NPI_FILE" Name="ML_DSA_top.npi"/>
   <File Type="RBD_FILE" Name="ML_DSA_top.rbd"/>
-  <File Type="BITSTR-LTX" Name="debug_nets.ltx"/>
-  <File Type="BITSTR-LTX" Name="ML_DSA_top.ltx"/>
-  <File Type="BITSTR-SYSDEF" Name="ML_DSA_top.sysdef"/>
-  <File Type="BG-BGN" Name="ML_DSA_top.bgn"/>
-  <File Type="BG-DRC" Name="ML_DSA_top.drc"/>
-  <File Type="RDI-RDI" Name="ML_DSA_top.vdi"/>
-  <File Type="WBT-USG" Name="usage_statistics_webtalk.html"/>
   <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
     <Filter Type="Srcs"/>
     <File Path="$PPRDIR/user/ip/sha3_din_fifo/sha3_din_fifo.xci">
@@ -511,6 +493,7 @@
     <Step Id="route_design"/>
     <Step Id="post_route_phys_opt_design"/>
     <Step Id="write_bitstream"/>
+    <Step Id="write_device_image"/>
   </Strategy>
   <BlockFileSet Type="BlockSrcs" Name="ExpandS_sipo_1"/>
   <BlockFileSet Type="BlockSrcs" Name="ZetaRaw_ROM"/>

@@ -6,7 +6,7 @@ module VectorS2 #(
     input       logic               clk,
 
     // --- Vector S ---
-    input       logic   signed  [15 : 0]    w_VectorS2_Coeff,            // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS2_Coeff,            // 4*4bit有符号数
     input       logic                       w_VectorS2_Coeff_valid,
     input       logic           [8 : 0]     w_VectorS2_Coeff_addr,
 
@@ -14,8 +14,8 @@ module VectorS2 #(
     input       logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1]
 );
 
-logic           [15 : 0]            VectorS2_Coeff [0 : K - 1];            // 4*4bit有符号数
-localparam                  		DATA_WIDTH = 'd16;
+logic           [91 : 0]            VectorS2_Coeff [0 : K - 1];            // 4*4bit有符号数
+localparam                  		DATA_WIDTH = 'd92;
 genvar i;
 generate
 	for (i = 0 ; i < K ; i = i + 1) begin : row_vector_bram
@@ -43,7 +43,7 @@ always_comb begin
     for (int i = 0 ; i < K ; i = i + 1) begin
         for (int j = 0 ; j < 4 ; j = j + 1) begin
             logic   [3 : 0]                raw_slice;
-            raw_slice = VectorS2_Coeff[i][j * 4 +: 4];
+            raw_slice = VectorS2_Coeff[i][j * 23 +: 4];
             if (raw_slice[3])
                 r_VectorS2_Coeff[i][j * 23 +: 23] = {{19{raw_slice[3]}}, raw_slice} + `q;
             else

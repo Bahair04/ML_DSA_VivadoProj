@@ -28,13 +28,13 @@ module keygen_internal
     input       logic           [91 : 0]    r_MatrixA_Coeff [0 : K - 1],
     output      logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
 
-    output      logic   signed  [15 : 0]    w_VectorS1_Coeff,                   // 4*4bit有符号数
+    output      logic   signed  [91 : 0]    w_VectorS1_Coeff,                   // 4*4bit有符号数
     output      logic                       w_VectorS1_Coeff_valid,
     output      logic           [8 : 0]     w_VectorS1_Coeff_addr,
     input       logic           [91 : 0]    r_VectorS1_Coeff,                   // 对q取模 无符号
     output      logic           [8 : 0]     r_VectorS1_Coeff_addr,
 
-    output      logic   signed  [15 : 0]    w_VectorS2_Coeff,                   // 4*4bit有符号数
+    output      logic   signed  [91 : 0]    w_VectorS2_Coeff,                   // 4*4bit有符号数
     output      logic                       w_VectorS2_Coeff_valid,
     output      logic           [8 : 0]     w_VectorS2_Coeff_addr,
     input       logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1],       // 对q取模 无符号
@@ -713,10 +713,14 @@ ExpandS u_ExpandS(
 assign w_MatrixA_Coeff = coeff_ExpandA;											// 存储扩展后的A矩阵
 assign w_MatrixA_Coeff_valid = coeff_valid_ExpandA;								// 有效信号
 
-assign w_VectorS1_Coeff = coeff_raw;											// 此处存储模q前的原始S值 从而减小位宽
+logic           [3 : 0]         s0, s1, s2, s3;
+logic           [91 : 0]        comb_res;
+assign {s3, s2, s1, s0} = coeff_raw;
+assign comb_res = {{{19{s3[3]}}, s3}, {{19{s2[3]}}, s2}, {{19{s1[3]}}, s1}, {{19{s0[3]}}, s0}};
+assign w_VectorS1_Coeff = comb_res;											
 assign w_VectorS1_Coeff_valid = coeff_valid_ExpandS & (nouce <= `l - 1);		// nounce用于区分当前正在扩展 S1 还是 S2
 
-assign w_VectorS2_Coeff = coeff_raw;
+assign w_VectorS2_Coeff = comb_res;
 assign w_VectorS2_Coeff_valid = coeff_valid_ExpandS & (nouce > `l - 1);
 
 always_ff @(posedge clk) begin													// 根据扩展模块输出的有效信号更新写地址
@@ -894,7 +898,8 @@ always_ff @(posedge clk) begin
     else if (state == S_IDLE)         
         con_coeff_cnt <= 'd0;
     else if (con_coeff_valid) begin						// 转换完成系数计数器 同时作为读取T和S2的地址
-        if (con_coeff_cnt == `l * 64 - 1)
+        if ((state <= S_MATRIX_MULT_WAIT && con_coeff_cnt == `l * 64 - 1) || 
+            (state > S_MATRIX_MULT_WAIT && con_coeff_cnt == `k * 64 - 1))
             con_coeff_cnt <= 'd0;
         else
             con_coeff_cnt <= con_coeff_cnt + 1'b1;

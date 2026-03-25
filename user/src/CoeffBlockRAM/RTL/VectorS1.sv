@@ -4,7 +4,7 @@ module VectorS1(
     input       logic               clk,
 
     // --- Vector S ---
-    input       logic   signed  [15 : 0]    w_VectorS1_Coeff,            // 4*4bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorS1_Coeff,            // 4*4bit有符号数
     input       logic                       w_VectorS1_Coeff_valid,
     input       logic           [8 : 0]     w_VectorS1_Coeff_addr,
 
@@ -12,7 +12,7 @@ module VectorS1(
     input       logic           [8 : 0]     r_VectorS1_Coeff_addr
 );
 
-localparam                  			DATA_WIDTH = 'd16;
+localparam                  			DATA_WIDTH = 'd92;
 logic   signed  [DATA_WIDTH - 1 : 0] 	rd_data;
 
 inferred_bram #(
@@ -32,7 +32,7 @@ logic           [22 : 0]                doutb [3 : 0];
 always_comb begin
     for (int i = 0 ; i < 4 ; i = i + 1) begin
         logic   [3 : 0]                raw_slice;
-        raw_slice = rd_data[i * 4 +: 4];
+        raw_slice = rd_data[i * 23 +: 4];
         if (raw_slice[3])
             doutb[i] = {{19{raw_slice[3]}}, raw_slice} + `q;
         else 

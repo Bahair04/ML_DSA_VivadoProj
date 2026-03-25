@@ -30,6 +30,8 @@ initial
 begin
     #(PERIOD*2) rstn  =  1;
 end
+
+integer fid1, fid2, fid3;
 initial begin
     repeat (60) @(posedge clk);
     zeta_keygen <= 256'hb6746c9c0fc51a34bee20406a62b8ce8ba4d3db1cbdbce824062c3ab24450775;
@@ -40,6 +42,9 @@ initial begin
         @(posedge clk);
     end
     repeat (1000) @(posedge clk);
+    $fclose(fid1);
+    $fclose(fid2);
+    $fclose(fid3);
     $finish;
 end
 
@@ -58,7 +63,6 @@ always_ff @(posedge clk) begin
     end
 end
 
-integer fid1;
 initial begin
     fid1 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_ExpandS_output.txt", "w");
     $fwrite(fid1, "[");
@@ -87,12 +91,10 @@ always_ff @(posedge clk) begin
     end
 end
 
-integer fid2;
 initial begin
     fid2 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_power2bound_output_t0.txt", "w");
     $fwrite(fid2, "[");
 end
-integer fid3;
 initial begin
     fid3 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_power2bound_output_t1.txt", "w");
     $fwrite(fid3, "[");
