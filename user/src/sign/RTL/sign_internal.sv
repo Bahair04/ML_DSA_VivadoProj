@@ -40,11 +40,23 @@ module sign_internal
     input       logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1],       // 对q取模 无符号
     output      logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1],
 
+    output      logic   signed  [91 : 0]    w_VectorY_Coeff,
+    output      logic                       w_VectorY_Coeff_valid,
+    output      logic           [5 : 0]     w_VectorY_Coeff_addr,
+    input       logic           [91 : 0]    r_VectorY_Coeff,
+    output      logic           [5 : 0]     r_VectorY_Coeff_addr,
+
     output      logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1],
     output      logic                       w_VectorT_Coeff_valid [0 : K - 1],
     output      logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1],
     input       logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
+
+    output      logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
+    output      logic                       w_VectorM_Coeff_valid [0 : K - 1],
+    output      logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+    input       logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1],
+    output      logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1],
 
     output      logic           [63 : 0]    w_EncodePK_Coeff,       
     output      logic                       w_EncodePK_Coeff_valid,
@@ -127,6 +139,13 @@ module sign_internal
     input       logic                       st_64bit_valid2
 );
 
+// 参数维度
+// y - l维向量      --  新建存储区 
+// w - k维向量      --  与t完全一致 使用与t完全一致存储区
+// c_tilde - 32Byte -- 字节流
+// c - 标量
+// c_hat - 标量 - 需保存 后面分别于s1_hat s2_hat t0_hat进行标量乘法 然后逆变换获得系数 并立即判断范围
+
 //* ==========================================================
 //* 1. 参数与状态定义
 //* ==========================================================
@@ -138,7 +157,20 @@ typedef enum logic [4 : 0] {
     S_PREPROC_NTT_STORE,
     S_PREPROC_GET_RHO,
     S_EXPAND_A,
-    S_STORE_A
+    S_STORE_A,
+
+    // 签名循环开始
+    S_SIGN_LOOP_INIT,           
+    
+    // 扩展并存储Y多项式(l个)
+    S_EXPAND_Y,
+    S_STORE_Y,
+    // 从BRAM中读出Y多项式并通过NTT变换到NTT域 获取NTT域系数的同时，从存储矩阵中读出k个A向量，使用ModuleMAC计算矩阵乘法 并将结果写回W矩阵
+    S_Y_NTT_ACK,
+    S_Y_NTT,
+    S_Y_NTT_WAIT,
+
+    // 从W矩阵中读出多项式，并进行INTT逆变换 变换的结果同时取高位按字节pack后存入SHA3
 
 } state_t;
 
@@ -148,8 +180,11 @@ typedef enum logic [4 : 0] {
     S_SUB_IDLE,
     S_SUB_INIT,
     S_SUB_LOAD,
-    S_SUB_SQUEEZE,
-    S_SUB_DONE
+    S_SUB_SQUEEZE,      // 获得rho_prime(seed_expand)
+    S_SUB_INIT_C_TILDE,             // C_TILDE SHA3初始化
+    S_SUB_LOAD_C_TILDE_MU,          // 加载MU
+    S_SUB_LOAD_C_TILDE_W1_BYTES,    // 主状态机生成w时去高位获得w1，再通过pack模块获得字节流 子状态机将字节流载入SHA3
+    S_SUB_SQUEEZE_C_TILDE           // 加载完MU和w1字节流之后 挤出C_TILDE 用于后续生成c多项式
 } substate_t;
 
 substate_t                          substate, substate_d;
@@ -681,5 +716,8 @@ end
 //* ==========================================================
 assign rho_ExpandA = {<<8{rho}};
 
+//* ==========================================================
+//* 10. ExpandY 控制逻辑
+//* ==========================================================
 
 endmodule

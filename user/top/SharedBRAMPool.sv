@@ -29,7 +29,7 @@ module SharedBRAMPool
     input       logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1],
     input 		logic						ori_s2_coeff_en,
 
-    input       logic   signed  [79 : 0]    w_VectorY_Coeff,
+    input       logic   signed  [91 : 0]    w_VectorY_Coeff,
     input       logic                       w_VectorY_Coeff_valid,
     input       logic           [5 : 0]     w_VectorY_Coeff_addr,
     output      logic           [91 : 0]    r_VectorY_Coeff,
@@ -40,6 +40,12 @@ module SharedBRAMPool
     input       logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1],
     output      logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     input       logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
+
+    input       logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
+    input       logic                       w_VectorM_Coeff_valid [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+    output      logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1],
 
     input       logic           [63 : 0]    w_EncodePK_Coeff,       
     input       logic                       w_EncodePK_Coeff_valid,
@@ -97,6 +103,13 @@ CoeffBlockRAM #(
     .w_VectorT_Coeff_addr           (w_VectorT_Coeff_addr       ),
     .r_VectorT_Coeff                (r_VectorT_Coeff            ),
     .r_VectorT_Coeff_addr           (r_VectorT_Coeff_addr       ),
+
+    // --- Vector M ---
+    .w_VectorM_Coeff       	        ( w_VectorM_Coeff           ),
+	.w_VectorM_Coeff_valid 	        ( w_VectorM_Coeff_valid     ),
+	.w_VectorM_Coeff_addr  	        ( w_VectorM_Coeff_addr      ),
+	.r_VectorM_Coeff       	        ( r_VectorM_Coeff           ),
+	.r_VectorM_Coeff_addr  	        ( r_VectorM_Coeff_addr      ),
 
      // --- Encode PK ---
 	.w_EncodePK_Coeff       	    ( w_EncodePK_Coeff          ),

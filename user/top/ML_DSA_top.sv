@@ -204,11 +204,23 @@ logic           [8 : 0]     w_VectorS2_Coeff_addr_sign;
 logic           [91 : 0]    r_VectorS2_Coeff_sign [0 : K - 1];       
 logic           [5 : 0]     r_VectorS2_Coeff_addr_sign [0 : K - 1];
 
+logic   signed  [91 : 0]    w_VectorY_Coeff_sign;
+logic                       w_VectorY_Coeff_valid_sign;
+logic           [5 : 0]     w_VectorY_Coeff_addr_sign;
+logic           [91 : 0]    r_VectorY_Coeff_sign;
+logic           [5 : 0]     r_VectorY_Coeff_addr_sign;
+
 logic           [91 : 0]    w_VectorT_Coeff_sign [0 : K - 1];
 logic                       w_VectorT_Coeff_valid_sign [0 : K - 1];
 logic           [5 : 0]     w_VectorT_Coeff_addr_sign [0 : K - 1];
 logic           [91 : 0]    r_VectorT_Coeff_sign [0 : K - 1];
 logic           [5 : 0]     r_VectorT_Coeff_addr_sign [0 : K - 1];
+
+logic           [91 : 0]    w_VectorM_Coeff_sign [0 : K - 1];
+logic                       w_VectorM_Coeff_valid_sign [0 : K - 1];
+logic           [5 : 0]     w_VectorM_Coeff_addr_sign [0 : K - 1];
+logic           [91 : 0]    r_VectorM_Coeff_sign [0 : K - 1];
+logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1];
 
 logic           [63 : 0]    w_EncodePK_Coeff_sign;       
 logic                       w_EncodePK_Coeff_valid_sign;
@@ -448,7 +460,6 @@ u_sign_internal(
     .mu                         ( mu                      ),
     .rnd                        ( rnd                     ),
 
-
     .w_MatrixA_Coeff            ( w_MatrixA_Coeff_sign         ),
     .w_MatrixA_Coeff_valid      ( w_MatrixA_Coeff_valid_sign   ),
     .w_MatrixA_Coeff_addr       ( w_MatrixA_Coeff_addr_sign    ),
@@ -467,12 +478,24 @@ u_sign_internal(
     .r_VectorS2_Coeff           ( r_VectorS2_Coeff_sign        ),
     .r_VectorS2_Coeff_addr      ( r_VectorS2_Coeff_addr_sign   ),
     
+    .w_VectorY_Coeff            (w_VectorY_Coeff_sign          ),
+    .w_VectorY_Coeff_valid      (w_VectorY_Coeff_valid_sign    ),
+    .w_VectorY_Coeff_addr       (w_VectorY_Coeff_addr_sign     ),
+    .r_VectorY_Coeff            (r_VectorY_Coeff_sign          ),
+    .r_VectorY_Coeff_addr       (r_VectorY_Coeff_addr_sign     ),
+
     .w_VectorT_Coeff            ( w_VectorT_Coeff_sign         ),
     .w_VectorT_Coeff_valid      ( w_VectorT_Coeff_valid_sign   ),
     .w_VectorT_Coeff_addr       ( w_VectorT_Coeff_addr_sign    ),
     .r_VectorT_Coeff            ( r_VectorT_Coeff_sign         ),
     .r_VectorT_Coeff_addr       ( r_VectorT_Coeff_addr_sign    ),
     
+    .w_VectorM_Coeff            (w_VectorM_Coeff_sign          ),
+    .w_VectorM_Coeff_valid      (w_VectorM_Coeff_valid_sign    ),
+    .w_VectorM_Coeff_addr       (w_VectorM_Coeff_addr_sign     ),
+    .r_VectorM_Coeff            (r_VectorM_Coeff_sign          ),
+    .r_VectorM_Coeff_addr       (r_VectorM_Coeff_addr_sign     ),
+
     .w_EncodePK_Coeff           ( w_EncodePK_Coeff_sign        ),
     .w_EncodePK_Coeff_valid     ( w_EncodePK_Coeff_valid_sign  ),
     .w_EncodePK_Coeff_addr      ( w_EncodePK_Coeff_addr_sign   ),

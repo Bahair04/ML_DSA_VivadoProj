@@ -32,7 +32,7 @@ module CoeffBlockRAM
 	input 		logic						ori_s2_coeff_en,
 
     // --- Vector Y ---
-    input       logic   signed  [79 : 0]    w_VectorY_Coeff,                            // 4*20bit有符号数
+    input       logic   signed  [91 : 0]    w_VectorY_Coeff,                            // 4*20bit有符号数
     input       logic                       w_VectorY_Coeff_valid,
     input       logic           [5 : 0]     w_VectorY_Coeff_addr,
     output      logic           [91 : 0]    r_VectorY_Coeff,                            // 对q取模 无符号
@@ -45,6 +45,14 @@ module CoeffBlockRAM
 
     output      logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     input       logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
+
+	// --- Vector M ---
+    input       logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
+    input       logic                       w_VectorM_Coeff_valid [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+
+    output      logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1],
 
     // --- Encode PK ---
     input       logic           [63 : 0]    w_EncodePK_Coeff,       
@@ -114,6 +122,18 @@ u_VectorT(
 	.r_VectorT_Coeff       	( r_VectorT_Coeff        ),
 	.r_VectorT_Coeff_addr  	( r_VectorT_Coeff_addr   )
 );
+
+VectorM #(
+	.K 	( K  ))
+u_VectorM(
+	.clk                   	( clk                    ),
+	.w_VectorM_Coeff       	( w_VectorM_Coeff        ),
+	.w_VectorM_Coeff_valid 	( w_VectorM_Coeff_valid  ),
+	.w_VectorM_Coeff_addr  	( w_VectorM_Coeff_addr   ),
+	.r_VectorM_Coeff       	( r_VectorM_Coeff        ),
+	.r_VectorM_Coeff_addr  	( r_VectorM_Coeff_addr   )
+);
+
 
 EncodePK u_EncodePK(
 	.clk                    	( clk                     ),

@@ -37,7 +37,6 @@ module GlobalBRAMArbitration
     output      logic           [91 : 0]    r_VectorT_Coeff_keygen [0 : K - 1],
     input       logic           [5 : 0]     r_VectorT_Coeff_addr_keygen [0 : K - 1],
 
-
     input       logic           [63 : 0]    w_EncodePK_Coeff_keygen,       
     input       logic                       w_EncodePK_Coeff_valid_keygen,
     input       logic           [8 : 0]     w_EncodePK_Coeff_addr_keygen,
@@ -72,11 +71,24 @@ module GlobalBRAMArbitration
     output      logic           [91 : 0]    r_VectorS2_Coeff_sign [0 : K - 1],
     input       logic           [5 : 0]     r_VectorS2_Coeff_addr_sign [0 : K - 1],
     
+    input       logic   signed  [91 : 0]    w_VectorY_Coeff_sign,
+    input       logic                       w_VectorY_Coeff_valid_sign,
+    input       logic           [5 : 0]     w_VectorY_Coeff_addr_sign,
+    output      logic           [91 : 0]    r_VectorY_Coeff_sign,
+    input       logic           [5 : 0]     r_VectorY_Coeff_addr_sign,
+
     input       logic           [91 : 0]    w_VectorT_Coeff_sign [0 : K - 1],
     input       logic                       w_VectorT_Coeff_valid_sign [0 : K - 1],
     input       logic           [5 : 0]     w_VectorT_Coeff_addr_sign [0 : K - 1],
     output      logic           [91 : 0]    r_VectorT_Coeff_sign [0 : K - 1],
     input       logic           [5 : 0]     r_VectorT_Coeff_addr_sign [0 : K - 1],
+
+    input       logic           [91 : 0]    w_VectorM_Coeff_sign [0 : K - 1],
+    input       logic                       w_VectorM_Coeff_valid_sign [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorM_Coeff_addr_sign [0 : K - 1],
+    output      logic           [91 : 0]    r_VectorM_Coeff_sign [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1],
+
 
     input       logic           [63 : 0]    w_EncodePK_Coeff_sign,       
     input       logic                       w_EncodePK_Coeff_valid_sign,
@@ -115,7 +127,7 @@ logic           [91 : 0]    r_VectorS2_Coeff [0 : K - 1];       // 对q取模 �
 logic           [5 : 0]     r_VectorS2_Coeff_addr [0 : K - 1];
 logic                       ori_s2_coeff_en;
 
-logic   signed  [79 : 0]    w_VectorY_Coeff;
+logic   signed  [91 : 0]    w_VectorY_Coeff;
 logic                       w_VectorY_Coeff_valid;
 logic           [5 : 0]     w_VectorY_Coeff_addr;
 logic           [91 : 0]    r_VectorY_Coeff;
@@ -126,6 +138,12 @@ logic                       w_VectorT_Coeff_valid [0 : K - 1];
 logic           [5 : 0]     w_VectorT_Coeff_addr [0 : K - 1];
 logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1];
 logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1];
+
+logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1];
+logic                       w_VectorM_Coeff_valid [0 : K - 1];
+logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1];
+logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1];
+logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1];
 
 logic           [63 : 0]    w_EncodePK_Coeff;       
 logic                       w_EncodePK_Coeff_valid;
@@ -309,6 +327,12 @@ u_SharedBRAMPool(
     .w_VectorT_Coeff_addr       (w_VectorT_Coeff_addr    ),
     .r_VectorT_Coeff            (r_VectorT_Coeff         ),
     .r_VectorT_Coeff_addr       (r_VectorT_Coeff_addr    ),
+
+    .w_VectorM_Coeff       	    ( w_VectorM_Coeff        ),
+	.w_VectorM_Coeff_valid 	    ( w_VectorM_Coeff_valid  ),
+	.w_VectorM_Coeff_addr  	    ( w_VectorM_Coeff_addr   ),
+	.r_VectorM_Coeff       	    ( r_VectorM_Coeff        ),
+	.r_VectorM_Coeff_addr  	    ( r_VectorM_Coeff_addr   ),
 
     .w_EncodePK_Coeff           ( w_EncodePK_Coeff       ),
     .w_EncodePK_Coeff_valid     ( w_EncodePK_Coeff_valid ),
