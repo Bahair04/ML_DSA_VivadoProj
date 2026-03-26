@@ -14,6 +14,8 @@ verilog xil_defaultlib  \
 sv xil_defaultlib  \
 "../../../../user/src/CoeffBlockRAM/RTL/CoeffBlockRAM.sv" \
 "../../../../user/src/Polynomials/RTL/DSP_MultPipe.sv" \
+"../../../../user/src/Auxilary/RTL/Decomposes.sv" \
+"../../../../user/src/Auxilary/RTL/Decomposes2.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/EncodePK.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/EncodeSK.sv" \
 "../../../../user/src/En_Decoder/Encoder.sv" \

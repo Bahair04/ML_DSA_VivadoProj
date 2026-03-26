@@ -283,6 +283,19 @@ logic                               w_VectorM_Coeff_valid_d [0 : K - 1];
 logic           [91 : 0]            r_VectorM_Coeff_INTT;
 logic           [8 : 0]             r_VectorM_Coeff_addr_INTT;
 logic           [8 : 0]             r_VectorM_Coeff_addr_INTT_d;
+logic                               m_valid;
+logic           [91 : 0]            m;
+
+// --- high_bits(decompose) ---
+
+logic   signed  [24 : 0]            r [0 : 3];
+logic                               r_valid [0 : 3];
+
+logic           [7 : 0]             r1 [0 : 3];                     // 无符号   8位
+logic                               r1_valid [0 : 3];
+logic   signed  [18 : 0]            r0 [0 : 3];                     // 有符号   19位
+logic                               r0_valid [0 : 3];
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -1063,6 +1076,16 @@ always_comb begin
 			w_VectorM_Coeff[i] = mac_out_comb[i];
  		end
 	end
+    else if (state <= S_DUMMY0) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            if (i == con_coeff_cnt[8 : 6])
+                w_VectorM_Coeff_valid[i] <= m_valid;
+            else 
+                w_VectorM_Coeff_valid[i] <= 1'b0;
+            
+            w_VectorM_Coeff[i] = m;
+        end
+    end
 end
 
 always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay
@@ -1109,6 +1132,14 @@ always_ff @(posedge clk) begin : vector_m_write_control
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
         end
     end
+    else if (state <= S_DUMMY0) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            if (m_valid)
+                w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
+            else 
+                w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
+        end
+    end
     else begin
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
@@ -1140,6 +1171,41 @@ always_ff @(posedge clk) begin				// 向量 M 存储时时按行存储的 低5�
 end
 
 assign r_VectorM_Coeff_INTT = r_VectorM_Coeff[r_VectorM_Coeff_addr_INTT_d[8 : 6]]; // 读取需要一个时钟周期 因此这里对地址打一拍后再根据高三位取行
+assign m_valid = con_coeff_valid & (state >= S_MATRIX_MULT_WAIT && state <= S_DUMMY0);
+assign m = con_coeff;
 
+//* ==========================================================
+//* 12. high_bits(decompose)
+//* ==========================================================
+generate
+    for (genvar i = 0 ; i < 4 ; i = i + 1) begin
+        assign r[i] = {2'b0, m[23 * i +: 23]};
+        assign r_valid[i] = m_valid;
+        if (`gamma_2 == 95232) begin
+            Decomposes u_Decomposes(
+                .clk      	( clk          ),
+                .rstn     	( rstn         ),
+                .r        	( r[i]         ),
+                .r_valid  	( r_valid[i]   ),
+                .r1       	( r1[i]        ),
+                .r1_valid 	( r1_valid[i]  ),
+                .r0       	( r0[i]        ),
+                .r0_valid 	( r0_valid[i]  )
+            );
+        end
+        else begin
+            Decomposes2 u_Decomposes2(
+                .clk      	( clk          ),
+                .rstn     	( rstn         ),
+                .r        	( r[i]         ),
+                .r_valid  	( r_valid[i]   ),
+                .r1       	( r1[i]        ),
+                .r1_valid 	( r1_valid[i]  ),
+                .r0       	( r0[i]        ),
+                .r0_valid 	( r0_valid[i]  )
+            );
+        end
+    end
+endgenerate
 
 endmodule
