@@ -171,10 +171,11 @@ assign r_EncodeSK_Coeff_keygen = r_EncodeSK_Coeff;
 assign r_MatrixA_Coeff_sign    = r_MatrixA_Coeff;
 assign r_VectorS1_Coeff_sign   = r_VectorS1_Coeff;
 assign r_VectorS2_Coeff_sign   = r_VectorS2_Coeff;
+assign r_VectorY_Coeff_sign    = r_VectorY_Coeff; 
 assign r_VectorT_Coeff_sign    = r_VectorT_Coeff;
 assign r_EncodePK_Coeff_sign   = r_EncodePK_Coeff;
 assign r_EncodeSK_Coeff_sign   = r_EncodeSK_Coeff;
-
+assign r_VectorM_Coeff_sign    = r_VectorM_Coeff;
 
 // ==========================================
 // 模式仲裁
@@ -271,11 +272,21 @@ always_comb begin
             r_VectorS2_Coeff_addr   = r_VectorS2_Coeff_addr_sign;
             ori_s2_coeff_en         = 1'b1;
 
+            w_VectorY_Coeff        = w_VectorY_Coeff_sign;         
+            w_VectorY_Coeff_valid  = w_VectorY_Coeff_valid_sign;   
+            w_VectorY_Coeff_addr   = w_VectorY_Coeff_addr_sign;    
+            r_VectorY_Coeff_addr   = r_VectorY_Coeff_addr_sign;    
+
             w_VectorT_Coeff         = w_VectorT_Coeff_sign;
             w_VectorT_Coeff_valid   = w_VectorT_Coeff_valid_sign;
             w_VectorT_Coeff_addr    = w_VectorT_Coeff_addr_sign;
             r_VectorT_Coeff_addr    = r_VectorT_Coeff_addr_sign;
             
+            w_VectorM_Coeff       	= w_VectorM_Coeff_sign;       
+            w_VectorM_Coeff_valid 	= w_VectorM_Coeff_valid_sign; 
+            w_VectorM_Coeff_addr  	= w_VectorM_Coeff_addr_sign;        
+            r_VectorM_Coeff_addr  	= r_VectorM_Coeff_addr_sign;  
+
             w_EncodePK_Coeff        = w_EncodePK_Coeff_sign;
             w_EncodePK_Coeff_valid  = w_EncodePK_Coeff_valid_sign;
             w_EncodePK_Coeff_addr   = w_EncodePK_Coeff_addr_sign;

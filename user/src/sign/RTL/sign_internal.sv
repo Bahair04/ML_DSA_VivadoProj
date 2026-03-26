@@ -165,11 +165,12 @@ typedef enum logic [4 : 0] {
     // 扩展并存储Y多项式(l个)
     S_EXPAND_Y,
     S_STORE_Y,
+
     // 从BRAM中读出Y多项式并通过NTT变换到NTT域 获取NTT域系数的同时，从存储矩阵中读出k个A向量，使用ModuleMAC计算矩阵乘法 并将结果写回W矩阵
     S_Y_NTT_ACK,
-    S_Y_NTT,
     S_Y_NTT_WAIT,
-
+    S_Y_NTT,
+    S_Y_NTT_STORE
     // 从W矩阵中读出多项式，并进行INTT逆变换 变换的结果同时取高位按字节pack后存入SHA3
 
 } state_t;
@@ -180,7 +181,7 @@ typedef enum logic [4 : 0] {
     S_SUB_IDLE,
     S_SUB_INIT,
     S_SUB_LOAD,
-    S_SUB_SQUEEZE,      // 获得rho_prime(seed_expand)
+    S_SUB_SQUEEZE,                  // 获得rho_prime(seed_expand)
     S_SUB_INIT_C_TILDE,             // C_TILDE SHA3初始化
     S_SUB_LOAD_C_TILDE_MU,          // 加载MU
     S_SUB_LOAD_C_TILDE_W1_BYTES,    // 主状态机生成w时去高位获得w1，再通过pack模块获得字节流 子状态机将字节流载入SHA3
@@ -246,6 +247,27 @@ logic                               ram_rd_en;
 logic                               coeff_valid_d;
 logic           [1 : 0]             current_coeff_type;
 
+// --- Expand Y ---
+logic           [511 : 0]           rho_prime_ExpandY;      
+logic           [15 : 0]            kappa_ExpandY;          
+logic                               start_expand_ExpandY;   
+logic           [91 : 0]            coeff_ExpandY;          
+logic                               coeff_valid_ExpandY;  
+logic                               expand_done_ExpandY;   
+
+logic           [7 : 0]             dout_ExpandY;           
+logic                               dout_valid_ExpandY;     
+logic           [31 : 0]            dout_len_ExpandY;       
+logic           [7 : 0]             mdlen_ExpandY;          
+logic                               init_ExpandY;           
+logic                               start_ExpandY;          
+logic                               done_ExpandY;           
+logic                               start_out_ExpandY;      
+logic           [31 : 0]            out_len_ExpandY;        
+logic                               done_out_ExpandY;       
+logic           [63 : 0]            st_64bit_ExpandY;       
+logic                               st_64bit_valid_ExpandY;  
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -254,6 +276,7 @@ always_ff @(posedge clk) begin
     if (!rstn) begin
         state <= S_IDLE;
         poly_cnt <= 'd0;
+        kappa_ExpandY <= 'd0;
     end
     else begin
         case (state)
@@ -274,12 +297,10 @@ always_ff @(posedge clk) begin
                     state <= S_PREPROC_NTT_ACK;
             end
             S_PREPROC_NTT_WAIT : begin
-                if (con_coeff_valid && con_coeff_cnt == 9'd63) begin
+                if (con_coeff_valid && con_coeff_cnt == 9'd63) 
                     state <= S_PREPROC_NTT_STORE;
-                end
-                else begin
+                else 
                     state <= S_PREPROC_NTT_WAIT;
-                end
             end
             S_PREPROC_NTT_STORE : begin
                 if (poly_cnt == TOTAL_POLYS - 1) begin
@@ -301,9 +322,38 @@ always_ff @(posedge clk) begin
             end
             S_STORE_A : begin
                 if (expand_done_ExpandA)
-                    state <= S_IDLE;
+                    state <= S_SIGN_LOOP_INIT;
                 else 
                     state <= S_STORE_A;
+            end
+            S_SIGN_LOOP_INIT : begin
+                state <= S_EXPAND_Y;                
+                kappa_ExpandY <= 'd0; 
+            end
+            S_EXPAND_Y : begin
+                state <= S_STORE_Y;
+            end
+            S_STORE_Y : begin
+                if (expand_done_ExpandY)
+                    state <= S_Y_NTT_ACK;
+                else
+                    state <= S_STORE_Y;
+            end
+            S_Y_NTT_ACK : begin
+                if (ready == 1'b0 && request == 1'b1)
+                    state <= S_Y_NTT;
+                else 
+                    state <= S_Y_NTT_ACK;
+                kappa_ExpandY <= kappa_ExpandY + L;
+            end
+            S_Y_NTT : begin
+                state <= S_Y_NTT;//*************************!
+            end
+            S_Y_NTT_WAIT : begin
+                if (con_coeff_valid && con_coeff_cnt == 9'd63)
+                    state <= S_Y_NTT_STORE;
+                else
+                    state <= S_Y_NTT_WAIT;
             end
             default : begin
                 state <= S_IDLE;
@@ -341,9 +391,33 @@ always_ff @(posedge clk) begin
             end
             S_SUB_SQUEEZE : begin
                 if (done_out_seed)
-                    substate <= S_SUB_IDLE;
+                    substate <= S_SUB_INIT_C_TILDE;
                 else 
                     substate <= S_SUB_SQUEEZE;
+            end
+            S_SUB_INIT_C_TILDE : begin
+                substate <= S_SUB_LOAD_C_TILDE_MU;
+            end
+            S_SUB_LOAD_C_TILDE_MU : begin
+                if (seed_load_cnt == 'd64)
+                    substate <= S_SUB_LOAD_C_TILDE_W1_BYTES;
+                else
+                    substate <= S_SUB_LOAD_C_TILDE_MU;
+            end
+            S_SUB_LOAD_C_TILDE_W1_BYTES : begin
+                if (done_seed)
+                    substate <= S_SUB_SQUEEZE_C_TILDE;
+                else
+                    substate <= S_SUB_LOAD_C_TILDE_W1_BYTES;
+            end
+            S_SUB_SQUEEZE_C_TILDE : begin
+                if (done_out_seed)
+                    substate <= S_SUB_IDLE;
+                else 
+                    substate <= S_SUB_SQUEEZE_C_TILDE;
+            end
+            default : begin
+                substate <= S_SUB_IDLE;
             end
         endcase
     end
@@ -427,7 +501,7 @@ assign mode_config = 'd0; // 预处理阶段都是 NTT (0)
 always_ff @(posedge clk) begin
     if (!rstn)
         request <= 1'b0;
-    else if (state == S_PREPROC_NTT_ACK) begin
+    else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK) begin
         if (ready) 
             request <= 1'b1;
         else 
@@ -440,7 +514,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         con_coeff_cnt <= 'd0;
-    else if (state == S_PREPROC_NTT_ACK)
+    else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK)
         con_coeff_cnt <= 'd0;  // 每次握手前清零
     else if (con_coeff_valid)
         con_coeff_cnt <= con_coeff_cnt + 1'b1;
@@ -502,6 +576,9 @@ always_comb begin
     end
 end
 
+// --------------------------------
+// 矩阵 A 回写分发 (Demux to BRAMs)
+// --------------------------------
 always_comb begin
     w_MatrixA_Coeff = 'd0;
     w_MatrixA_Coeff_valid = 1'b0;
@@ -522,6 +599,29 @@ always_ff @(posedge clk) begin
         w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr;
 end
 
+// --------------------------------
+// 矩阵 Y 回写分发 (Demux to BRAMs)
+// --------------------------------
+always_comb begin
+    w_VectorY_Coeff = 'd0;
+    w_VectorY_Coeff_valid = 1'b0;
+    if (state == S_STORE_Y) begin
+        w_VectorY_Coeff = coeff_ExpandY;
+        w_VectorY_Coeff_valid = coeff_valid_ExpandY;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        w_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_INIT)
+        w_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_STORE_Y && coeff_valid_ExpandY)
+        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr + 1'b1;
+    else 
+        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr;
+end
+
 //* ==========================================================
 //* 7. SHA3 控制逻辑
 //* ==========================================================
@@ -535,6 +635,16 @@ always_comb begin
         dout_len_seed = 'd128;			// 原始种子长度为 128Byte 需要按字节装载进SHA3
         mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
     end
+    else if (substate <= S_SUB_SQUEEZE_C_TILDE) begin
+        out_len_seed = 'd32;
+        if (K == 4)
+            dout_len_seed = 'd768 + 'd64;
+        else if (K == 6)
+            dout_len_seed = 'd768 + 'd64;
+        else 
+            dout_len_seed = 'd1024 + 'd64;
+        mdlen_seed = 'd32;
+    end
     else begin
         out_len_seed = 'd64;			// 原始种子扩展 扩展后为64Byte
         dout_len_seed = 32 + 320 * K;	// 原始种子长度为 32 + 320 * K Byte 需要按字节装载进SHA3
@@ -545,12 +655,12 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         start_seed <= 1'b0;
-    else if (substate == S_SUB_INIT)
+    else if (substate == S_SUB_INIT || substate == S_SUB_INIT_C_TILDE)
         start_seed <= 1'b1;
     else
         start_seed <= 1'b0;
 end
-assign init_seed = substate == S_SUB_INIT;
+assign init_seed = (substate == S_SUB_INIT) || (substate == S_SUB_INIT_C_TILDE);
 
 always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -563,6 +673,12 @@ always_ff @(posedge clk) begin
         dout_seed <= 'd0;
         dout_valid_seed <= 1'b0;
         seed_domain_sep <= {k_seed, rnd, mu};
+        seed_load_cnt <= 'd0;
+    end
+    else if (substate == S_SUB_INIT_C_TILDE) begin
+        dout_seed <= 'd0;
+        dout_valid_seed <= 1'b0;
+        seed_domain_sep <= {mu, 512'd0};
         seed_load_cnt <= 'd0;
     end
     else if (substate == S_SUB_LOAD) begin
@@ -582,6 +698,16 @@ always_ff @(posedge clk) begin
             dout_valid_seed <= 1'b1;
             seed_domain_sep <= seed_domain_sep << 8;
         end
+    end
+    else if (substate == S_SUB_LOAD_C_TILDE_MU) begin
+        seed_load_cnt <= seed_load_cnt + 1'b1;
+        dout_seed <= seed_domain_sep[1023 : 1016];
+        dout_valid_seed <= 1'b1;
+        seed_domain_sep <= seed_domain_sep << 8;
+    end
+    else if (substate == S_SUB_LOAD_C_TILDE_W1_BYTES) begin
+        //**********************************!
+        dout_valid_seed <= 1'b0;
     end
     else begin
         dout_seed <= 'd0;
@@ -615,16 +741,6 @@ always_ff @(posedge clk) begin			// 拼接扩展后的种子 一共128Byte，每
     end
 end
 
-
-always_ff @(posedge clk) begin
-    if (!rstn)
-        start_expand_ExpandA <= 1'b0;
-    else if (state == S_EXPAND_A)  
-        start_expand_ExpandA <= 1'b1;
-    else 
-        start_expand_ExpandA <= 1'b0;
-end
-
 always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用端口 此处对端口进行分配 分配依据为状态机变量
     dout1 = 'd0; dout_valid1 = 'd0; dout_len1 = 'd0; mdlen1 = 'd0;
     init1 = 'd0; start1 = 'd0; start_out1 = 'd0; out_len1 = 'd0;
@@ -634,7 +750,8 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
 
     done_ExpandA = 'd0; done_out_ExpandA = 'd0; st_64bit_ExpandA = 'd0; st_64bit_valid_ExpandA = 'd0;
     done_seed    = 'd0; done_out_seed    = 'd0; st_64bit_seed    = 'd0; st_64bit_valid_seed    = 'd0;
-
+    done_ExpandY = 'd0; done_out_ExpandY = 'd0; st_64bit_ExpandY = 'd0; st_64bit_valid_ExpandY = 'd0;
+    
     if (state == S_EXPAND_A || state == S_STORE_A) begin
         // ==========================================
         // 状态为 EXPAND_A 时，SHA3-1 分配给 ExpandA
@@ -652,7 +769,28 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         done_out_ExpandA       = done_out1; 
         st_64bit_ExpandA       = st_64bit1; 
         st_64bit_valid_ExpandA = st_64bit_valid1; 
-    
+    end
+
+    if (state >= S_EXPAND_Y && state <= S_STORE_Y) begin
+        // ==========================================
+        // 状态为 EXPAND_Y 时，SHA3-1 分配给 ExpandA
+        // ==========================================
+        dout1       = dout_ExpandY; 
+        dout_valid1 = dout_valid_ExpandY; 
+        dout_len1   = dout_len_ExpandY; 
+        mdlen1      = mdlen_ExpandY; 
+        init1       = init_ExpandY; 
+        start1      = start_ExpandY; 
+        start_out1  = start_out_ExpandY; 
+        out_len1    = out_len_ExpandY; 
+        
+        done_ExpandY           = done1; 
+        done_out_ExpandY       = done_out1; 
+        st_64bit_ExpandY       = st_64bit1; 
+        st_64bit_valid_ExpandY = st_64bit_valid1;
+    end
+
+    if (substate <= S_SUB_SQUEEZE_C_TILDE) begin
         dout2       = dout_seed;
         dout_valid2 = dout_valid_seed;
         dout_len2   = dout_len_seed;
@@ -665,7 +803,7 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         done_seed           = done2;
         done_out_seed       = done_out2;
         st_64bit_seed       = st_64bit2;
-        st_64bit_valid_seed = st_64bit_valid2;
+        st_64bit_valid_seed = st_64bit_valid2;    
     end
 end
 
@@ -715,9 +853,53 @@ end
 //* 9. ExpandA 控制逻辑
 //* ==========================================================
 assign rho_ExpandA = {<<8{rho}};
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_expand_ExpandA <= 1'b0;
+    else if (state == S_EXPAND_A)  
+        start_expand_ExpandA <= 1'b1;
+    else 
+        start_expand_ExpandA <= 1'b0;
+end
 
 //* ==========================================================
 //* 10. ExpandY 控制逻辑
 //* ==========================================================
+assign rho_prime_ExpandY = {<<8{seed_expand}};
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_expand_ExpandY <= 1'b0;
+    else if (state == S_EXPAND_Y)  
+        start_expand_ExpandY <= 1'b1;
+    else 
+        start_expand_ExpandY <= 1'b0;
+end
+
+ExpandY u_ExpandY(
+	.clk            	( clk                     ),
+	.rstn           	( rstn                    ),
+
+	.rho_prime      	( rho_prime_ExpandY       ),
+	.kappa          	( kappa_ExpandY           ),
+	.start_expand   	( start_expand_ExpandY    ),
+
+	.coeff          	( coeff_ExpandY           ),
+	.coeff_valid    	( coeff_valid_ExpandY     ),
+
+	.expand_done    	( expand_done_ExpandY     ),
+
+	.dout           	( dout_ExpandY            ),
+	.dout_valid     	( dout_valid_ExpandY      ),
+	.dout_len       	( dout_len_ExpandY        ),
+	.mdlen          	( mdlen_ExpandY           ),
+	.init           	( init_ExpandY            ),
+	.start          	( start_ExpandY           ),
+	.done           	( done_ExpandY            ),
+	.start_out      	( start_out_ExpandY       ),
+	.out_len        	( out_len_ExpandY         ),
+	.done_out       	( done_out_ExpandY        ),
+	.st_64bit       	( st_64bit_ExpandY        ),
+	.st_64bit_valid 	( st_64bit_valid_ExpandY  )
+);
 
 endmodule

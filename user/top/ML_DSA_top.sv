@@ -636,11 +636,23 @@ u_GlobalBRAMArbitration(
     .r_VectorS2_Coeff_sign          (r_VectorS2_Coeff_sign          ),
     .r_VectorS2_Coeff_addr_sign     (r_VectorS2_Coeff_addr_sign     ),
     
+    .w_VectorY_Coeff_sign           (w_VectorY_Coeff_sign           ),
+    .w_VectorY_Coeff_valid_sign     (w_VectorY_Coeff_valid_sign     ),
+    .w_VectorY_Coeff_addr_sign      (w_VectorY_Coeff_addr_sign      ),
+    .r_VectorY_Coeff_sign           (r_VectorY_Coeff_sign           ),
+    .r_VectorY_Coeff_addr_sign      (r_VectorY_Coeff_addr_sign      ),
+
     .w_VectorT_Coeff_sign           (w_VectorT_Coeff_sign           ),
     .w_VectorT_Coeff_valid_sign     (w_VectorT_Coeff_valid_sign     ),
     .w_VectorT_Coeff_addr_sign      (w_VectorT_Coeff_addr_sign      ),
     .r_VectorT_Coeff_sign           (r_VectorT_Coeff_sign           ),
     .r_VectorT_Coeff_addr_sign      (r_VectorT_Coeff_addr_sign      ),
+
+    .w_VectorM_Coeff_sign           (w_VectorM_Coeff_sign           ),
+    .w_VectorM_Coeff_valid_sign     (w_VectorM_Coeff_valid_sign     ),
+    .w_VectorM_Coeff_addr_sign      (w_VectorM_Coeff_addr_sign      ),
+    .r_VectorM_Coeff_sign           (r_VectorM_Coeff_sign           ),
+    .r_VectorM_Coeff_addr_sign      (r_VectorM_Coeff_addr_sign      ),
 
     .w_EncodePK_Coeff_sign          (w_EncodePK_Coeff_sign          ),       
     .w_EncodePK_Coeff_valid_sign    (w_EncodePK_Coeff_valid_sign    ),
