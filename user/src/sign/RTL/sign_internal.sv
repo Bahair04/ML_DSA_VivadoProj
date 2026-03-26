@@ -168,9 +168,11 @@ typedef enum logic [4 : 0] {
 
     // 从BRAM中读出Y多项式并通过NTT变换到NTT域 获取NTT域系数的同时，从存储矩阵中读出k个A向量，使用ModuleMAC计算矩阵乘法 并将结果写回W矩阵
     S_Y_NTT_ACK,
-    S_Y_NTT_WAIT,
     S_Y_NTT,
-    S_Y_NTT_STORE
+    S_Y_NTT_WAIT,
+    S_Y_NTT_STORE,
+    S_MATRIX_MULT_WAIT
+
     // 从W矩阵中读出多项式，并进行INTT逆变换 变换的结果同时取高位按字节pack后存入SHA3
 
 } state_t;
@@ -268,6 +270,12 @@ logic                               done_out_ExpandY;
 logic           [63 : 0]            st_64bit_ExpandY;       
 logic                               st_64bit_valid_ExpandY;  
 
+// --- mac ---
+logic           [91 : 0]            con_coeff_d;
+logic                               con_coeff_valid_d;
+logic           [22 : 0]            conv [0 : 3];
+logic                               w_VectorM_Coeff_valid_d [0 : K - 1];
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -355,12 +363,18 @@ always_ff @(posedge clk) begin
             S_Y_NTT_WAIT : begin
                 if (con_coeff_cnt[5 : 0] == 'd63) begin
                     if (con_coeff_cnt == `l * 64 - 1)
-                        state <= S_IDLE;
+                        state <= S_MATRIX_MULT_WAIT;
                     else
                         state <= S_Y_NTT_ACK;
                 end
                 else
                     state <= S_Y_NTT_WAIT;
+            end
+            S_MATRIX_MULT_WAIT : begin
+                if (w_VectorM_Coeff_valid_d[0] && !w_VectorM_Coeff_valid[0])
+                    state <= S_IDLE;
+                else 
+                    state <= S_MATRIX_MULT_WAIT;
             end
             default : begin
                 state <= S_IDLE;
@@ -948,5 +962,107 @@ ExpandY u_ExpandY(
 	.st_64bit       	( st_64bit_ExpandY        ),
 	.st_64bit_valid 	( st_64bit_valid_ExpandY  )
 );
+
+//* ==========================================================
+//* 11. ExpandY 控制逻辑
+//* ==========================================================
+assign conv[0] = con_coeff_d[23 * 0 +: 23];
+assign conv[1] = con_coeff_d[23 * 1 +: 23];
+assign conv[2] = con_coeff_d[23 * 2 +: 23];
+assign conv[3] = con_coeff_d[23 * 3 +: 23];
+// logic   [22 : 0]    temp0, temp1, temp2, temp3;
+// assign temp0 = r_VectorM_Coeff[23 * 0 +: 23];
+// assign temp1 = r_VectorM_Coeff[23 * 1 +: 23];
+// assign temp2 = r_VectorM_Coeff[23 * 2 +: 23];
+// assign temp3 = r_VectorM_Coeff[23 * 3 +: 23];
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        con_coeff_d <= 'd0;
+        con_coeff_valid_d <= 1'b0;
+    end
+    else begin
+        con_coeff_d <= con_coeff;
+        con_coeff_valid_d <= con_coeff_valid;
+    end
+end
+
+logic                   valid_out [0 : K - 1];
+logic   [91 : 0]        mac_out_comb [0 : K - 1];
+
+assign mac_valid_in = con_coeff_valid_d;
+assign mac_data_in2 = con_coeff_d;
+
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        // 输出给 MAC 的操作数
+        mac_data_in1[i] = r_MatrixA_Coeff[i];
+        mac_data_in3[i] = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 92'd0 : r_VectorM_Coeff[i];
+        
+        // 接收来自 MAC 的结果
+        valid_out[i] = mac_valid_out;
+        mac_out_comb[i] = mac_data_out[i];
+    end
+end
+
+always_comb begin
+	for (int i = 0 ; i < K ; i = i + 1) begin
+		w_VectorM_Coeff_valid[i] = 1'b0;
+		w_VectorM_Coeff[i] = 'd0;
+	end
+	if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT) begin
+		for (int i = 0 ; i < K ; i = i + 1) begin
+			w_VectorM_Coeff_valid[i] = valid_out[i];
+			w_VectorM_Coeff[i] = mac_out_comb[i];
+ 		end
+	end
+end
+
+always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay
+    if (!rstn) begin
+		for (int i = 0 ; i < K ; i = i + 1)
+        	w_VectorM_Coeff_valid_d[i] <= 1'b0;
+	end
+    else begin
+		for (int i = 0 ; i < K ; i = i + 1)
+        	w_VectorM_Coeff_valid_d[i] <= w_VectorM_Coeff_valid[i];
+	end
+end
+
+always_comb begin : matrix_A_vector_T_read_control
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        r_MatrixA_Coeff_addr[i] = 'd0;
+        r_VectorM_Coeff_addr[i] = 'd0;
+    end
+    if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT && con_coeff_valid) begin		// 取出 A 和上一阶段计算好的T 利用NTT(S1) 计算T_prime+A*S1的MAC结果
+        for (int i = 0 ; i < K ; i = i + 1) begin	
+            r_MatrixA_Coeff_addr[i] = con_coeff_cnt;
+            r_VectorM_Coeff_addr[i] = con_coeff_cnt[5 : 0];
+        end
+    end
+end
+
+always_ff @(posedge clk) begin : vector_m_write_control
+    if (!rstn) begin
+        for (int i = 0 ; i < K ; i = i + 1)
+            w_VectorM_Coeff_addr[i] <= 'd0;
+    end
+    else if (state == S_IDLE) begin   
+        for (int i = 0 ; i < K ; i = i + 1)
+            w_VectorM_Coeff_addr[i] <= 'd0;
+    end
+    else if ((w_VectorM_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT) ) begin		// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址	
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            if (w_VectorM_Coeff_addr[i] == 'd63)
+                w_VectorM_Coeff_addr[i] <= 'd0;
+            else
+                w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
+        end
+    end
+    else begin
+        for (int i = 0 ; i < K ; i = i + 1)
+            w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
+    end
+end
 
 endmodule
