@@ -31,9 +31,9 @@ module SharedBRAMPool
 
     input       logic   signed  [91 : 0]    w_VectorY_Coeff,
     input       logic                       w_VectorY_Coeff_valid,
-    input       logic           [5 : 0]     w_VectorY_Coeff_addr,
+    input       logic           [8 : 0]     w_VectorY_Coeff_addr,
     output      logic           [91 : 0]    r_VectorY_Coeff,
-    input       logic           [5 : 0]     r_VectorY_Coeff_addr,
+    input       logic           [8 : 0]     r_VectorY_Coeff_addr,
 
     input       logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1],
     input       logic                       w_VectorT_Coeff_valid [0 : K - 1],

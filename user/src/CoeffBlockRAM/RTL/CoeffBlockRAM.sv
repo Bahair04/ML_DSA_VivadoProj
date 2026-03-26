@@ -34,9 +34,9 @@ module CoeffBlockRAM
     // --- Vector Y ---
     input       logic   signed  [91 : 0]    w_VectorY_Coeff,                            // 4*20bit有符号数
     input       logic                       w_VectorY_Coeff_valid,
-    input       logic           [5 : 0]     w_VectorY_Coeff_addr,
+    input       logic           [8 : 0]     w_VectorY_Coeff_addr,
     output      logic           [91 : 0]    r_VectorY_Coeff,                            // 对q取模 无符号
-    input       logic           [5 : 0]     r_VectorY_Coeff_addr,
+    input       logic           [8 : 0]     r_VectorY_Coeff_addr,
 
     // --- Vector T ---
     input       logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1],

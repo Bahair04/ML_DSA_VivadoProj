@@ -42,9 +42,9 @@ module sign_internal
 
     output      logic   signed  [91 : 0]    w_VectorY_Coeff,
     output      logic                       w_VectorY_Coeff_valid,
-    output      logic           [5 : 0]     w_VectorY_Coeff_addr,
+    output      logic           [8 : 0]     w_VectorY_Coeff_addr,
     input       logic           [91 : 0]    r_VectorY_Coeff,
-    output      logic           [5 : 0]     r_VectorY_Coeff_addr,
+    output      logic           [8 : 0]     r_VectorY_Coeff_addr,
 
     output      logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1],
     output      logic                       w_VectorT_Coeff_valid [0 : K - 1],
@@ -347,11 +347,18 @@ always_ff @(posedge clk) begin
                 kappa_ExpandY <= kappa_ExpandY + L;
             end
             S_Y_NTT : begin
-                state <= S_Y_NTT;//*************************!
+                if (r_VectorY_Coeff_addr > 0 && r_VectorY_Coeff_addr[5 : 0] == 0)
+                    state <= S_Y_NTT_WAIT;
+                else
+                    state <= S_Y_NTT;
             end
             S_Y_NTT_WAIT : begin
-                if (con_coeff_valid && con_coeff_cnt == 9'd63)
-                    state <= S_Y_NTT_STORE;
+                if (con_coeff_cnt[5 : 0] == 'd63) begin
+                    if (con_coeff_cnt == `l * 64 - 1)
+                        state <= S_IDLE;
+                    else
+                        state <= S_Y_NTT_ACK;
+                end
                 else
                     state <= S_Y_NTT_WAIT;
             end
@@ -479,6 +486,8 @@ always_ff @(posedge clk) begin
 end
 
 logic           [63 : 0]            reverse_temp;
+logic           [91 : 0]            ori_coeff_Modq;
+logic                               ori_coeff_valid_Modq;
 assign reverse_temp = {<<8{r_EncodeSK_Coeff}};
 coeffModq u_coeffModq(
     .clk                ( clk                                                               ),
@@ -488,9 +497,41 @@ coeffModq u_coeffModq(
     .ori_coeff_valid    ( coeff_valid_d                                                     ),
     .coeff_type         ( current_coeff_type                                                ),
     .poly_start_pulse   ( state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1    ),
-    .modq_coeff         ( ori_coeff                                                         ), 
-    .modq_coeff_valid   ( ori_coeff_valid                                                   )
+    .modq_coeff         ( ori_coeff_Modq                                                    ), 
+    .modq_coeff_valid   ( ori_coeff_valid_Modq                                              )
 );
+
+always_ff @(posedge clk) begin
+    if (!rstn)     
+        r_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_INIT) 
+        r_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_Y_NTT) begin
+        if (r_VectorY_Coeff_addr == `l * 64)
+            r_VectorY_Coeff_addr <= 'd0;
+        else if (r_VectorY_Coeff_addr > 0 && r_VectorY_Coeff_addr[5 : 0] == 0)
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+        else 
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+    end
+    else if (state >= S_Y_NTT_ACK && ready == 1'b0 && request == 1'b1)
+        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+    else
+        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+end
+
+always_comb begin
+    ori_coeff = 'd0;
+    ori_coeff_valid = 1'b0;
+    if (state <= S_PREPROC_NTT_STORE) begin
+        ori_coeff = ori_coeff_Modq;
+        ori_coeff_valid = ori_coeff_valid_Modq;
+    end
+    else if (state == S_Y_NTT) begin
+        ori_coeff = r_VectorY_Coeff;
+        ori_coeff_valid = 1'b1;
+    end
+end
 
 //* ==========================================================
 //* 5. Poly_PAU 控制逻辑
@@ -514,10 +555,16 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         con_coeff_cnt <= 'd0;
-    else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK)
+    else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT)
         con_coeff_cnt <= 'd0;  // 每次握手前清零
-    else if (con_coeff_valid)
-        con_coeff_cnt <= con_coeff_cnt + 1'b1;
+    else if (con_coeff_valid) begin
+        if (state <= S_Y_NTT_WAIT && con_coeff_cnt == `l * 64 - 1)
+            con_coeff_cnt <= 'd0;
+        else
+            con_coeff_cnt <= con_coeff_cnt + 1'b1;
+    end
+    else 
+        con_coeff_cnt <= con_coeff_cnt;
 end
 
 always_ff @(posedge clk) begin

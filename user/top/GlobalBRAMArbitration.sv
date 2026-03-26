@@ -73,9 +73,9 @@ module GlobalBRAMArbitration
     
     input       logic   signed  [91 : 0]    w_VectorY_Coeff_sign,
     input       logic                       w_VectorY_Coeff_valid_sign,
-    input       logic           [5 : 0]     w_VectorY_Coeff_addr_sign,
+    input       logic           [8 : 0]     w_VectorY_Coeff_addr_sign,
     output      logic           [91 : 0]    r_VectorY_Coeff_sign,
-    input       logic           [5 : 0]     r_VectorY_Coeff_addr_sign,
+    input       logic           [8 : 0]     r_VectorY_Coeff_addr_sign,
 
     input       logic           [91 : 0]    w_VectorT_Coeff_sign [0 : K - 1],
     input       logic                       w_VectorT_Coeff_valid_sign [0 : K - 1],
@@ -129,9 +129,9 @@ logic                       ori_s2_coeff_en;
 
 logic   signed  [91 : 0]    w_VectorY_Coeff;
 logic                       w_VectorY_Coeff_valid;
-logic           [5 : 0]     w_VectorY_Coeff_addr;
+logic           [8 : 0]     w_VectorY_Coeff_addr;
 logic           [91 : 0]    r_VectorY_Coeff;
-logic           [5 : 0]     r_VectorY_Coeff_addr;
+logic           [8 : 0]     r_VectorY_Coeff_addr;
 
 logic           [91 : 0]    w_VectorT_Coeff [0 : K - 1];
 logic                       w_VectorT_Coeff_valid [0 : K - 1];

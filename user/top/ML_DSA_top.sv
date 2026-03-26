@@ -206,9 +206,9 @@ logic           [5 : 0]     r_VectorS2_Coeff_addr_sign [0 : K - 1];
 
 logic   signed  [91 : 0]    w_VectorY_Coeff_sign;
 logic                       w_VectorY_Coeff_valid_sign;
-logic           [5 : 0]     w_VectorY_Coeff_addr_sign;
+logic           [8 : 0]     w_VectorY_Coeff_addr_sign;
 logic           [91 : 0]    r_VectorY_Coeff_sign;
-logic           [5 : 0]     r_VectorY_Coeff_addr_sign;
+logic           [8 : 0]     r_VectorY_Coeff_addr_sign;
 
 logic           [91 : 0]    w_VectorT_Coeff_sign [0 : K - 1];
 logic                       w_VectorT_Coeff_valid_sign [0 : K - 1];
