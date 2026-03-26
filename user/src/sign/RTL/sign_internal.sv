@@ -171,9 +171,14 @@ typedef enum logic [4 : 0] {
     S_Y_NTT,
     S_Y_NTT_WAIT,
     S_Y_NTT_STORE,
-    S_MATRIX_MULT_WAIT
+    S_MATRIX_MULT_WAIT,
 
     // 从W矩阵中读出多项式，并进行INTT逆变换 变换的结果同时取高位按字节pack后存入SHA3
+    S_M_INTT_ACK, 
+    S_M_INTT,     
+    S_M_INTT_WAIT,
+    S_M_INTT_END,
+    S_DUMMY0
 
 } state_t;
 
@@ -275,7 +280,9 @@ logic           [91 : 0]            con_coeff_d;
 logic                               con_coeff_valid_d;
 logic           [22 : 0]            conv [0 : 3];
 logic                               w_VectorM_Coeff_valid_d [0 : K - 1];
-
+logic           [91 : 0]            r_VectorM_Coeff_INTT;
+logic           [8 : 0]             r_VectorM_Coeff_addr_INTT;
+logic           [8 : 0]             r_VectorM_Coeff_addr_INTT_d;
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -342,8 +349,10 @@ always_ff @(posedge clk) begin
                 state <= S_STORE_Y;
             end
             S_STORE_Y : begin
-                if (expand_done_ExpandY)
+                if (expand_done_ExpandY) begin
                     state <= S_Y_NTT_ACK;
+                    kappa_ExpandY <= kappa_ExpandY + L;
+                end
                 else
                     state <= S_STORE_Y;
             end
@@ -352,7 +361,6 @@ always_ff @(posedge clk) begin
                     state <= S_Y_NTT;
                 else 
                     state <= S_Y_NTT_ACK;
-                kappa_ExpandY <= kappa_ExpandY + L;
             end
             S_Y_NTT : begin
                 if (r_VectorY_Coeff_addr > 0 && r_VectorY_Coeff_addr[5 : 0] == 0)
@@ -372,9 +380,40 @@ always_ff @(posedge clk) begin
             end
             S_MATRIX_MULT_WAIT : begin
                 if (w_VectorM_Coeff_valid_d[0] && !w_VectorM_Coeff_valid[0])
-                    state <= S_IDLE;
+                    state <= S_M_INTT_ACK;
                 else 
                     state <= S_MATRIX_MULT_WAIT;
+            end
+            S_M_INTT_ACK : begin
+                if (ready == 1'b0 && request == 1'b1)
+                    state <= S_M_INTT;
+                else 
+                    state <= S_M_INTT_ACK;
+            end
+            S_M_INTT : begin
+                if (r_VectorM_Coeff_addr_INTT > 0 && r_VectorM_Coeff_addr_INTT[5 : 0] == 0)  // r_VectorM_Coeff_addr % 64 == 0
+                    state <= S_M_INTT_WAIT;
+                else 
+                    state <= S_M_INTT;
+            end
+            S_M_INTT_WAIT : begin
+                if (con_coeff_cnt[5 : 0] == 'd63) begin
+                    if (con_coeff_cnt == `k * 64 - 1)	// 一共`k组 全部转换完成后进入下一状态
+                        state <= S_M_INTT_END;			
+                    else 								// 否则就回到握手状态 准备下一组INTT变换
+                        state <= S_M_INTT_ACK;
+                end
+                else 
+                    state <= S_M_INTT_WAIT;
+            end
+            S_M_INTT_END : begin
+                if (con_coeff_cnt == `k * 64)
+                    state <= S_DUMMY0;
+                else 
+                    state <= S_M_INTT_END;
+            end
+            S_DUMMY0 : begin
+                state <= S_DUMMY0;
             end
             default : begin
                 state <= S_IDLE;
@@ -545,18 +584,26 @@ always_comb begin
         ori_coeff = r_VectorY_Coeff;
         ori_coeff_valid = 1'b1;
     end
+    else if (state == S_M_INTT) begin
+        ori_coeff = r_VectorM_Coeff_INTT;
+        ori_coeff_valid = 1'b1;
+    end
 end
 
 //* ==========================================================
 //* 5. Poly_PAU 控制逻辑
 //* ==========================================================
 assign ext_operand = 'd0;
-assign mode_config = 'd0; // 预处理阶段都是 NTT (0)
-
+always_comb begin
+    if (state <= S_PREPROC_NTT_STORE)
+        mode_config = 'd0;
+    else if (state >= S_M_INTT_ACK && state <= S_M_INTT_WAIT)
+        mode_config = 'd1;
+end
 always_ff @(posedge clk) begin
     if (!rstn)
         request <= 1'b0;
-    else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK) begin
+    else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK || state == S_M_INTT_ACK) begin
         if (ready) 
             request <= 1'b1;
         else 
@@ -569,7 +616,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         con_coeff_cnt <= 'd0;
-    else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT)
+    else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT || state == S_MATRIX_MULT_WAIT)
         con_coeff_cnt <= 'd0;  // 每次握手前清零
     else if (con_coeff_valid) begin
         if (state <= S_Y_NTT_WAIT && con_coeff_cnt == `l * 64 - 1)
@@ -970,11 +1017,11 @@ assign conv[0] = con_coeff_d[23 * 0 +: 23];
 assign conv[1] = con_coeff_d[23 * 1 +: 23];
 assign conv[2] = con_coeff_d[23 * 2 +: 23];
 assign conv[3] = con_coeff_d[23 * 3 +: 23];
-// logic   [22 : 0]    temp0, temp1, temp2, temp3;
-// assign temp0 = r_VectorM_Coeff[23 * 0 +: 23];
-// assign temp1 = r_VectorM_Coeff[23 * 1 +: 23];
-// assign temp2 = r_VectorM_Coeff[23 * 2 +: 23];
-// assign temp3 = r_VectorM_Coeff[23 * 3 +: 23];
+logic   [22 : 0]    temp0, temp1, temp2, temp3;
+assign temp0 = r_VectorM_Coeff_INTT[23 * 0 +: 23];
+assign temp1 = r_VectorM_Coeff_INTT[23 * 1 +: 23];
+assign temp2 = r_VectorM_Coeff_INTT[23 * 2 +: 23];
+assign temp3 = r_VectorM_Coeff_INTT[23 * 3 +: 23];
 
 always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -1040,6 +1087,9 @@ always_comb begin : matrix_A_vector_T_read_control
             r_VectorM_Coeff_addr[i] = con_coeff_cnt[5 : 0];
         end
     end
+    if (state > S_MATRIX_MULT_WAIT && state <= S_M_INTT_WAIT)
+        for (int i = 0 ; i < K ; i = i + 1) 
+            r_VectorM_Coeff_addr[i] =  r_VectorM_Coeff_addr_INTT[5 : 0];
 end
 
 always_ff @(posedge clk) begin : vector_m_write_control
@@ -1064,5 +1114,32 @@ always_ff @(posedge clk) begin : vector_m_write_control
             w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
     end
 end
+
+always_ff @(posedge clk) begin
+    if (!rstn) 
+        r_VectorM_Coeff_addr_INTT <= 'd0;
+    else if (state == S_M_INTT) begin		// 从存储矩阵中读取 M 并装载到 SHA3 中 进行 INTT 变换
+        if (r_VectorM_Coeff_addr_INTT == `k * 64) 
+            r_VectorM_Coeff_addr_INTT <= 'd0;
+        else if (r_VectorM_Coeff_addr_INTT > 0 && r_VectorM_Coeff_addr_INTT[5 : 0] == 0) 
+            r_VectorM_Coeff_addr_INTT <= r_VectorM_Coeff_addr_INTT;
+        else 
+            r_VectorM_Coeff_addr_INTT <= r_VectorM_Coeff_addr_INTT + 1'b1;
+    end
+    else if (state > S_MATRIX_MULT_WAIT && ready == 1'b0 && request == 1'b1) 
+        r_VectorM_Coeff_addr_INTT <= r_VectorM_Coeff_addr_INTT + 1'b1;
+    else 
+        r_VectorM_Coeff_addr_INTT <= r_VectorM_Coeff_addr_INTT;
+end
+
+always_ff @(posedge clk) begin				// 向量 M 存储时时按行存储的 低5位表示列 高3位表示行
+    if (!rstn)
+        r_VectorM_Coeff_addr_INTT_d <= 'd0;
+    else 
+        r_VectorM_Coeff_addr_INTT_d <= r_VectorM_Coeff_addr_INTT;
+end
+
+assign r_VectorM_Coeff_INTT = r_VectorM_Coeff[r_VectorM_Coeff_addr_INTT_d[8 : 6]]; // 读取需要一个时钟周期 因此这里对地址打一拍后再根据高三位取行
+
 
 endmodule

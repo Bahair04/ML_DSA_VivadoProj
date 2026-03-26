@@ -843,7 +843,7 @@ always_ff @(posedge clk) begin
     if (!rstn) 
         r_VectorT_Coeff_addr_INTT <= 'd0;
     else if (state == S_T_INTT) begin		// 从存储矩阵中读取 T 并装载到 SHA3 中 进行 INTT 变换
-        if (r_VectorT_Coeff_addr_INTT == `l * 64) 
+        if (r_VectorT_Coeff_addr_INTT == `k * 64) 
             r_VectorT_Coeff_addr_INTT <= 'd0;
         else if (r_VectorT_Coeff_addr_INTT > 0 && r_VectorT_Coeff_addr_INTT[5 : 0] == 0) 
             r_VectorT_Coeff_addr_INTT <= r_VectorT_Coeff_addr_INTT;
