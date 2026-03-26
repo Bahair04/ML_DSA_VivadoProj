@@ -139,9 +139,20 @@ typedef enum logic [4 : 0] {
     S_PREPROC_GET_RHO,
     S_EXPAND_A,
     S_STORE_A
+
 } state_t;
 
 state_t                             state, state_d;
+
+typedef enum logic [4 : 0] { 
+    S_SUB_IDLE,
+    S_SUB_INIT,
+    S_SUB_LOAD,
+    S_SUB_SQUEEZE,
+    S_SUB_DONE
+} substate_t;
+
+substate_t                          substate, substate_d;
 
 localparam      S1_POLYS = L;
 localparam      S2_POLYS = K;
@@ -153,6 +164,25 @@ logic [4 : 0]   poly_cnt;
 //* ==========================================================
 //* 2. 内部信号统一定义
 //* ==========================================================
+
+// --- Seed 处理信号 ---
+logic           [1023 : 0]          seed_domain_sep;     // 128 字节输入原始种子
+logic           [511 : 0]           seed_expand;         // 64 字节扩展种子
+logic           [7 : 0]             seed_expand_cnt;     // 扩展种子字节计数器 一次输出8字节 所以计数器每次 +8
+logic           [7 : 0]             seed_load_cnt;       // 输入种子字节计数器
+
+logic           [7 : 0]             dout_seed;           // SHA3 串行输入字节数据
+logic                               dout_valid_seed;     // SHA3 串行输入字节有效信号
+logic           [31 : 0]            dout_len_seed;       // SHA3 串行输入字节长度
+logic           [7 : 0]             mdlen_seed;          // SHA3 Hash长度
+logic                               init_seed;           // SHA3 初始化信号
+logic                               start_seed;          // SHA3 开始装载数据
+logic                               done_seed;           // SHA3 数据装载完成
+logic                               start_out_seed;      // SHA3 开始挤出数据
+logic           [31 : 0]            out_len_seed;        // SHA3 挤出数据长度
+logic                               done_out_seed;       // SHA3 挤出数据完成
+logic           [63 : 0]            st_64bit_seed;       // SHA3 挤出8字节数据
+logic                               st_64bit_valid_seed; // SHA3 挤出8字节数据有效信号
 
 // --- BRAM 信号 ---
 logic           [511 : 0]           tr_seed;
@@ -252,6 +282,43 @@ always_ff @(posedge clk) begin
         state_d <= S_IDLE;
     else 
         state_d <= state;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        substate <= S_SUB_IDLE;
+    else begin
+        case (substate)
+            S_SUB_IDLE : begin
+                if (state == S_EXPAND_A)  
+                    substate <= S_SUB_INIT;
+                else
+                    substate <= S_SUB_IDLE;
+            end
+            S_SUB_INIT : begin 
+                substate <= S_SUB_LOAD;
+            end
+            S_SUB_LOAD : begin
+                if (done_seed)
+                    substate <= S_SUB_SQUEEZE;
+                else 
+                    substate <= S_SUB_LOAD;
+            end
+            S_SUB_SQUEEZE : begin
+                if (done_out_seed)
+                    substate <= S_SUB_IDLE;
+                else 
+                    substate <= S_SUB_SQUEEZE;
+            end
+        endcase
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        substate_d <= S_SUB_IDLE;
+    else 
+        substate_d <= substate;
 end
 
 always_ff @(posedge clk) begin
@@ -424,6 +491,96 @@ end
 //* 7. SHA3 控制逻辑
 //* ==========================================================
 
+always_comb begin
+    out_len_seed = out_len_seed;
+    dout_len_seed = dout_len_seed;
+    mdlen_seed = mdlen_seed;
+    if (substate <= S_SUB_SQUEEZE) begin
+        out_len_seed = 'd64;			// 原始种子扩展 扩展后为64Byte
+        dout_len_seed = 'd128;			// 原始种子长度为 128Byte 需要按字节装载进SHA3
+        mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
+    end
+    else begin
+        out_len_seed = 'd64;			// 原始种子扩展 扩展后为64Byte
+        dout_len_seed = 32 + 320 * K;	// 原始种子长度为 32 + 320 * K Byte 需要按字节装载进SHA3
+        mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_seed <= 1'b0;
+    else if (substate == S_SUB_INIT)
+        start_seed <= 1'b1;
+    else
+        start_seed <= 1'b0;
+end
+assign init_seed = substate == S_SUB_INIT;
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        dout_seed <= 'd0;
+        dout_valid_seed <= 1'b0;
+        seed_domain_sep <= 'd0;
+        seed_load_cnt <= 'd0;
+    end
+    else if (substate == S_SUB_INIT) begin
+        dout_seed <= 'd0;
+        dout_valid_seed <= 1'b0;
+        seed_domain_sep <= {k_seed, rnd, mu};
+        seed_load_cnt <= 'd0;
+    end
+    else if (substate == S_SUB_LOAD) begin
+        if (done_seed)
+            seed_load_cnt <= 'd0;
+        else if (seed_load_cnt == dout_len_seed)
+            seed_load_cnt <= dout_len_seed;
+        else
+            seed_load_cnt <= seed_load_cnt + 1'b1;
+            
+        if (seed_load_cnt == dout_len_seed) begin
+            dout_seed <= 'd0;
+            dout_valid_seed <= 1'b0;
+        end
+        else begin
+            dout_seed <= seed_domain_sep[1023 : 1016];
+            dout_valid_seed <= 1'b1;
+            seed_domain_sep <= seed_domain_sep << 8;
+        end
+    end
+    else begin
+        dout_seed <= 'd0;
+        dout_valid_seed <= 1'b0;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) 
+        start_out_seed <= 1'b0;
+    else if (substate_d == S_SUB_LOAD && substate == S_SUB_SQUEEZE)
+        start_out_seed <= 1'b1;
+    else 
+        start_out_seed <= 1'b0;
+end
+
+always_ff @(posedge clk) begin			// 拼接扩展后的种子 一共128Byte，每次扩展输出8Byte
+    if (!rstn) begin
+        seed_expand <= 'd0;
+        seed_expand_cnt <= 'd0;
+    end
+    else if (state == S_INIT) begin
+        seed_expand <= 'd0;
+        seed_expand_cnt <= 'd0;
+    end
+    else if (substate == S_SUB_SQUEEZE) begin		
+        if (st_64bit_valid_seed) begin
+            seed_expand <= (seed_expand << 64) | st_64bit_seed;
+            seed_expand_cnt <= seed_expand_cnt + 'd8;
+        end
+    end
+end
+
+
 always_ff @(posedge clk) begin
     if (!rstn)
         start_expand_ExpandA <= 1'b0;
@@ -441,6 +598,7 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
     init2 = 'd0; start2 = 'd0; start_out2 = 'd0; out_len2 = 'd0;
 
     done_ExpandA = 'd0; done_out_ExpandA = 'd0; st_64bit_ExpandA = 'd0; st_64bit_valid_ExpandA = 'd0;
+    done_seed    = 'd0; done_out_seed    = 'd0; st_64bit_seed    = 'd0; st_64bit_valid_seed    = 'd0;
 
     if (state == S_EXPAND_A || state == S_STORE_A) begin
         // ==========================================
@@ -460,6 +618,19 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         st_64bit_ExpandA       = st_64bit1; 
         st_64bit_valid_ExpandA = st_64bit_valid1; 
     
+        dout2       = dout_seed;
+        dout_valid2 = dout_valid_seed;
+        dout_len2   = dout_len_seed;
+        mdlen2      = mdlen_seed;
+        init2       = init_seed;
+        start2      = start_seed;
+        start_out2  = start_out_seed;
+        out_len2    = out_len_seed;
+
+        done_seed           = done2;
+        done_out_seed       = done_out2;
+        st_64bit_seed       = st_64bit2;
+        st_64bit_valid_seed = st_64bit_valid2;
     end
 end
 

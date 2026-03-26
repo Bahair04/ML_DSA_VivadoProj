@@ -27,7 +27,9 @@ module ML_DSA_top
     // --- Sign 接口 ---
     input       logic                       start_sign,          
     output      logic                       sign_ready,      
-    output      logic                       done_sign
+    output      logic                       done_sign,
+    input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
+    input       logic           [255 : 0]   rnd             // 32字节 随机数
 );
 
 // ==========================================================
@@ -443,7 +445,10 @@ u_sign_internal(
     .start                      ( start_sign              ),
     .sign_ready                 ( sign_ready              ),
     .done                       ( done_sign               ),
-    
+    .mu                         ( mu                      ),
+    .rnd                        ( rnd                     ),
+
+
     .w_MatrixA_Coeff            ( w_MatrixA_Coeff_sign         ),
     .w_MatrixA_Coeff_valid      ( w_MatrixA_Coeff_valid_sign   ),
     .w_MatrixA_Coeff_addr       ( w_MatrixA_Coeff_addr_sign    ),
