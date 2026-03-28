@@ -33,7 +33,7 @@
     `define omega           55
     `define bit_count       20
     `define total_bits      5120        // 640 * 8
-    `define c_tilde_bytes   32
+    `define c_tilde_bytes   48
     `define input_width     16
 
 `endif
@@ -52,7 +52,7 @@
     `define omega           75
     `define bit_count       20
     `define total_bits      5120        // 640 * 8
-    `define c_tilde_bytes   32
+    `define c_tilde_bytes   64
     `define input_width     16
 
 `endif

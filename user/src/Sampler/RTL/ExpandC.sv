@@ -134,7 +134,7 @@ always_ff @(posedge clk or negedge rstn) begin
         end
         else begin
             dout_valid <= 1'b1;
-            dout <= seed[7 : 0];
+            dout <= seed_r[7 : 0];
             seed_r <= seed_r >> 8;
         end
     end

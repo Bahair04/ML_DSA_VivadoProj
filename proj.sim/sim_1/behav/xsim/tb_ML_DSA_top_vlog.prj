@@ -7,6 +7,8 @@ verilog xil_defaultlib  \
 "../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
 "../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
 "../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
+"../../../../proj.gen/sources_1/ip/ExpandC_coeff_ram/sim/ExpandC_coeff_ram.v" \
+"../../../../proj.gen/sources_1/ip/ExpandC_sipo/sim/ExpandC_sipo.v" \
 "../../../../proj.gen/sources_1/ip/w1_bytes_fifo_16/sim/w1_bytes_fifo_16.v" \
 "../../../../proj.gen/sources_1/ip/w1_bytes_fifo_24/sim/w1_bytes_fifo_24.v" \
 "../../../../proj.gen/sources_1/ip/ExpandY_sipo/sim/ExpandY_sipo.v" \
@@ -24,11 +26,13 @@ sv xil_defaultlib  \
 "../../../../user/src/En_Decoder/Encoder_single_channel.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA_sipo96.sv" \
+"../../../../user/src/Sampler/RTL/ExpandC.sv" \
 "../../../../user/src/Sampler/RTL/ExpandS.sv" \
 "../../../../user/src/Sampler/RTL/ExpandY.sv" \
 "../../../../user/src/Sampler/RTL/ExpandY_sipo72.sv" \
 "../../../../user/src/Sampler/RTL/ExpandY_sipo80.sv" \
 "../../../../user/src/Sampler/RTL/ExpandY_sipoX.sv" \
+"../../../../user/src/sign/RTL/Gearbox_2to4.sv" \
 "../../../../user/top/GlobalBRAMArbitration.sv" \
 "../../../../user/top/GlobalComputeArbitration.sv" \
 "../../../../user/src/Polynomials/RTL/INTT_BU.sv" \

@@ -4,7 +4,6 @@ hs_err_pid17180.dmp
 *.jou
 *.zip
 *.str
-*.xpr
 proj.cache/** 
 proj.hw/** 
 prj/xilinx/template.cache/** 
