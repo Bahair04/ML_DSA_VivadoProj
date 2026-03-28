@@ -7,6 +7,8 @@ verilog xil_defaultlib  \
 "../../../../../template.gen/sources_1/ip/sha3_din_fifo/sim/sha3_din_fifo.v" \
 "../../../../proj.gen/sources_1/ip/ZetaRaw_ROM/sim/ZetaRaw_ROM.v" \
 "../../../../proj.gen/sources_1/ip/ExpandA_sipo/sim/ExpandA_sipo.v" \
+"../../../../proj.gen/sources_1/ip/w1_bytes_fifo_16/sim/w1_bytes_fifo_16.v" \
+"../../../../proj.gen/sources_1/ip/w1_bytes_fifo_24/sim/w1_bytes_fifo_24.v" \
 "../../../../proj.gen/sources_1/ip/ExpandY_sipo/sim/ExpandY_sipo.v" \
 "../../../../proj.gen/sources_1/ip/t1_load_fifo/sim/t1_load_fifo.v" \
 "../../../../proj.gen/sources_1/ip/ExpandS_sipo_1/sim/ExpandS_sipo_1.v" \
@@ -42,6 +44,7 @@ sv xil_defaultlib  \
 "../../../../user/src/Polynomials/RTL/Poly_PAU.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigCompute.sv" \
 "../../../../user/src/Polynomials/RTL/ReconfigComputeUnit.sv" \
+"../../../../user/src/sign/RTL/Serializer.sv" \
 "../../../../user/top/SharedBRAMPool.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorM.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/VectorS1.sv" \

@@ -15,6 +15,7 @@
     `define bit_count       18
     `define total_bits      4608        // 576 * 8
     `define c_tilde_bytes   32
+    `define input_width     24
 
 `endif
 
@@ -33,6 +34,7 @@
     `define bit_count       20
     `define total_bits      5120        // 640 * 8
     `define c_tilde_bytes   32
+    `define input_width     16
 
 `endif
 
@@ -51,6 +53,7 @@
     `define bit_count       20
     `define total_bits      5120        // 640 * 8
     `define c_tilde_bytes   32
+    `define input_width     16
 
 `endif
 

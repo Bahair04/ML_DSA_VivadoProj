@@ -189,6 +189,7 @@ typedef enum logic [4 : 0] {
     S_SUB_INIT,
     S_SUB_LOAD,
     S_SUB_SQUEEZE,                  // 获得rho_prime(seed_expand)
+    S_SUB_WAIT,
     S_SUB_INIT_C_TILDE,             // C_TILDE SHA3初始化
     S_SUB_LOAD_C_TILDE_MU,          // 加载MU
     S_SUB_LOAD_C_TILDE_W1_BYTES,    // 主状态机生成w时去高位获得w1，再通过pack模块获得字节流 子状态机将字节流载入SHA3
@@ -295,6 +296,10 @@ logic           [7 : 0]             r1 [0 : 3];                     // 无符号
 logic                               r1_valid [0 : 3];
 logic   signed  [18 : 0]            r0 [0 : 3];                     // 有符号   19位
 logic                               r0_valid [0 : 3];
+
+// --- Serializer ---
+logic           [7 : 0] 	        w_out;
+logic      	                        w_out_valid;
 
 //* ==========================================================
 //* 3. 状态机
@@ -464,9 +469,15 @@ always_ff @(posedge clk) begin
             end
             S_SUB_SQUEEZE : begin
                 if (done_out_seed)
-                    substate <= S_SUB_INIT_C_TILDE;
+                    substate <= S_SUB_WAIT;
                 else 
                     substate <= S_SUB_SQUEEZE;
+            end
+            S_SUB_WAIT : begin
+                if (state == S_EXPAND_Y)
+                    substate <= S_SUB_INIT_C_TILDE;
+                else 
+                    substate <= S_SUB_WAIT;
             end
             S_SUB_INIT_C_TILDE : begin
                 substate <= S_SUB_LOAD_C_TILDE_MU;
@@ -823,12 +834,16 @@ always_ff @(posedge clk) begin
     else if (substate == S_SUB_LOAD_C_TILDE_MU) begin
         seed_load_cnt <= seed_load_cnt + 1'b1;
         dout_seed <= seed_domain_sep[1023 : 1016];
-        dout_valid_seed <= 1'b1;
+        if (seed_load_cnt == 'd64)
+            dout_valid_seed <= 1'b0;
+        else
+            dout_valid_seed <= 1'b1;
         seed_domain_sep <= seed_domain_sep << 8;
     end
     else if (substate == S_SUB_LOAD_C_TILDE_W1_BYTES) begin
         //**********************************!
-        dout_valid_seed <= 1'b0;
+        dout_seed <= w_out;
+        dout_valid_seed <= w_out_valid;
     end
     else begin
         dout_seed <= 'd0;
@@ -840,6 +855,8 @@ always_ff @(posedge clk) begin
     if (!rstn) 
         start_out_seed <= 1'b0;
     else if (substate_d == S_SUB_LOAD && substate == S_SUB_SQUEEZE)
+        start_out_seed <= 1'b1;
+    else if (substate_d == S_SUB_LOAD_C_TILDE_W1_BYTES && substate == S_SUB_SQUEEZE_C_TILDE)
         start_out_seed <= 1'b1;
     else 
         start_out_seed <= 1'b0;
@@ -894,7 +911,7 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
 
     if (state >= S_EXPAND_Y && state <= S_STORE_Y) begin
         // ==========================================
-        // 状态为 EXPAND_Y 时，SHA3-1 分配给 ExpandA
+        // 状态为 EXPAND_Y 时，SHA3-1 分配给 ExpandY
         // ==========================================
         dout1       = dout_ExpandY; 
         dout_valid1 = dout_valid_ExpandY; 
@@ -1207,5 +1224,18 @@ generate
         end
     end
 endgenerate
+
+Serializer u_Serializer(
+	.clk         	( clk          ),
+	.rstn        	( rstn         ),
+	.w_in_0      	( r1[0]        ),
+	.w_in_1      	( r1[1]        ),
+	.w_in_2      	( r1[2]        ),
+	.w_in_3      	( r1[3]        ),
+	.w_in_valid  	( r1_valid[0]  ),
+	.w_out       	( w_out        ),
+	.w_out_valid 	( w_out_valid  )
+);
+
 
 endmodule

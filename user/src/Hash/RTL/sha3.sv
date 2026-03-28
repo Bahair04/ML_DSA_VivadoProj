@@ -78,6 +78,7 @@ logic                               wr_en;
 logic                               rd_en;
 logic       [7 : 0]                 dout;
 logic                               empty;
+logic                               empty_d;
 logic                               full;
 logic       [8 : 0]                 data_count;
 logic       [8 : 0]                 data_count_d;
@@ -97,7 +98,7 @@ always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         cnt <= 'd0;
     else if (state == S_UPDATE) begin
-        if (rd_en) begin
+        if (rd_en && empty == 1'b0) begin
             if (cnt == din_len - 1)
                 cnt <= 'd0;
             else 
@@ -137,11 +138,11 @@ always_ff @(posedge clk or negedge rstn) begin
             rd_en <= 1'b1;                  // 那么就开始读取
         else if (data_count_d == 'd2 && data_count == 'd1)
             rd_en <= 1'b0;
-        else if (curr_pt + 1 >= ctx.rsiz)
+        else if (curr_pt + 1 >= ctx.rsiz && empty_d == 1'b0)
             rd_en <= 1'b0;
         else 
             rd_en <= rd_en;
-        if (rd_en) begin // 更新8-bit在展开的64-bit中的位置
+        if (rd_en && empty == 1'b0) begin // 更新8-bit在展开的64-bit中的位置
             if (din_pos == 'd7) begin
                 din_pos <= 'd0;
                 if (din_col == 'd4) begin
@@ -367,11 +368,11 @@ always_ff @(posedge clk or negedge rstn) begin
                     state <= S_IDLE;
             end
             S_UPDATE : begin
-                if (cnt == din_len - 1 && rd_en) begin
+                if (cnt == din_len - 1 && rd_en && empty == 1'b0) begin
                     state <= S_XOF_PAD;
                     ctx.pt <= curr_pt + 1;
                 end
-                else if (curr_pt + 1 >= ctx.rsiz)
+                else if (curr_pt + 1 >= ctx.rsiz && rd_en && empty == 1'b0)
                     state <= S_KACCAK;
                 else
                     state <= S_UPDATE;
@@ -427,7 +428,7 @@ keccak u_keccak(
 	.init       	( init                                              ),
 	.start_perm 	( start_perm                                        ),
 	.perm_done  	( perm_done                                         ),
-	.din_valid  	( (state == S_XOF_PAD) ? pad_din_valid  : rd_en     ),
+	.din_valid  	( (state == S_XOF_PAD) ? pad_din_valid  : (rd_en && empty == 1'b0)     ),
 	.din        	( (state == S_XOF_PAD) ? pad_din        : dout      ),
 	.din_row    	( (state == S_XOF_PAD) ? pad_din_row    : din_row   ),
 	.din_col    	( (state == S_XOF_PAD) ? pad_din_col    : din_col   ),
@@ -452,6 +453,13 @@ always_ff @(posedge clk or negedge rstn) begin
         data_count_d <= 'd0;
     else 
         data_count_d <= data_count;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        empty_d <= 1'b0;
+    else 
+        empty_d <= empty;
 end
 
 endmodule
