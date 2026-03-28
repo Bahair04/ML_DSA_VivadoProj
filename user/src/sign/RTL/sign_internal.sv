@@ -299,7 +299,7 @@ logic           [91 : 0]            m;
 logic           [10 : 0]            mac_cnt;   // 乘法次数计数器
 logic           [1 : 0]             mac_stage; // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
 logic                               mac_valid; // 输入信号有效标志
-logic           [5 : 0]             r_Vector_Coeff_addr_d;
+logic           [2 : 0]             select;    // 确定选择S2和T的哪一行
 logic                               valid_out [0 : K - 1];
 logic           [91 : 0]            mac_out_comb [0 : K - 1];
 logic                               mult_res_valid_d;
@@ -535,7 +535,38 @@ always_ff @(posedge clk) begin
                     state <= S_MULT_INTT;
             end
             S_MULT_INTT_WAIT : begin
-                state <= S_MULT_INTT_WAIT;
+                case (mac_stage)
+                    'd0 : begin
+                        if (con_coeff_cnt == `l * 64 - 1) begin
+                            mac_stage <= 'd1;
+                            state <= S_MULT_INTT_ACK;
+                        end
+                        else if (con_coeff_cnt[5 : 0] == 'd63)
+                            state <= S_MULT_INTT_ACK;
+                        else 
+                            state <= S_MULT_INTT_WAIT;
+                    end
+                    'd1 : begin 
+                        if (con_coeff_cnt == `k * 64 - 1) begin
+                            mac_stage <= 'd2;
+                            state <= S_MULT_INTT_ACK;
+                        end
+                        else if (con_coeff_cnt[5 : 0] == 'd63)
+                            state <= S_MULT_INTT_ACK;
+                        else 
+                            state <= S_MULT_INTT_WAIT;
+                    end
+                    'd2 : begin 
+                        if (con_coeff_cnt == `k * 64 - 1) begin
+                            mac_stage <= 'd0;
+                            state <= S_IDLE;
+                        end
+                        else if (con_coeff_cnt[5 : 0] == 'd63)  
+                            state <= S_MULT_INTT_ACK;
+                        else 
+                            state <= S_MULT_INTT_WAIT;
+                    end
+                endcase
             end
             default : begin
                 state <= S_IDLE;
@@ -767,6 +798,16 @@ always_ff @(posedge clk) begin
             con_coeff_cnt <= 'd0;
         else if (state > S_M_INTT_WAIT && state <= S_C_NTT_WAIT && con_coeff_cnt == 64 - 1)
             con_coeff_cnt <= 'd0;
+        else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
+            if (mode_config == 'd0 && con_coeff_cnt == `l * 64 - 1)
+                con_coeff_cnt <= 'd0;
+            else if (mode_config == 'd1 && con_coeff_cnt == `k * 64 - 1)
+                con_coeff_cnt <= 'd0;
+            else if (mode_config == 'd2 && con_coeff_cnt == `k * 64 - 1)
+                con_coeff_cnt <= 'd0;
+            else 
+                con_coeff_cnt <= con_coeff_cnt + 1'b1;
+        end
         else
             con_coeff_cnt <= con_coeff_cnt + 1'b1;
     end
@@ -1218,12 +1259,12 @@ always_comb begin
             end
             'd1 : begin
                 mac_data_in1[0] = r_c_hat;
-                mac_data_in2 = r_VectorS2_Coeff[r_Vector_Coeff_addr_d[8 : 6]];
+                mac_data_in2 = r_VectorS2_Coeff[0];
                 mac_data_in3[0] = 'd0;
             end
             'd2 : begin
                 mac_data_in1[0] = r_c_hat;
-                mac_data_in2 = r_VectorT_Coeff[r_Vector_Coeff_addr_d[8 : 6]];
+                mac_data_in2 = r_VectorT_Coeff[0];
                 mac_data_in3[0] = 'd0;
             end
             default : begin
@@ -1400,25 +1441,18 @@ always_ff @(posedge clk) begin
     end
     else if (state == S_MULT_INTT) begin
         if (r_VectorS1_Coeff_addr == `l * 64 - 1)
-            r_VectorS1_Coeff_addr <= `l * 64 - 1;
+            r_VectorS1_Coeff_addr <= 'd0;
         else
             r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
-        if (r_VectorS2_Coeff_addr[0] == 64 - 1)
-            r_VectorS2_Coeff_addr[0] <= 64 - 1;
+        if (r_VectorS2_Coeff_addr[0] == 63)
+            r_VectorS2_Coeff_addr[0] <= 'd0;
         else
             r_VectorS2_Coeff_addr[0] <= r_VectorS2_Coeff_addr[0] + 1'b1;
-        if (r_VectorT_Coeff_addr[0] == 64 - 1)
-            r_VectorT_Coeff_addr[0] <= 64 - 1;
+        if (r_VectorT_Coeff_addr[0] == 63)
+            r_VectorT_Coeff_addr[0] <= 'd0;
         else
             r_VectorT_Coeff_addr[0] <= r_VectorT_Coeff_addr[0] + 1'b1;
     end
-end
-
-always_ff @(posedge clk) begin
-    if (!rstn)
-        r_Vector_Coeff_addr_d <= 'd0;
-    else 
-        r_Vector_Coeff_addr_d <= r_VectorS1_Coeff_addr;
 end
 
 assign r_c_hat_addr = mac_cnt;
