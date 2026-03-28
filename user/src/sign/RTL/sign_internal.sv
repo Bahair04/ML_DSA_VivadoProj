@@ -178,10 +178,10 @@ typedef enum logic [5 : 0] {
     S_M_INTT_WAIT,
     S_M_INTT_END,
     S_DUMMY0,
-
+    
+    S_C_NTT_ACK,
     S_EXPAND_C,
     S_STORE_C,
-    S_C_NTT_ACK,
     S_C_NTT,
     S_C_NTT_WAIT,
     S_DUMMY1
@@ -472,33 +472,36 @@ always_ff @(posedge clk) begin
             end
             S_DUMMY0 : begin
                 if (substate == S_SUB_SQUEEZE_C_TILDE && done_out_seed)
-                    state <= S_EXPAND_C;
+                    state <= S_C_NTT_ACK;
                 else
                     state <= S_DUMMY0;
+            end
+            S_C_NTT_ACK : begin
+                if (ready == 1'b0 && request == 1'b1)
+                    state <= S_EXPAND_C;
+                else
+                    state <= S_C_NTT_ACK;
             end
             S_EXPAND_C : begin
                 state <= S_STORE_C;
             end
             S_STORE_C : begin 
                 if (expand_done_ExpandC)
-                    state <= S_C_NTT_ACK;
+                    state <= S_C_NTT;
                 else 
                     state <= S_STORE_C;
             end
-            S_C_NTT_ACK : begin
-                if (ready == 1'b0 && request == 1'b1)
-                    state <= S_C_NTT;
-                else
-                    state <= S_C_NTT_ACK;
-            end
             S_C_NTT : begin
-                if (data_cnt == 'd63)
-                    state <= S_C_NTT_ACK;
+                if (data_cnt == 'd63 && data_valid_out)
+                    state <= S_C_NTT_WAIT;
                 else
                     state <= S_C_NTT;
             end
             S_C_NTT_WAIT : begin
-                state <= S_C_NTT_WAIT;
+                if (con_coeff_cnt == 'd63 && con_coeff_valid)
+                    state <= S_DUMMY1;
+                else
+                    state <= S_C_NTT_WAIT;
             end
             default : begin
                 state <= S_IDLE;
@@ -679,6 +682,10 @@ always_comb begin
         ori_coeff = r_VectorM_Coeff_INTT;
         ori_coeff_valid = 1'b1;
     end
+    else if (state == S_C_NTT) begin
+        ori_coeff = data_out;
+        ori_coeff_valid = data_valid_out;
+    end
 end
 
 //* ==========================================================
@@ -690,6 +697,8 @@ always_comb begin
         mode_config = 'd0;
     else if (state >= S_M_INTT_ACK && state <= S_M_INTT_WAIT)
         mode_config = 'd1;
+    else if (state >= S_C_NTT && state <= S_C_NTT_WAIT)
+        mode_config = 'd0;
 end
 always_ff @(posedge clk) begin
     if (!rstn)
@@ -708,10 +717,15 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         con_coeff_cnt <= 'd0;
-    else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT || state == S_MATRIX_MULT_WAIT)
+    else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT || state == S_MATRIX_MULT_WAIT || 
+             state == S_DUMMY0)
         con_coeff_cnt <= 'd0;  // 每次握手前清零
     else if (con_coeff_valid) begin
         if (state <= S_Y_NTT_WAIT && con_coeff_cnt == `l * 64 - 1)
+            con_coeff_cnt <= 'd0;
+        else if (state > S_Y_NTT_WAIT && state <= S_M_INTT_WAIT && con_coeff_cnt == `k * 64)
+            con_coeff_cnt <= 'd0;
+        else if (state > S_M_INTT_WAIT && state <= S_C_NTT_WAIT && con_coeff_cnt == 64 - 1)
             con_coeff_cnt <= 'd0;
         else
             con_coeff_cnt <= con_coeff_cnt + 1'b1;
