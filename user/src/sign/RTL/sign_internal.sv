@@ -841,7 +841,6 @@ always_ff @(posedge clk) begin
         seed_domain_sep <= seed_domain_sep << 8;
     end
     else if (substate == S_SUB_LOAD_C_TILDE_W1_BYTES) begin
-        //**********************************!
         dout_seed <= w_out;
         dout_valid_seed <= w_out_valid;
     end
@@ -1096,9 +1095,9 @@ always_comb begin
     else if (state <= S_DUMMY0) begin
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (i == con_coeff_cnt[8 : 6])
-                w_VectorM_Coeff_valid[i] <= m_valid;
+                w_VectorM_Coeff_valid[i] = m_valid;
             else 
-                w_VectorM_Coeff_valid[i] <= 1'b0;
+                w_VectorM_Coeff_valid[i] = 1'b0;
             
             w_VectorM_Coeff[i] = m;
         end
