@@ -184,7 +184,10 @@ typedef enum logic [5 : 0] {
     S_STORE_C,
     S_C_NTT,
     S_C_NTT_WAIT,
-    S_DUMMY1
+    
+    S_MULT_INTT_ACK,
+    S_MULT_INTT,
+    S_MULT_INTT_WAIT
 
 } state_t;
 
@@ -293,6 +296,17 @@ logic           [8 : 0]             r_VectorM_Coeff_addr_INTT_d;
 logic                               m_valid;
 logic           [91 : 0]            m;
 
+logic           [10 : 0]            mac_cnt;   // 乘法次数计数器
+logic           [1 : 0]             mac_stage; // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
+logic                               mac_valid; // 输入信号有效标志
+logic           [5 : 0]             r_Vector_Coeff_addr_d;
+logic                               valid_out [0 : K - 1];
+logic           [91 : 0]            mac_out_comb [0 : K - 1];
+logic                               mult_res_valid_d;
+
+logic           [91 : 0]            mult_res;           // s1*c s2*c t0*c 阶段的乘法结果
+logic                               mult_res_valid;     // 乘法结果有效标志
+
 // --- high_bits(decompose) ---
 
 logic   signed  [24 : 0]            r [0 : 3];
@@ -337,9 +351,12 @@ logic                               done_out_ExpandC;
 logic           [63 : 0]            st_64bit_ExpandC;       
 logic                               st_64bit_valid_ExpandC;  
 
-logic           [91 : 0]            data_out;
-logic                               data_valid_out;
-logic           [5 : 0]             data_cnt;
+logic           [91 : 0]            data_out;       // 扩展C时用到的拼接器 连接模块
+logic                               data_valid_out; // 扩展C时用到的拼接器有效信号 连接模块
+logic           [5 : 0]             data_cnt;       // 扩展C时用到的拼接器计数器 连接模块
+(* ram_style = "distributed" *) logic [91 : 0]    c_hat [0 : 63];
+logic           [91 : 0]            r_c_hat;
+logic           [5 : 0]             r_c_hat_addr;
 
 //* ==========================================================
 //* 3. 状态机
@@ -350,6 +367,7 @@ always_ff @(posedge clk) begin
         state <= S_IDLE;
         poly_cnt <= 'd0;
         kappa_ExpandY <= 'd0;
+        mac_stage <= 'd0;
     end
     else begin
         case (state)
@@ -402,6 +420,7 @@ always_ff @(posedge clk) begin
             S_SIGN_LOOP_INIT : begin
                 state <= S_EXPAND_Y;                
                 kappa_ExpandY <= 'd0; 
+                mac_stage <= 'd0;
             end
             S_EXPAND_Y : begin
                 state <= S_STORE_Y;
@@ -499,9 +518,24 @@ always_ff @(posedge clk) begin
             end
             S_C_NTT_WAIT : begin
                 if (con_coeff_cnt == 'd63 && con_coeff_valid)
-                    state <= S_DUMMY1;
+                    state <= S_MULT_INTT_ACK;
                 else
                     state <= S_C_NTT_WAIT;
+            end
+            S_MULT_INTT_ACK : begin
+                if (ready == 1'b0 && request == 1'b1)
+                    state <= S_MULT_INTT;
+                else 
+                    state <= S_MULT_INTT_ACK;
+            end
+            S_MULT_INTT : begin
+                if (mac_cnt == 'd63)
+                    state <= S_MULT_INTT_WAIT;
+                else 
+                    state <= S_MULT_INTT;
+            end
+            S_MULT_INTT_WAIT : begin
+                state <= S_MULT_INTT_WAIT;
             end
             default : begin
                 state <= S_IDLE;
@@ -686,6 +720,10 @@ always_comb begin
         ori_coeff = data_out;
         ori_coeff_valid = data_valid_out;
     end
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
+        ori_coeff = mult_res;
+        ori_coeff_valid = mult_res_valid;
+    end
 end
 
 //* ==========================================================
@@ -699,12 +737,14 @@ always_comb begin
         mode_config = 'd1;
     else if (state >= S_C_NTT && state <= S_C_NTT_WAIT)
         mode_config = 'd0;
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT)
+        mode_config = 'd1;
 end
 always_ff @(posedge clk) begin
     if (!rstn)
         request <= 1'b0;
     else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK || state == S_M_INTT_ACK || 
-             state == S_C_NTT_ACK) begin
+             state == S_C_NTT_ACK || state == S_MULT_INTT_ACK) begin
         if (ready) 
             request <= 1'b1;
         else 
@@ -1168,22 +1208,54 @@ always_ff @(posedge clk) begin
     end
 end
 
-logic                   valid_out [0 : K - 1];
-logic   [91 : 0]        mac_out_comb [0 : K - 1];
-
-assign mac_valid_in = con_coeff_valid_d;
-assign mac_data_in2 = con_coeff_d;
-
 always_comb begin
-    for (int i = 0 ; i < K ; i = i + 1) begin
-        // 输出给 MAC 的操作数
-        mac_data_in1[i] = r_MatrixA_Coeff[i];
-        mac_data_in3[i] = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 92'd0 : r_VectorM_Coeff[i];
-        
-        // 接收来自 MAC 的结果
-        valid_out[i] = mac_valid_out;
-        mac_out_comb[i] = mac_data_out[i];
+    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
+        case (mac_stage)
+            'd0 : begin 
+                mac_data_in1[0] = r_c_hat;
+                mac_data_in2 = r_VectorS1_Coeff;
+                mac_data_in3[0] = 'd0;
+            end
+            'd1 : begin
+                mac_data_in1[0] = r_c_hat;
+                mac_data_in2 = r_VectorS2_Coeff[r_Vector_Coeff_addr_d[8 : 6]];
+                mac_data_in3[0] = 'd0;
+            end
+            'd2 : begin
+                mac_data_in1[0] = r_c_hat;
+                mac_data_in2 = r_VectorT_Coeff[r_Vector_Coeff_addr_d[8 : 6]];
+                mac_data_in3[0] = 'd0;
+            end
+            default : begin
+                mac_data_in1[0] = 'd0;
+                mac_data_in2 = 'd0;
+                mac_data_in3[0] = 'd0;
+            end
+        endcase
+        mult_res = mac_data_out[0];
+        mult_res_valid = mac_valid_out;
+        mac_valid_in = mac_valid;
     end
+    else begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            // 输出给 MAC 的操作数
+            mac_data_in1[i] = r_MatrixA_Coeff[i];
+            mac_data_in3[i] = ('d1 <= con_coeff_cnt && con_coeff_cnt <= 'd64) ? 92'd0 : r_VectorM_Coeff[i];
+            
+            // 接收来自 MAC 的结果
+            valid_out[i] = mac_valid_out;
+            mac_out_comb[i] = mac_data_out[i];
+        end
+        mac_valid_in = con_coeff_valid_d && state < S_M_INTT_ACK;
+        mac_data_in2 = con_coeff_d;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        mult_res_valid_d <= 1'b0;
+    else 
+        mult_res_valid_d <= mult_res_valid;
 end
 
 always_comb begin
@@ -1294,6 +1366,71 @@ end
 assign r_VectorM_Coeff_INTT = r_VectorM_Coeff[r_VectorM_Coeff_addr_INTT_d[8 : 6]]; // 读取需要一个时钟周期 因此这里对地址打一拍后再根据高三位取行
 assign m_valid = con_coeff_valid & (state >= S_MATRIX_MULT_WAIT && state <= S_DUMMY0);
 assign m = con_coeff;
+
+// --- mult_intt ---
+
+// mac计数器
+always_ff @(posedge clk) begin
+    if (!rstn) 
+        mac_cnt <= 'd0;
+    else if (state == S_SIGN_LOOP_INIT)
+        mac_cnt <= 'd0;
+    else if (state == S_MULT_INTT_WAIT)
+        mac_cnt <= 'd0;
+    else if (state == S_MULT_INTT) begin
+        if (mac_cnt == 'd63)
+            mac_cnt <= mac_cnt;
+        else 
+            mac_cnt <= mac_cnt + 1'b1;
+    end
+    else 
+        mac_cnt <= mac_cnt;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        r_VectorS1_Coeff_addr <= 'd0;
+        r_VectorS2_Coeff_addr[0] <= 'd0;
+        r_VectorT_Coeff_addr[0] <= 'd0;
+    end
+    else if (state == S_SIGN_LOOP_INIT) begin
+        r_VectorS1_Coeff_addr <= 'd0;
+        r_VectorS2_Coeff_addr[0] <= 'd0;
+        r_VectorT_Coeff_addr[0] <= 'd0;
+    end
+    else if (state == S_MULT_INTT) begin
+        if (r_VectorS1_Coeff_addr == `l * 64 - 1)
+            r_VectorS1_Coeff_addr <= `l * 64 - 1;
+        else
+            r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
+        if (r_VectorS2_Coeff_addr[0] == 64 - 1)
+            r_VectorS2_Coeff_addr[0] <= 64 - 1;
+        else
+            r_VectorS2_Coeff_addr[0] <= r_VectorS2_Coeff_addr[0] + 1'b1;
+        if (r_VectorT_Coeff_addr[0] == 64 - 1)
+            r_VectorT_Coeff_addr[0] <= 64 - 1;
+        else
+            r_VectorT_Coeff_addr[0] <= r_VectorT_Coeff_addr[0] + 1'b1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_Vector_Coeff_addr_d <= 'd0;
+    else 
+        r_Vector_Coeff_addr_d <= r_VectorS1_Coeff_addr;
+end
+
+assign r_c_hat_addr = mac_cnt;
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        mac_valid <= 1'b0;
+    else if (state == S_MULT_INTT)
+        mac_valid <= 1'b1;
+    else 
+        mac_valid <= 1'b0;
+end
 
 //* ==========================================================
 //* 12. high_bits(decompose)
@@ -1437,6 +1574,21 @@ always_ff @(posedge clk) begin
         data_cnt <= data_cnt;
 end
 
+// --- c_hat 存储器 ---
+initial begin
+    for (int i = 0; i < 64; i = i + 1)
+        c_hat[i] <= 'd0;
+end
+
+always_ff @(posedge clk) begin
+    if (state == S_C_NTT_WAIT && con_coeff_valid)
+        c_hat[con_coeff_cnt] <= con_coeff;
+    else 
+        c_hat[con_coeff_cnt] <= c_hat[con_coeff_cnt];
+    r_c_hat <= c_hat[r_c_hat_addr];
+end
+
+// --- 每次只能同时读出2个C系数 这里将C系数对q取模并4个为一组进行输出 ---
 Gearbox_2to4 u_Gearbox_2to4(
     .clk                (clk                        ),
     .rstn               (rstn                       ),
