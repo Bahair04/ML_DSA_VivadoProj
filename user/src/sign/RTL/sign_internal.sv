@@ -357,6 +357,10 @@ logic           [5 : 0]             data_cnt;       // 扩展C时用到的拼接
 (* ram_style = "distributed" *) logic [91 : 0]    c_hat [0 : 63];
 logic           [91 : 0]            r_c_hat;
 logic           [5 : 0]             r_c_hat_addr;
+logic           [8 : 0]             r_VectorS2_Coeff_addr_global;
+logic           [8 : 0]             r_VectorT_Coeff_addr_global;
+logic           [8 : 0]             r_VectorS2_Coeff_addr_global_d;
+logic           [8 : 0]             r_VectorT_Coeff_addr_global_d;
 
 //* ==========================================================
 //* 3. 状态机
@@ -1259,12 +1263,12 @@ always_comb begin
             end
             'd1 : begin
                 mac_data_in1[0] = r_c_hat;
-                mac_data_in2 = r_VectorS2_Coeff[0];
+                mac_data_in2 = r_VectorS2_Coeff[r_VectorS2_Coeff_addr_global_d[8 : 6]];
                 mac_data_in3[0] = 'd0;
             end
             'd2 : begin
                 mac_data_in1[0] = r_c_hat;
-                mac_data_in2 = r_VectorT_Coeff[0];
+                mac_data_in2 = r_VectorT_Coeff[r_VectorT_Coeff_addr_global_d[8 : 6]];
                 mac_data_in3[0] = 'd0;
             end
             default : begin
@@ -1431,27 +1435,51 @@ end
 always_ff @(posedge clk) begin
     if (!rstn) begin
         r_VectorS1_Coeff_addr <= 'd0;
-        r_VectorS2_Coeff_addr[0] <= 'd0;
-        r_VectorT_Coeff_addr[0] <= 'd0;
+        r_VectorS2_Coeff_addr_global <= 'd0;
+        r_VectorT_Coeff_addr_global <= 'd0;
     end
     else if (state == S_SIGN_LOOP_INIT) begin
         r_VectorS1_Coeff_addr <= 'd0;
-        r_VectorS2_Coeff_addr[0] <= 'd0;
-        r_VectorT_Coeff_addr[0] <= 'd0;
+        r_VectorS2_Coeff_addr_global <= 'd0;
+        r_VectorT_Coeff_addr_global <= 'd0;
     end
     else if (state == S_MULT_INTT) begin
         if (r_VectorS1_Coeff_addr == `l * 64 - 1)
             r_VectorS1_Coeff_addr <= 'd0;
         else
             r_VectorS1_Coeff_addr <= r_VectorS1_Coeff_addr + 1'b1;
-        if (r_VectorS2_Coeff_addr[0] == 63)
-            r_VectorS2_Coeff_addr[0] <= 'd0;
-        else
-            r_VectorS2_Coeff_addr[0] <= r_VectorS2_Coeff_addr[0] + 1'b1;
-        if (r_VectorT_Coeff_addr[0] == 63)
-            r_VectorT_Coeff_addr[0] <= 'd0;
-        else
-            r_VectorT_Coeff_addr[0] <= r_VectorT_Coeff_addr[0] + 1'b1;
+        if (r_VectorS2_Coeff_addr_global == `k * 64 - 1)
+            r_VectorS2_Coeff_addr_global <= 'd0;
+        else 
+            r_VectorS2_Coeff_addr_global <= r_VectorS2_Coeff_addr_global + 1'b1;
+        if (r_VectorT_Coeff_addr_global == `k * 64 - 1)
+            r_VectorT_Coeff_addr_global <= 'd0;
+        else 
+            r_VectorT_Coeff_addr_global <= r_VectorT_Coeff_addr_global + 1'b1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        r_VectorS2_Coeff_addr_global_d <= 'd0;
+        r_VectorT_Coeff_addr_global_d <= 'd0;
+    end
+    else begin
+        r_VectorS2_Coeff_addr_global_d <= r_VectorS2_Coeff_addr_global;
+        r_VectorT_Coeff_addr_global_d <= r_VectorT_Coeff_addr_global;
+    end
+end
+
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        r_VectorS2_Coeff_addr[i] = 'd0;
+        r_VectorT_Coeff_addr[i] = 'd0;
+    end
+    if (state == S_MULT_INTT) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            r_VectorS2_Coeff_addr[i] = r_VectorS2_Coeff_addr_global[5 : 0];
+            r_VectorT_Coeff_addr[i] = r_VectorT_Coeff_addr_global[5 : 0];
+        end
     end
 end
 
