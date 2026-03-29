@@ -359,9 +359,10 @@ logic           [91 : 0]            r_c_hat;
 logic           [5 : 0]             r_c_hat_addr;
 logic           [8 : 0]             r_VectorS2_Coeff_addr_global;
 logic           [8 : 0]             r_VectorT_Coeff_addr_global;
+logic           [8 : 0]             r_VectorM_Coeff_addr_global;
 logic           [8 : 0]             r_VectorS2_Coeff_addr_global_d;
 logic           [8 : 0]             r_VectorT_Coeff_addr_global_d;
-
+logic           [8 : 0]             r_VectorM_Coeff_addr_global_d;
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -730,8 +731,18 @@ always_ff @(posedge clk) begin
         else 
             r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
     end
-    else if (state >= S_Y_NTT_ACK && ready == 1'b0 && request == 1'b1)
+    else if (S_Y_NTT_WAIT >= state && state >= S_Y_NTT_ACK && ready == 1'b0 && request == 1'b1)
         r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && mac_stage == 'd0) begin
+        if (con_coeff_valid) begin
+            if (r_VectorY_Coeff_addr == `l * 64 - 1)
+                r_VectorY_Coeff_addr <= 'd0;
+            else
+                r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+        end
+        else 
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+    end
     else
         r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
 end
@@ -1337,6 +1348,30 @@ always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay
 	end
 end
 
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_VectorM_Coeff_addr_global <= 'd0;
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && mac_stage == 'd1) begin
+        if (con_coeff_valid) begin
+            if (r_VectorM_Coeff_addr_global == `k * 64 - 1)
+                r_VectorM_Coeff_addr_global <= 'd0;
+            else
+                r_VectorM_Coeff_addr_global <= r_VectorM_Coeff_addr_global + 1'b1;
+        end
+        else
+            r_VectorM_Coeff_addr_global <= r_VectorM_Coeff_addr_global;
+    end
+    else
+        r_VectorM_Coeff_addr_global <= r_VectorM_Coeff_addr_global;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_VectorM_Coeff_addr_global_d <= 'd0;
+    else 
+        r_VectorM_Coeff_addr_global_d <= r_VectorM_Coeff_addr_global;
+end
+
 always_comb begin : matrix_A_vector_T_read_control
     for (int i = 0 ; i < K ; i = i + 1) begin
         r_MatrixA_Coeff_addr[i] = 'd0;
@@ -1351,6 +1386,9 @@ always_comb begin : matrix_A_vector_T_read_control
     if (state > S_MATRIX_MULT_WAIT && state <= S_M_INTT_WAIT)
         for (int i = 0 ; i < K ; i = i + 1) 
             r_VectorM_Coeff_addr[i] =  r_VectorM_Coeff_addr_INTT[5 : 0];
+    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT)
+        for (int i = 0 ; i < K ; i = i + 1) 
+            r_VectorM_Coeff_addr[i] = r_VectorM_Coeff_addr_global[5 : 0];
 end
 
 always_ff @(posedge clk) begin : vector_m_write_control
