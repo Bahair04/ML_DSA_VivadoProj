@@ -263,12 +263,12 @@ always_comb begin
         end
     end
     if (state == S_IDLE) begin
-        ena = 1'b1;
+        ena = low_rd_en;
         wea = ~low_rd_en;
         addra = coeff_low_add;
         coeff_low = douta;
 
-        enb = 1'b1;
+        enb = high_rd_en;
         web = ~high_rd_en;
         addrb = coeff_high_add;
         coeff_high = doutb;
