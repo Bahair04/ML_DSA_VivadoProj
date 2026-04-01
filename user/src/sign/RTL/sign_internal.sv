@@ -58,15 +58,6 @@ module sign_internal
     input       logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1],
     output      logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1],
 
-    output      logic           [63 : 0]    w_EncodePK_Coeff,       
-    output      logic                       w_EncodePK_Coeff_valid,
-    output      logic           [8 : 0]     w_EncodePK_Coeff_addr,
-    input       logic           [63 : 0]    r_EncodePK_Coeff,           
-    output      logic           [8 : 0]     r_EncodePK_Coeff_addr,
-
-    output      logic           [63 : 0]    w_EncodeSK_Coeff,       
-    output      logic                       w_EncodeSK_Coeff_valid,
-    output      logic           [9 : 0]     w_EncodeSK_Coeff_addr,
     input       logic           [63 : 0]    r_EncodeSK_Coeff,           
     output      logic           [9 : 0]     r_EncodeSK_Coeff_addr,
 
@@ -300,7 +291,6 @@ logic           [10 : 0]            mac_cnt;   // 乘法次数计数器
 logic           [1 : 0]             mac_stage; // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
 logic           [1 : 0]             mac_stage_d;
 logic                               mac_valid; // 输入信号有效标志
-logic           [2 : 0]             select;    // 确定选择S2和T的哪一行
 logic                               valid_out [0 : K - 1];
 logic           [91 : 0]            mac_out_comb [0 : K - 1];
 logic                               mult_res_valid_d;
@@ -1083,7 +1073,8 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
     done_ExpandA = 'd0; done_out_ExpandA = 'd0; st_64bit_ExpandA = 'd0; st_64bit_valid_ExpandA = 'd0;
     done_seed    = 'd0; done_out_seed    = 'd0; st_64bit_seed    = 'd0; st_64bit_valid_seed    = 'd0;
     done_ExpandY = 'd0; done_out_ExpandY = 'd0; st_64bit_ExpandY = 'd0; st_64bit_valid_ExpandY = 'd0;
-    
+    done_ExpandC = 'd0; done_out_ExpandC = 'd0; st_64bit_ExpandC = 'd0; st_64bit_valid_ExpandC = 'd0;
+
     if (state == S_EXPAND_A || state == S_STORE_A) begin
         // ==========================================
         // 状态为 EXPAND_A 时，SHA3-1 分配给 ExpandA
@@ -1189,6 +1180,7 @@ always_ff @(posedge clk) begin
         rho <= 'd0;
         k_seed <= 'd0;
         save_cnt <= 'd0;
+        tr_seed <= 'd0;
     end 
     else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1) begin
         save_cnt <= 'd0;
@@ -1282,6 +1274,14 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
+    mult_res = 'd0;
+    mult_res_valid = 1'b0;
+    mac_valid_in = 1'b0;
+    mac_data_in2 = 'd0;
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        mac_data_in1[i] = 'd0;
+        mac_data_in3[i] = 'd0;
+    end
     if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
         case (mac_stage)
             'd0 : begin 

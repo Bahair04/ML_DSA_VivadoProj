@@ -89,16 +89,6 @@ module GlobalBRAMArbitration
     output      logic           [91 : 0]    r_VectorM_Coeff_sign [0 : K - 1],
     input       logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1],
 
-
-    input       logic           [63 : 0]    w_EncodePK_Coeff_sign,       
-    input       logic                       w_EncodePK_Coeff_valid_sign,
-    input       logic           [8 : 0]     w_EncodePK_Coeff_addr_sign,
-    output      logic           [63 : 0]    r_EncodePK_Coeff_sign,           
-    input       logic           [8 : 0]     r_EncodePK_Coeff_addr_sign,
-
-    input       logic           [63 : 0]    w_EncodeSK_Coeff_sign,       
-    input       logic                       w_EncodeSK_Coeff_valid_sign,
-    input       logic           [9 : 0]     w_EncodeSK_Coeff_addr_sign,
     output      logic           [63 : 0]    r_EncodeSK_Coeff_sign,           
     input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign
 
@@ -173,7 +163,6 @@ assign r_VectorS1_Coeff_sign   = r_VectorS1_Coeff;
 assign r_VectorS2_Coeff_sign   = r_VectorS2_Coeff;
 assign r_VectorY_Coeff_sign    = r_VectorY_Coeff; 
 assign r_VectorT_Coeff_sign    = r_VectorT_Coeff;
-assign r_EncodePK_Coeff_sign   = r_EncodePK_Coeff;
 assign r_EncodeSK_Coeff_sign   = r_EncodeSK_Coeff;
 assign r_VectorM_Coeff_sign    = r_VectorM_Coeff;
 
@@ -287,14 +276,6 @@ always_comb begin
             w_VectorM_Coeff_addr  	= w_VectorM_Coeff_addr_sign;        
             r_VectorM_Coeff_addr  	= r_VectorM_Coeff_addr_sign;  
 
-            w_EncodePK_Coeff        = w_EncodePK_Coeff_sign;
-            w_EncodePK_Coeff_valid  = w_EncodePK_Coeff_valid_sign;
-            w_EncodePK_Coeff_addr   = w_EncodePK_Coeff_addr_sign;
-            r_EncodePK_Coeff_addr   = r_EncodePK_Coeff_addr_sign;
-
-            w_EncodeSK_Coeff        = w_EncodeSK_Coeff_sign;
-            w_EncodeSK_Coeff_valid  = w_EncodeSK_Coeff_valid_sign;
-            w_EncodeSK_Coeff_addr   = w_EncodeSK_Coeff_addr_sign;
             r_EncodeSK_Coeff_addr   = r_EncodeSK_Coeff_addr_sign;
         end
     endcase

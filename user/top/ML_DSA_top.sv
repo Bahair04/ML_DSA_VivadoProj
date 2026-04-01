@@ -222,15 +222,6 @@ logic           [5 : 0]     w_VectorM_Coeff_addr_sign [0 : K - 1];
 logic           [91 : 0]    r_VectorM_Coeff_sign [0 : K - 1];
 logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1];
 
-logic           [63 : 0]    w_EncodePK_Coeff_sign;       
-logic                       w_EncodePK_Coeff_valid_sign;
-logic           [8 : 0]     w_EncodePK_Coeff_addr_sign;
-logic           [63 : 0]    r_EncodePK_Coeff_sign;           
-logic           [8 : 0]     r_EncodePK_Coeff_addr_sign;
-
-logic           [63 : 0]    w_EncodeSK_Coeff_sign;       
-logic                       w_EncodeSK_Coeff_valid_sign;
-logic           [9 : 0]     w_EncodeSK_Coeff_addr_sign;
 logic           [63 : 0]    r_EncodeSK_Coeff_sign;           
 logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign;
 
@@ -496,15 +487,6 @@ u_sign_internal(
     .r_VectorM_Coeff            (r_VectorM_Coeff_sign          ),
     .r_VectorM_Coeff_addr       (r_VectorM_Coeff_addr_sign     ),
 
-    .w_EncodePK_Coeff           ( w_EncodePK_Coeff_sign        ),
-    .w_EncodePK_Coeff_valid     ( w_EncodePK_Coeff_valid_sign  ),
-    .w_EncodePK_Coeff_addr      ( w_EncodePK_Coeff_addr_sign   ),
-    .r_EncodePK_Coeff           ( r_EncodePK_Coeff_sign        ),
-    .r_EncodePK_Coeff_addr      ( r_EncodePK_Coeff_addr_sign   ),
-    
-    .w_EncodeSK_Coeff           ( w_EncodeSK_Coeff_sign        ),
-    .w_EncodeSK_Coeff_valid     ( w_EncodeSK_Coeff_valid_sign  ),
-    .w_EncodeSK_Coeff_addr      ( w_EncodeSK_Coeff_addr_sign   ),
     .r_EncodeSK_Coeff           ( r_EncodeSK_Coeff_sign        ),
     .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr_sign   ),
     
@@ -654,15 +636,6 @@ u_GlobalBRAMArbitration(
     .r_VectorM_Coeff_sign           (r_VectorM_Coeff_sign           ),
     .r_VectorM_Coeff_addr_sign      (r_VectorM_Coeff_addr_sign      ),
 
-    .w_EncodePK_Coeff_sign          (w_EncodePK_Coeff_sign          ),       
-    .w_EncodePK_Coeff_valid_sign    (w_EncodePK_Coeff_valid_sign    ),
-    .w_EncodePK_Coeff_addr_sign     (w_EncodePK_Coeff_addr_sign     ),
-    .r_EncodePK_Coeff_sign          (r_EncodePK_Coeff_sign          ),           
-    .r_EncodePK_Coeff_addr_sign     (r_EncodePK_Coeff_addr_sign     ),
-
-    .w_EncodeSK_Coeff_sign          (w_EncodeSK_Coeff_sign          ),       
-    .w_EncodeSK_Coeff_valid_sign    (w_EncodeSK_Coeff_valid_sign    ),
-    .w_EncodeSK_Coeff_addr_sign     (w_EncodeSK_Coeff_addr_sign     ),
     .r_EncodeSK_Coeff_sign          (r_EncodeSK_Coeff_sign          ),           
     .r_EncodeSK_Coeff_addr_sign     (r_EncodeSK_Coeff_addr_sign     )
 );
