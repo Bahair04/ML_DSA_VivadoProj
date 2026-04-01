@@ -19,6 +19,8 @@ module postMultCalc
     input       logic                       coeff_valid, // 统一的有效脉冲
     input       logic   [1 : 0]             mac_stage,
 
+    output      logic   [91 : 0]            w_minus_c_s2,
+    output      logic                       w_minus_c_s2_valid,
     output      logic   [63:0]              encode,
     output      logic                       encoder_valid,
     output      logic                       reject_flag
@@ -99,6 +101,9 @@ generate
         end
     end
 endgenerate
+
+assign w_minus_c_s2 = data_res;
+assign w_minus_c_s2_valid = data_out_valid && (mac_stage == 2'd1);
 
 generate                                            // r = low_bits(w - c_s2)
     for (genvar i = 0 ; i < 4 ; i = i + 1) begin : gen_decomp
