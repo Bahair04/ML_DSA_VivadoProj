@@ -21,8 +21,10 @@ module postMultCalc
 
     output      logic   [91 : 0]            w_minus_c_s2,
     output      logic                       w_minus_c_s2_valid,
-    output      logic   [63:0]              encode,
+    output      logic   [63 : 0]            encode,
     output      logic                       encoder_valid,
+    output      logic   [3 : 0]             hint,
+    output      logic                       hint_valid,
     output      logic                       reject_flag
 );
 
@@ -55,6 +57,10 @@ always_comb begin
             data_in_valid = coeff_valid;
         end
         2'd1 : begin                    // 阶段1：处理 w - c_s2
+            data1 = w;
+            data_in_valid = coeff_valid;
+        end
+        2'd2 : begin
             data1 = w;
             data_in_valid = coeff_valid;
         end
@@ -93,10 +99,10 @@ generate
             .data_out   ( data_out_sub      )
         );
 
-        assign data_res[23 * i +: 23] = (mac_stage == 2'd0) ? data_out_add :
+        assign data_res[23 * i +: 23] = ((mac_stage == 2'd0) || (mac_stage == 2'd2)) ? data_out_add :
                                         (mac_stage == 2'd1) ? data_out_sub : 23'd0;
         if (i == 0) begin : gen_valid
-            assign data_out_valid = (mac_stage == 2'd0) ? valid_out_add :
+            assign data_out_valid = ((mac_stage == 2'd0) || (mac_stage == 2'd2)) ? valid_out_add :
                                     (mac_stage == 2'd1) ? valid_out_sub : 1'b0;
         end
     end
@@ -211,4 +217,28 @@ always_ff @(posedge clk) begin
             reject_flag <= 1'b0; 
     end
 end
+
+generate 
+    for (genvar i = 0 ; i < 4 ; i = i + 1) begin : make_hint_block
+        wire    [24 : 0]            r_d = {2'd0, w[23 * i +: 23]};
+        wire    [24 : 0]            r_plus_z = {2'd0, data_res[23 * i +: 23]};
+        wire                        i_valid = data_out_valid && (mac_stage == 'd2);
+        wire                        o_hint;
+        wire                        o_valid;
+        make_hint u_make_hint(
+            .clk      	( clk       ),
+            .rstn     	( rstn      ),
+            .r_d      	( r_d       ),
+            .r_plus_z 	( r_plus_z  ),
+            .i_valid  	( i_valid   ),
+            .hint     	( o_hint    ),
+            .o_valid  	( o_valid   )
+        );
+        assign hint[i] = o_hint;
+        if (i == 0)
+            assign hint_valid = o_valid;
+    end
+endgenerate
+
+
 endmodule

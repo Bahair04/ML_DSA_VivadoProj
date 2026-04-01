@@ -1377,7 +1377,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         r_VectorM_Coeff_addr_global <= 'd0;
-    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && mac_stage == 'd1) begin
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && (mac_stage == 'd1 || mac_stage == 'd2)) begin
         if (con_coeff_valid) begin
             if (r_VectorM_Coeff_addr_global == `k * 64 - 1)
                 r_VectorM_Coeff_addr_global <= 'd0;
