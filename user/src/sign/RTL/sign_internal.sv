@@ -298,6 +298,7 @@ logic           [91 : 0]            m;
 
 logic           [10 : 0]            mac_cnt;   // 乘法次数计数器
 logic           [1 : 0]             mac_stage; // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
+logic           [1 : 0]             mac_stage_d;
 logic                               mac_valid; // 输入信号有效标志
 logic           [2 : 0]             select;    // 确定选择S2和T的哪一行
 logic                               valid_out [0 : K - 1];
@@ -363,6 +364,12 @@ logic           [8 : 0]             r_VectorM_Coeff_addr_global;
 logic           [8 : 0]             r_VectorS2_Coeff_addr_global_d;
 logic           [8 : 0]             r_VectorT_Coeff_addr_global_d;
 logic           [8 : 0]             r_VectorM_Coeff_addr_global_d;
+
+// --- Rejection ---
+logic           [63 : 0] 	        encode;
+logic        	                    encoder_valid;
+logic        	                    reject_flag;
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -585,6 +592,13 @@ always_ff @(posedge clk) begin
         state_d <= S_IDLE;
     else 
         state_d <= state;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        mac_stage_d <= S_IDLE;
+    else 
+        mac_stage_d <= mac_stage;
 end
 
 always_ff @(posedge clk) begin
@@ -1729,6 +1743,29 @@ ExpandC u_ExpandC(
 	.done_out         	( done_out_ExpandC          ),
 	.st_64bit         	( st_64bit_ExpandC          ),
 	.st_64bit_valid   	( st_64bit_valid_ExpandC    )
+);
+
+//* ==========================================================
+//* 15. Rejection
+//* ==========================================================
+
+postMultCalc u_postMultCalc(
+	.clk           	( clk                       ),
+	.rstn          	( rstn                      ),
+	.y             	( r_VectorY_Coeff           ),
+	.y_valid       	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd0)        ),
+	.w             	( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8 : 6]]        ),
+	.w_valid       	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd1)        ),
+	.c_s1          	( con_coeff_d                 ),
+	.c_s1_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd0)        ),
+	.c_s2          	( con_coeff_d                 ),
+	.c_s2_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd1)        ),
+	.c_t0          	( con_coeff_d                 ),
+	.c_t0_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd2)        ),
+	.mac_stage     	( mac_stage_d                 ),
+	.encode        	( encode                    ),
+	.encoder_valid 	( encoder_valid             ),
+	.reject_flag   	( reject_flag               )
 );
 
 

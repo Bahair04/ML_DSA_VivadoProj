@@ -29,7 +29,7 @@ module Encoder_single_channel                                       // 编码模块 
     output      logic   [4 : 0]                         sk_encode_len,
     
     // --- 签名(sig) 编码信号 ---
-    input       logic   [Z_BIT_LEN - 1 : 0]             z,                  // 这里传递进来的还是有符号数 所以在内部需要先将z转为无符号数
+    input       logic   [23 - 1 : 0]                    z,                  // 这里传递进来的还是有符号数 所以在内部需要先将z转为无符号数
     input       logic                                   z_valid,            
     output      logic   [Z_BIT_LEN - 1 : 0]             sig_encode,         // 签名编码输出(先拼z 再拼 Hint(h))
     output      logic                                   sig_encode_valid    // 签名编码输出有效信号

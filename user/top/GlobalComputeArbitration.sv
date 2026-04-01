@@ -86,7 +86,7 @@ module GlobalComputeArbitration
     input       logic           [4 * T0_BIT_LEN - 1 : 0]    t0_1_keygen,         
     input       logic                                       t0_valid_1_keygen,
 
-    input       logic           [4 * Z_BIT_LEN - 1 : 0]     z_1_keygen,
+    input       logic           [4 * 23 - 1 : 0]            z_1_keygen,
     input       logic                                       z_valid_1_keygen,
 
     output      logic           [63 : 0]    encode_1_keygen,
@@ -262,7 +262,7 @@ logic           [4 * 23 - 1 : 0]                s2_1;
 logic                                           s2_valid_1;
 logic           [4 * T0_BIT_LEN - 1 : 0]        t0_1;         
 logic                                           t0_valid_1;
-logic           [4 * Z_BIT_LEN - 1 : 0]         z_1;
+logic           [4 * 23 - 1 : 0]                z_1;
 logic                                           z_valid_1;
 logic           [63 : 0]                        encode_1;
 logic                                           encoder_valid_1;

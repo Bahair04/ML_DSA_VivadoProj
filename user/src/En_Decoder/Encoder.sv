@@ -26,7 +26,7 @@ module Encoder
     input       logic                                   t0_valid,
 
     // --- 签名(sig) 编码信号 ---
-    input       logic   [4 * Z_BIT_LEN - 1 : 0]         z,
+    input       logic   [4 * 23 - 1 : 0]                z,
     input       logic                                   z_valid,
     
     // --- 编码输出接口 输出位宽 8 个字节 ---
@@ -63,7 +63,7 @@ generate
             .sk_encode        	( sk_encode[i]                                  ),
             .sk_encode_valid  	( sk_encode_valid[i]                            ),
             .sk_encode_len      ( sk_encode_len[i]                              ),
-            .z                	( z[i * Z_BIT_LEN +: Z_BIT_LEN]                 ),
+            .z                	( z[i * 23 +: 23]                               ),
             .z_valid          	( z_valid                                       ),
             .sig_encode       	( sig_encode[i]                                 ),
             .sig_encode_valid 	( sig_encode_valid[i]                           )
