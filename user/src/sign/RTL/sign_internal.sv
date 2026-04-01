@@ -1750,22 +1750,18 @@ ExpandC u_ExpandC(
 //* ==========================================================
 
 postMultCalc u_postMultCalc(
-	.clk           	( clk                       ),
-	.rstn          	( rstn                      ),
-	.y             	( r_VectorY_Coeff           ),
-	.y_valid       	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd0)        ),
-	.w             	( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8 : 6]]        ),
-	.w_valid       	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd1)        ),
-	.c_s1          	( con_coeff_d                 ),
-	.c_s1_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd0)        ),
-	.c_s2          	( con_coeff_d                 ),
-	.c_s2_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd1)        ),
-	.c_t0          	( con_coeff_d                 ),
-	.c_t0_valid    	( con_coeff_valid_d && (state_d >= S_MULT_INTT_ACK && state_d <= S_MULT_INTT_WAIT) && (mac_stage_d == 'd2)        ),
-	.mac_stage     	( mac_stage_d                 ),
-	.encode        	( encode                    ),
-	.encoder_valid 	( encoder_valid             ),
-	.reject_flag   	( reject_flag               )
+    .clk            ( clk                       ),
+    .rstn           ( rstn                      ),
+    .y              ( r_VectorY_Coeff           ),
+    .w              ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]] ),
+    .c_coeff        ( con_coeff_d               ),
+    .coeff_valid    ( con_coeff_valid_d && 
+                            (state_d >= S_MULT_INTT_ACK
+                             && state_d <= S_MULT_INTT_WAIT) ),
+    .mac_stage      ( mac_stage_d               ),
+    .encode         ( encode                    ),
+    .encoder_valid  ( encoder_valid             ),
+    .reject_flag    ( reject_flag               )
 );
 
 
