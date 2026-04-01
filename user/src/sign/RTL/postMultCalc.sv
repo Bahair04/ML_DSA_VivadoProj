@@ -13,6 +13,7 @@ module postMultCalc
     input       logic                       clk,
     input       logic                       rstn,
 
+    input       logic                       init,
     input       logic   [91 : 0]            y,
     input       logic   [91 : 0]            w,
     input       logic   [91 : 0]            c_coeff,     // 统一的乘积系数输入
@@ -172,6 +173,7 @@ logic   [3 : 0]                 reject_ct0;
 logic   [22 : 0]                z_i; 
 logic   [22 : 0]                ct0_i;
 logic   [18 : 0]                r0_i;
+logic   [7 : 0]                 hint_cnt;
 
 always_comb begin
     reject_z   = 4'b0;
@@ -213,6 +215,8 @@ always_ff @(posedge clk) begin
             reject_flag <= 1'b1;
         else if (coeff_valid && (mac_stage == 2'd2) && (|reject_ct0))
             reject_flag <= 1'b1; // 仅在 stage 2 时检查 c_t0
+        else if (hint_valid && (hint_cnt > `omega))
+            reject_flag <= 1'b1; // 最终的 hint 计数检查
         else
             reject_flag <= 1'b0; 
     end
@@ -240,5 +244,13 @@ generate
     end
 endgenerate
 
+always_ff @(posedge clk) begin
+    if (!rstn)
+        hint_cnt <= 'd0;
+    else if (init) 
+        hint_cnt <= 'd0;
+    else if (hint_valid) 
+        hint_cnt <= hint_cnt + hint[0] + hint[1] + hint[2] + hint[3];
+end
 
 endmodule
