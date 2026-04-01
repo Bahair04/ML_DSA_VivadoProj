@@ -366,9 +366,12 @@ logic           [8 : 0]             r_VectorT_Coeff_addr_global_d;
 logic           [8 : 0]             r_VectorM_Coeff_addr_global_d;
 
 // --- Rejection ---
+logic           [91 : 0]            w_minus_c_s2;
+logic                               w_minus_c_s2_valid;
 logic           [63 : 0] 	        encode;
 logic        	                    encoder_valid;
 logic        	                    reject_flag;
+logic           [2 : 0]             save_w_select;
 
 //* ==========================================================
 //* 3. 状态机
@@ -1349,6 +1352,15 @@ always_comb begin
             w_VectorM_Coeff[i] = m;
         end
     end
+    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            if (i == save_w_select)
+                w_VectorM_Coeff_valid[i] = w_minus_c_s2_valid;
+            else 
+                w_VectorM_Coeff_valid[i] = 1'b0;
+            w_VectorM_Coeff[i] = w_minus_c_s2;
+        end 
+    end
 end
 
 always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay
@@ -1409,10 +1421,12 @@ always_ff @(posedge clk) begin : vector_m_write_control
     if (!rstn) begin
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorM_Coeff_addr[i] <= 'd0;
+        save_w_select <= 'd0;
     end
     else if (state == S_IDLE) begin   
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorM_Coeff_addr[i] <= 'd0;
+        save_w_select <= 'd0;
     end
     else if ((w_VectorM_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT) ) begin		// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址	
         for (int i = 0 ; i < K ; i = i + 1) begin
@@ -1428,6 +1442,21 @@ always_ff @(posedge clk) begin : vector_m_write_control
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
             else 
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
+        end
+    end//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin
+        if (w_minus_c_s2_valid) begin
+            for (int i = 0 ; i < K ; i = i + 1) begin
+                if (w_VectorM_Coeff_addr[i] == 'd63) begin
+                    w_VectorM_Coeff_addr[i] <= 'd0;
+                    if (save_w_select == 'd3)
+                        save_w_select <= 'd0;
+                    else
+                        save_w_select <= save_w_select + 1'b1;
+                end
+                else
+                    w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
+            end
         end
     end
     else begin
@@ -1750,18 +1779,20 @@ ExpandC u_ExpandC(
 //* ==========================================================
 
 postMultCalc u_postMultCalc(
-    .clk            ( clk                                                   ),
-    .rstn           ( rstn                                                  ),
-    .y              ( r_VectorY_Coeff                                       ),
-    .w              ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]]   ),
-    .c_coeff        ( con_coeff_d                                           ),
-    .coeff_valid    ( con_coeff_valid_d && 
-                            (state_d >= S_MULT_INTT_ACK
-                             && state_d <= S_MULT_INTT_WAIT)                       ),
-    .mac_stage      ( mac_stage_d                                           ),
-    .encode         ( encode                                                ),
-    .encoder_valid  ( encoder_valid                                         ),
-    .reject_flag    ( reject_flag                                           )
+    .clk                ( clk                                                   ),
+    .rstn               ( rstn                                                  ),
+    .y                  ( r_VectorY_Coeff                                       ),
+    .w                  ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]]   ),
+    .c_coeff            ( con_coeff_d                                           ),
+    .coeff_valid        ( con_coeff_valid_d && 
+                                (state_d >= S_MULT_INTT_ACK
+                                 && state_d <= S_MULT_INTT_WAIT)                       ),
+    .mac_stage          ( mac_stage_d                                           ),
+    .w_minus_c_s2       ( w_minus_c_s2                                          ),
+    .w_minus_c_s2_valid ( w_minus_c_s2_valid                                    ),
+    .encode             ( encode                                                ),
+    .encoder_valid      ( encoder_valid                                         ),
+    .reject_flag        ( reject_flag                                           )
 );
 
 
