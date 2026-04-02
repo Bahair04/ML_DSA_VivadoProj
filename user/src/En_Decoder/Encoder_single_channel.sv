@@ -144,9 +144,9 @@ always_ff @(posedge clk or negedge rstn) begin
     end
     else if (z_valid) begin
         if (z > (`q >> 1)) // 如果 z 是负数
-            z_useful <= `gamma_1 - 1 + (`q - z);
+            z_useful <= `gamma_1 + (`q - z);
         else               // 如果 z 是正数
-            z_useful <= `gamma_1 - 1 - z;
+            z_useful <= `gamma_1 - z;
     end
 end
 assign sig_encode       = z_useful;

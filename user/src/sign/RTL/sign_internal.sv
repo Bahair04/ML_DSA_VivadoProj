@@ -533,13 +533,21 @@ always_ff @(posedge clk) begin
                     state <= S_C_NTT_WAIT;
             end
             S_MULT_INTT_ACK : begin
-                if (ready == 1'b0 && request == 1'b1)
+                if (reject_flag) begin
+                    mac_stage <= 'd0;
+                    state <= S_SIGN_LOOP_INIT;
+                end
+                else if (ready == 1'b0 && request == 1'b1)
                     state <= S_MULT_INTT;
                 else 
                     state <= S_MULT_INTT_ACK;
             end
             S_MULT_INTT : begin
-                if (mac_cnt == 'd63)
+                if (reject_flag) begin
+                    mac_stage <= 'd0;
+                    state <= S_SIGN_LOOP_INIT;
+                end
+                else if (mac_cnt == 'd63)
                     state <= S_MULT_INTT_WAIT;
                 else 
                     state <= S_MULT_INTT;
@@ -585,8 +593,10 @@ always_ff @(posedge clk) begin
                 end
             end
             S_WAIT : begin
-                if (reject_flag)
+                if (reject_flag) begin
+                    mac_stage <= 'd0;
                     state <= S_SIGN_LOOP_INIT;
+                end
                 else if (make_hint_done) 
                     state <= S_IDLE;
                 else
@@ -1821,7 +1831,7 @@ ExpandC u_ExpandC(
 
 postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_hint和拒绝采样门限判定
     .clk                ( clk                                                   ),
-    .rstn               ( rstn                                                  ),
+    .rstn               ( rstn & (~reject_init)                                 ),
     .init               ( state == S_SIGN_LOOP_INIT                             ),
     .y                  ( r_VectorY_Coeff                                       ),
     .w                  ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]]   ),

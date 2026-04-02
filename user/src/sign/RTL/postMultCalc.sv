@@ -156,15 +156,17 @@ always_ff @(posedge clk) begin
     end
 end
 
+logic           [63 : 0]            encode_temp;
 Encoder u_Encoder(                                          
     .clk            ( clk            ),
     .rstn           ( rstn           ),
     .system_done    ( system_done    ), 
     .z              ( z              ),
     .z_valid        ( z_valid        ),
-    .encode         ( encode         ),
+    .encode         ( encode_temp    ),
     .encoder_valid  ( encoder_valid  )
 );
+assign encode = {<<8{encode_temp}};
 
 // ==========================================
 // 拒绝判定模块 (Reject Logic)
