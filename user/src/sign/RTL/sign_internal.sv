@@ -143,42 +143,43 @@ module sign_internal
 typedef enum logic [5 : 0] { 
     S_IDLE,                     // 空闲状态
     S_INIT,                     // 初始化状态
-    S_PREPROC_NTT_ACK,          
-    S_PREPROC_NTT_WAIT,
-    S_PREPROC_NTT_STORE,
-    S_PREPROC_GET_RHO,
-    S_EXPAND_A,
-    S_STORE_A,
+    
+    S_PREPROC_NTT_ACK,          // s1，s2，t0 依次 NTT 变换到 NTT 域：握手信号
+    S_PREPROC_NTT_WAIT,         // 装载原始系数
+    S_PREPROC_NTT_STORE,        // 等待变换输出结果
+    
+    S_PREPROC_GET_RHO,          // 从公钥中获取 tr rho k
+
+    S_EXPAND_A,                 // 通过 rho 扩展并存储矩阵 A：产生起始信号
+    S_STORE_A,                  // 存储矩阵 A
 
     // 签名循环开始
-    S_SIGN_LOOP_INIT,           
+    S_SIGN_LOOP_INIT,           // 公共初始化信号
     
     // 扩展并存储Y多项式(l个)
-    S_EXPAND_Y,
-    S_STORE_Y,
+    S_EXPAND_Y,                 // 扩展随机向量 Y 多项式：产生起始信号
+    S_STORE_Y,                  // 将扩展后的l个多项式存入BRAM
 
-    // 从BRAM中读出Y多项式并通过NTT变换到NTT域 获取NTT域系数的同时，从存储矩阵中读出k个A向量，使用ModuleMAC计算矩阵乘法 并将结果写回W矩阵
-    S_Y_NTT_ACK,
-    S_Y_NTT,
-    S_Y_NTT_WAIT,
-    S_MATRIX_MULT_WAIT,
+    S_Y_NTT_ACK,                // 从BRAM中读出Y多项式并进行NTT变换：握手信号
+    S_Y_NTT,                    // 将Y多项式加载到Poly_PAU中
+    S_Y_NTT_WAIT,               // Y的NTT变换输出结果 输出结果的同时读出A矩阵通过k*4个并行MAC加速矩阵乘法运算 计算结果存入M矩阵 
+    S_MATRIX_MULT_WAIT,         // 矩阵乘法有流水线延迟 这里等待矩阵乘法完全结束之后再进入下一个状态
 
-    // 从W矩阵中读出多项式，并进行INTT逆变换 变换的结果同时取高位按字节pack后存入SHA3
-    S_M_INTT_ACK, 
-    S_M_INTT,     
-    S_M_INTT_WAIT,
-    S_M_INTT_END,
-    S_DUMMY0,
+    S_M_INTT_ACK,               // 从M矩阵中读出W向量准备进行INTT变换：握手信号
+    S_M_INTT,                   // 将W向量加载到Poly_PAU中
+    S_M_INTT_WAIT,              // W的INTT变换输出结果 输出的结果直接通过decompose获得高位w1 pack成字节流给到SHA3
+    S_M_INTT_END,               // 等待INTT变换完全结束
+    S_DUMMY0,                   // 等待状态：只有子状态机完成C_TILDE的生成后才进入下一个状态
     
-    S_C_NTT_ACK,
-    S_EXPAND_C,
-    S_STORE_C,
-    S_C_NTT,
-    S_C_NTT_WAIT,
+    S_C_NTT_ACK,                // NTT（Poly_PAU单元）握手信号
+    S_EXPAND_C,                 // 扩展挑战多项式C标量：产生起始信号
+    S_STORE_C,                  // 等待存储多项式完成扩展
+    S_C_NTT,                    // ExpandC中包含了一个存储标量C的双端口RAM 此状态生成两个地址 同时从RAM中读取两个系数 载入Poly_PAU单元
+    S_C_NTT_WAIT,               // C的NTT变换输出结果 输出结果存储到 (LUTRAM)c_hat 中
     
-    S_MULT_INTT_ACK,
-    S_MULT_INTT,
-    S_MULT_INTT_WAIT
+    S_MULT_INTT_ACK,            // INTT(c*s1) INTT(c*s2) INTT(c*t0) 并进行不同的post mult的处理 判断门限 进行拒绝采样 完成makehint操作
+    S_MULT_INTT,                // 装载原始系数
+    S_MULT_INTT_WAIT            // 输出乘法结果 传递到postMultCalc单元 进行后续处理
 
 } state_t;
 
@@ -186,10 +187,10 @@ state_t                             state, state_d;
 
 typedef enum logic [4 : 0] { 
     S_SUB_IDLE,
-    S_SUB_INIT,
-    S_SUB_LOAD,
+    S_SUB_INIT,                     // 初始化信号：加载种子
+    S_SUB_LOAD,                     // 输入SHA3
     S_SUB_SQUEEZE,                  // 获得rho_prime(seed_expand)
-    S_SUB_WAIT,
+    S_SUB_WAIT,                     // 等待主状态机完成 ExpandY
     S_SUB_INIT_C_TILDE,             // C_TILDE SHA3初始化
     S_SUB_LOAD_C_TILDE_MU,          // 加载MU
     S_SUB_LOAD_C_TILDE_W1_BYTES,    // 主状态机生成w时去高位获得w1，再通过pack模块获得字节流 子状态机将字节流载入SHA3
@@ -229,31 +230,31 @@ logic           [63 : 0]            st_64bit_seed;       // SHA3 挤出8字节�
 logic                               st_64bit_valid_seed; // SHA3 挤出8字节数据有效信号
 
 // --- BRAM 信号 ---
-logic           [511 : 0]           tr_seed;
-logic           [255 : 0]           rho;
+logic           [511 : 0]           tr_seed;    // 保存 tr_seed (64 bytes = 512 bits)
+logic           [255 : 0]           rho;        // 保存 rho (32 bytes = 256 bits)
 logic           [255 : 0]           k_seed;     // 保存 k_seed (32 bytes = 256 bits)
 
-// --- 用于计算地址偏移的本地参数 ---
+// --- 用于计算S1, S2, T0在SK BRAM中的地址偏移的本地参数 ---
 localparam S1_RAM_LEN = L * 256 * S1_S2_BIT_LEN / 64;
 localparam S2_RAM_LEN = K * 256 * S1_S2_BIT_LEN / 64;
 localparam T0_RAM_LEN = K * 256 * T0_BIT_LEN / 64;
-localparam TR_RAM_LEN = 8; // TR 是 64 bytes = 512 bits = 8 个 64-bit 块
+localparam TR_RAM_LEN = 8;                                          // TR 是 64 bytes = 512 bits = 8 个 64-bit 块
 
-localparam TR_START_ADDR = S1_RAM_LEN + S2_RAM_LEN + T0_RAM_LEN;
+localparam TR_START_ADDR = S1_RAM_LEN + S2_RAM_LEN + T0_RAM_LEN;    // TR起始地址 从此开始连续读取16个块获得tr rho k
 
-// --- 读取 RHO 和 K_SEED 用的计数器 ---
+// --- 读取 TR RHO 和 K_SEED 用的计数器 ---
 logic           [4 : 0]             fetch_cnt;
 logic                               fetch_valid;
-logic           [4 : 0]             save_cnt;
+logic           [4 : 0]             save_cnt;                       // 读取块计数 总共16个块
 
 // --- NTT/INTT (Poly_PAU) 信号 ---
-logic           [8 : 0]             con_coeff_cnt;  
-logic           [8 : 0]             con_coeff_cnt_d;
+logic           [8 : 0]             con_coeff_cnt;                  // NTT/INTT 转换结果计数器
+logic           [8 : 0]             con_coeff_cnt_d;                // NTT/INTT 转换结果计数器（延迟）
 
 // --- coeffModq 控制信号 ---
 logic                               ram_rd_en;
 logic                               coeff_valid_d;
-logic           [1 : 0]             current_coeff_type;
+logic           [1 : 0]             current_coeff_type;             // 区分当前读取的向量类型 0-s1 1-s2 2-t0
 
 // --- Expand Y ---
 logic           [511 : 0]           rho_prime_ExpandY;      
@@ -277,26 +278,25 @@ logic           [63 : 0]            st_64bit_ExpandY;
 logic                               st_64bit_valid_ExpandY;  
 
 // --- mac ---
-logic           [91 : 0]            con_coeff_d;
+logic           [91 : 0]            con_coeff_d;                    // 从RAM中读取需要一个时钟周期的延迟 因此这里转换完成的系数和有效信号都要打一拍
 logic                               con_coeff_valid_d;
-logic           [22 : 0]            conv [0 : 3];
+logic           [22 : 0]            conv [0 : 3];                   // 分成四个系数便于并行MAC计算
 logic                               w_VectorM_Coeff_valid_d [0 : K - 1];
-logic           [91 : 0]            r_VectorM_Coeff_INTT;
-logic           [8 : 0]             r_VectorM_Coeff_addr_INTT;
-logic           [8 : 0]             r_VectorM_Coeff_addr_INTT_d;
-logic                               m_valid;
-logic           [91 : 0]            m;
+logic           [91 : 0]            r_VectorM_Coeff_INTT;           // 读出完成A_hat @ y_hat的向量W准备进行 INTT 变换
+logic           [8 : 0]             r_VectorM_Coeff_addr_INTT;      // INTT 变换阶段读取向量W的地址
+logic           [8 : 0]             r_VectorM_Coeff_addr_INTT_d;    // W是按行分开存储的且读取有一个时钟周期的延迟 所以这里需要对地址打一拍 然后取高3位确定读取的是哪一行的W
+logic                               m_valid;                        // INTT(A_hat @ y_hat)的变换结果：送入decompose获得高位w1
+logic           [91 : 0]            m;                              // INTT(A_hat @ y_hat)的变换结果有效信号：送入decompose获得高位w1
 
-logic           [10 : 0]            mac_cnt;   // 乘法次数计数器
-logic           [1 : 0]             mac_stage; // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
-logic           [1 : 0]             mac_stage_d;
-logic                               mac_valid; // 输入信号有效标志
+logic           [10 : 0]            mac_cnt;                        // 乘法次数计数器
+logic           [1 : 0]             mac_stage;                      // 指示乘法阶段：0-s1*c 1-s2*c 2-t0*c
+logic           [1 : 0]             mac_stage_d;                    // 读取延迟一个时钟周期 因此这里乘法阶段也要延迟一拍
+logic                               mac_valid;                      // 输入信号有效标志
 logic                               valid_out [0 : K - 1];
-logic           [91 : 0]            mac_out_comb [0 : K - 1];
-logic                               mult_res_valid_d;
+logic           [91 : 0]            mac_out_comb [0 : K - 1];       // K行 每一行同时算出四个结果 存取BRAM
 
-logic           [91 : 0]            mult_res;           // s1*c s2*c t0*c 阶段的乘法结果
-logic                               mult_res_valid;     // 乘法结果有效标志
+logic           [91 : 0]            mult_res;                       // s1*c s2*c t0*c 阶段的乘法结果
+logic                               mult_res_valid;                 // 乘法结果有效标志
 
 // --- high_bits(decompose) ---
 
@@ -309,8 +309,8 @@ logic   signed  [18 : 0]            r0 [0 : 3];                     // 有符号
 logic                               r0_valid [0 : 3];
 
 // --- Serializer ---
-logic           [7 : 0] 	        w_out;
-logic      	                        w_out_valid;
+logic           [7 : 0] 	        w_out;                          // pack后单字节输出给到SHA3获得c_tilde
+logic      	                        w_out_valid;                    // pack后单字节有效信号
 
 // --- c_tilde ---
 logic           [255 : 0]           c_tilde;
@@ -385,7 +385,8 @@ always_ff @(posedge clk) begin
                     state <= S_IDLE;
             end
             S_INIT : begin
-                poly_cnt <= 'd0;
+                poly_cnt <= 'd0;              
+                kappa_ExpandY <= 'd0; 
                 state <= S_PREPROC_NTT_ACK;
             end
             S_PREPROC_NTT_ACK : begin
@@ -425,8 +426,7 @@ always_ff @(posedge clk) begin
                     state <= S_STORE_A;
             end
             S_SIGN_LOOP_INIT : begin
-                state <= S_EXPAND_Y;                
-                kappa_ExpandY <= 'd0; 
+                state <= S_EXPAND_Y;  
                 mac_stage <= 'd0;
             end
             S_EXPAND_Y : begin
@@ -685,29 +685,25 @@ always_comb begin
         current_coeff_type = 2'd2; // t0
 end
 
-// 1. 核心读地址 MUX 仲裁
+// 读取私钥SK中的参数：更新读取地址
 always_ff @(posedge clk) begin
     if (!rstn)
         r_EncodeSK_Coeff_addr <= 'd0;
     else if (state == S_INIT || state == S_IDLE)
         r_EncodeSK_Coeff_addr <= 'd0;
-    // NTT 预处理阶段，受 coeffModq 反控 读取s1 s2 t0
-    else if (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE)
+    else if (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE)   // NTT 预处理阶段，受 coeffModq 反控 读取s1 s2 t0
         r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
-    // 多项式全部处理完的瞬间，地址直接飞跃到 RHO 的起点 跳过tr 直接读取rho和k
-    else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1)
+    else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1)               // 多项式全部处理完的瞬间，地址直接飞跃到 RHO 的起点 跳过tr 直接读取rho和k
         r_EncodeSK_Coeff_addr <= TR_START_ADDR;
-    // 获取 TR, RHO 和 K 时，连读 16 拍
-    else if (state == S_PREPROC_GET_RHO && fetch_cnt < 5'd16)
+    else if (state == S_PREPROC_GET_RHO && fetch_cnt < 5'd16)                           // 获取 TR, RHO 和 K 时，连读 16 拍
         r_EncodeSK_Coeff_addr <= r_EncodeSK_Coeff_addr + 1'b1;
 end
 
-// 2. 严格屏蔽 coeffModq 的有效信号，防止读取 RHO 时把数据误喂给多项式解包器
+// 读出SK中的系数有效信号：一个时钟周期的延时
 always_ff @(posedge clk) begin
     if (!rstn) 
         coeff_valid_d <= 1'b0;
     else 
-        // 只有在 NTT 处理阶段才允许给 coeffModq 发送 valid
         coeff_valid_d <= (ram_rd_en && state >= S_PREPROC_NTT_ACK && state <= S_PREPROC_NTT_STORE);
 end
 
@@ -727,79 +723,28 @@ coeffModq u_coeffModq(
     .modq_coeff_valid   ( ori_coeff_valid_Modq                                              )
 );
 
-always_ff @(posedge clk) begin
-    if (!rstn)     
-        r_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_INIT) 
-        r_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_Y_NTT) begin
-        if (r_VectorY_Coeff_addr == `l * 64)
-            r_VectorY_Coeff_addr <= 'd0;
-        else if (r_VectorY_Coeff_addr > 0 && r_VectorY_Coeff_addr[5 : 0] == 0)
-            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
-        else 
-            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
-    end
-    else if (S_Y_NTT_WAIT >= state && state >= S_Y_NTT_ACK && ready == 1'b0 && request == 1'b1)
-        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
-    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && mac_stage == 'd0) begin
-        if (con_coeff_valid) begin
-            if (r_VectorY_Coeff_addr == `l * 64 - 1)
-                r_VectorY_Coeff_addr <= 'd0;
-            else
-                r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
-        end
-        else 
-            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
-    end
-    else
-        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
-end
-
-always_comb begin
-    ori_coeff = 'd0;
-    ori_coeff_valid = 1'b0;
-    if (state <= S_PREPROC_NTT_STORE) begin
-        ori_coeff = ori_coeff_Modq;
-        ori_coeff_valid = ori_coeff_valid_Modq;
-    end
-    else if (state == S_Y_NTT) begin
-        ori_coeff = r_VectorY_Coeff;
-        ori_coeff_valid = 1'b1;
-    end
-    else if (state == S_M_INTT) begin
-        ori_coeff = r_VectorM_Coeff_INTT;
-        ori_coeff_valid = 1'b1;
-    end
-    else if (state == S_C_NTT) begin
-        ori_coeff = data_out;
-        ori_coeff_valid = data_valid_out;
-    end
-    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
-        ori_coeff = mult_res;
-        ori_coeff_valid = mult_res_valid;
-    end
-end
-
 //* ==========================================================
 //* 5. Poly_PAU 控制逻辑
 //* ==========================================================
 assign ext_operand = 'd0;
 always_comb begin
+    mode_config = 'd0;
     if (state <= S_PREPROC_NTT_STORE)
-        mode_config = 'd0;
+        mode_config = 'd0;  // NTT
     else if (state >= S_M_INTT_ACK && state <= S_M_INTT_WAIT)
-        mode_config = 'd1;
+        mode_config = 'd1;  // INTT
     else if (state >= S_C_NTT && state <= S_C_NTT_WAIT)
-        mode_config = 'd0;
+        mode_config = 'd0;  // NTT
     else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT)
-        mode_config = 'd1;
+        mode_config = 'd1;  // INTT
 end
+
+// Poly_PAU握手阶段
 always_ff @(posedge clk) begin
     if (!rstn)
         request <= 1'b0;
     else if (state == S_PREPROC_NTT_ACK || state == S_Y_NTT_ACK || state == S_M_INTT_ACK || 
-             state == S_C_NTT_ACK || state == S_MULT_INTT_ACK) begin
+             state == S_C_NTT_ACK || state == S_MULT_INTT_ACK) begin            
         if (ready) 
             request <= 1'b1;
         else 
@@ -809,6 +754,7 @@ always_ff @(posedge clk) begin
         request <= 1'b0;
 end
 
+// 系数计数器
 always_ff @(posedge clk) begin
     if (!rstn)
         con_coeff_cnt <= 'd0;
@@ -846,16 +792,93 @@ always_ff @(posedge clk) begin
         con_coeff_cnt_d <= con_coeff_cnt;
 end
 
+// 输入原始系数信号 进行NTT/INTT变换
+always_comb begin
+    ori_coeff = 'd0;
+    ori_coeff_valid = 1'b0;
+    if (state <= S_PREPROC_NTT_STORE) begin         // s1 s2 t0预处理NTT阶段 从SK中unpack得到对应的系数并进行NTT变换
+        ori_coeff = ori_coeff_Modq;
+        ori_coeff_valid = ori_coeff_valid_Modq;
+    end
+    else if (state == S_Y_NTT) begin                // 读出随机向量Y进行NTT变换
+        ori_coeff = r_VectorY_Coeff;
+        ori_coeff_valid = 1'b1;
+    end
+    else if (state == S_M_INTT) begin               // 读出随机向量W进行NTT变换
+        ori_coeff = r_VectorM_Coeff_INTT;
+        ori_coeff_valid = 1'b1;
+    end
+    else if (state == S_C_NTT) begin                // 读出随机向量C进行NTT变换
+        ori_coeff = data_out;
+        ori_coeff_valid = data_valid_out;
+    end
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin   // 对矩阵乘法的结果进行INTT变换
+        ori_coeff = mult_res;
+        ori_coeff_valid = mult_res_valid;
+    end
+end
+
 //* ==========================================================
 //* 6. BRAM 回写分发 (Demux to BRAMs)
 //* ==========================================================
 
-logic [4:0] s2_idx;
-logic [4:0] t0_idx;
+logic       [4 : 0]                 s2_idx;
+logic       [4 : 0]                 t0_idx;
 assign s2_idx = poly_cnt - L[4:0];
 assign t0_idx = poly_cnt - (L[4:0] + K[4:0]);
 
+//* Y-读写
+always_ff @(posedge clk) begin
+    if (!rstn)     
+        r_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_INIT) 
+        r_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_Y_NTT) begin            // 读出随机向量Y进行NTT变换
+        if (r_VectorY_Coeff_addr == `l * 64)
+            r_VectorY_Coeff_addr <= 'd0;
+        else if (r_VectorY_Coeff_addr > 0 && r_VectorY_Coeff_addr[5 : 0] == 0)
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+        else 
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+    end
+    else if (S_Y_NTT_WAIT >= state && state >= S_Y_NTT_ACK && ready == 1'b0 && request == 1'b1)
+        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+    else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && mac_stage == 'd0) begin // 读出随机向量Y和c_s1做模加
+        if (con_coeff_valid) begin
+            if (r_VectorY_Coeff_addr == `l * 64 - 1)
+                r_VectorY_Coeff_addr <= 'd0;
+            else
+                r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr + 1'b1;
+        end
+        else 
+            r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+    end
+    else
+        r_VectorY_Coeff_addr <= r_VectorY_Coeff_addr;
+end
+
 always_comb begin
+    w_VectorY_Coeff = 'd0;
+    w_VectorY_Coeff_valid = 1'b0;
+    if (state == S_STORE_Y) begin
+        w_VectorY_Coeff = coeff_ExpandY;
+        w_VectorY_Coeff_valid = coeff_valid_ExpandY;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        w_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_INIT)
+        w_VectorY_Coeff_addr <= 'd0;
+    else if (state == S_STORE_Y && coeff_valid_ExpandY)             // 存储扩展的随机向量Y
+        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr + 1'b1;
+    else 
+        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr;
+end
+
+//* S1 S2 T0-读写
+always_comb begin                           // 存储s1 s2 t0的NTT变换结果
     w_VectorS1_Coeff       = 92'd0;
     w_VectorS1_Coeff_valid = 1'b0;
     w_VectorS1_Coeff_addr  = 9'd0;
@@ -895,9 +918,7 @@ always_comb begin
     end
 end
 
-// --------------------------------
-// 矩阵 A 回写分发 (Demux to BRAMs)
-// --------------------------------
+//* A-读写
 always_comb begin
     w_MatrixA_Coeff = 'd0;
     w_MatrixA_Coeff_valid = 1'b0;
@@ -907,7 +928,7 @@ always_comb begin
     end
 end
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 存储A矩阵
     if (!rstn)
         w_MatrixA_Coeff_addr <= 'd0;
     else if (state == S_INIT)
@@ -918,29 +939,6 @@ always_ff @(posedge clk) begin
         w_MatrixA_Coeff_addr <= w_MatrixA_Coeff_addr;
 end
 
-// --------------------------------
-// 矩阵 Y 回写分发 (Demux to BRAMs)
-// --------------------------------
-always_comb begin
-    w_VectorY_Coeff = 'd0;
-    w_VectorY_Coeff_valid = 1'b0;
-    if (state == S_STORE_Y) begin
-        w_VectorY_Coeff = coeff_ExpandY;
-        w_VectorY_Coeff_valid = coeff_valid_ExpandY;
-    end
-end
-
-always_ff @(posedge clk) begin
-    if (!rstn)
-        w_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_INIT)
-        w_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_STORE_Y && coeff_valid_ExpandY)
-        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr + 1'b1;
-    else 
-        w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr;
-end
-
 //* ==========================================================
 //* 7. SHA3 控制逻辑
 //* ==========================================================
@@ -949,12 +947,12 @@ always_comb begin
     out_len_seed = out_len_seed;
     dout_len_seed = dout_len_seed;
     mdlen_seed = mdlen_seed;
-    if (substate <= S_SUB_SQUEEZE) begin
+    if (substate <= S_SUB_SQUEEZE) begin    // 获得扩展种子
         out_len_seed = 'd64;			// 原始种子扩展 扩展后为64Byte
         dout_len_seed = 'd128;			// 原始种子长度为 128Byte 需要按字节装载进SHA3
         mdlen_seed = 'd32;				// 32-SHA256 16-SHA128 这里为SHA256
     end
-    else if (substate <= S_SUB_SQUEEZE_C_TILDE) begin
+    else if (substate <= S_SUB_SQUEEZE_C_TILDE) begin   // 获得生成挑战多项式C的Hash值
         out_len_seed = `c_tilde_bytes;
         if (K == 4)
             dout_len_seed = 'd768 + 'd64;
@@ -974,33 +972,33 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         start_seed <= 1'b0;
-    else if (substate == S_SUB_INIT || substate == S_SUB_INIT_C_TILDE)
+    else if (substate == S_SUB_INIT || substate == S_SUB_INIT_C_TILDE)  // 获得扩展种子和Hash值时生成起始信号
         start_seed <= 1'b1;
     else
         start_seed <= 1'b0;
 end
-assign init_seed = (substate == S_SUB_INIT) || (substate == S_SUB_INIT_C_TILDE);
+assign init_seed = (substate == S_SUB_INIT) || (substate == S_SUB_INIT_C_TILDE);    // SHA3 的初始化信号
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 吸入(装载) 控制逻辑
     if (!rstn) begin
         dout_seed <= 'd0;
         dout_valid_seed <= 1'b0;
         seed_domain_sep <= 'd0;
         seed_load_cnt <= 'd0;
     end
-    else if (substate == S_SUB_INIT) begin
+    else if (substate == S_SUB_INIT) begin      // 扩展种子的种子
         dout_seed <= 'd0;
         dout_valid_seed <= 1'b0;
         seed_domain_sep <= {k_seed, rnd, mu};
         seed_load_cnt <= 'd0;
     end
-    else if (substate == S_SUB_INIT_C_TILDE) begin
+    else if (substate == S_SUB_INIT_C_TILDE) begin // 挑战多项式Hash值的种子
         dout_seed <= 'd0;
         dout_valid_seed <= 1'b0;
         seed_domain_sep <= {mu, 512'd0};
         seed_load_cnt <= 'd0;
     end
-    else if (substate == S_SUB_LOAD) begin
+    else if (substate == S_SUB_LOAD) begin      // 扩展种子的装载过程
         if (done_seed)
             seed_load_cnt <= 'd0;
         else if (seed_load_cnt == dout_len_seed)
@@ -1018,7 +1016,7 @@ always_ff @(posedge clk) begin
             seed_domain_sep <= seed_domain_sep << 8;
         end
     end
-    else if (substate == S_SUB_LOAD_C_TILDE_MU) begin
+    else if (substate == S_SUB_LOAD_C_TILDE_MU) begin       // 挑战多项式Hash值的装载过程 先装载mu
         seed_load_cnt <= seed_load_cnt + 1'b1;
         dout_seed <= seed_domain_sep[1023 : 1016];
         if (seed_load_cnt == 'd64)
@@ -1027,7 +1025,7 @@ always_ff @(posedge clk) begin
             dout_valid_seed <= 1'b1;
         seed_domain_sep <= seed_domain_sep << 8;
     end
-    else if (substate == S_SUB_LOAD_C_TILDE_W1_BYTES) begin
+    else if (substate == S_SUB_LOAD_C_TILDE_W1_BYTES) begin // 提取到高位w1并pack之后 再装载w1_bytes
         dout_seed <= w_out;
         dout_valid_seed <= w_out_valid;
     end
@@ -1040,9 +1038,9 @@ end
 always_ff @(posedge clk) begin
     if (!rstn) 
         start_out_seed <= 1'b0;
-    else if (substate_d == S_SUB_LOAD && substate == S_SUB_SQUEEZE)
+    else if (substate_d == S_SUB_LOAD && substate == S_SUB_SQUEEZE)     // 获得扩展种子的开始挤出信号
         start_out_seed <= 1'b1;
-    else if (substate_d == S_SUB_LOAD_C_TILDE_W1_BYTES && substate == S_SUB_SQUEEZE_C_TILDE)
+    else if (substate_d == S_SUB_LOAD_C_TILDE_W1_BYTES && substate == S_SUB_SQUEEZE_C_TILDE)    // 获得生成挑战多项式C的Hash值开始挤出信号
         start_out_seed <= 1'b1;
     else 
         start_out_seed <= 1'b0;
@@ -1057,7 +1055,7 @@ always_ff @(posedge clk) begin			// 拼接扩展后的种子 一共128Byte，每
         seed_expand <= 'd0;
         seed_expand_cnt <= 'd0;
     end
-    else if (substate == S_SUB_SQUEEZE) begin		
+    else if (substate == S_SUB_SQUEEZE) begin		    // 拼接获得扩展种子
         if (st_64bit_valid_seed) begin
             seed_expand <= (seed_expand << 64) | st_64bit_seed;
             seed_expand_cnt <= seed_expand_cnt + 'd8;
@@ -1258,11 +1256,11 @@ assign conv[0] = con_coeff_d[23 * 0 +: 23];
 assign conv[1] = con_coeff_d[23 * 1 +: 23];
 assign conv[2] = con_coeff_d[23 * 2 +: 23];
 assign conv[3] = con_coeff_d[23 * 3 +: 23];
-logic   [22 : 0]    temp0, temp1, temp2, temp3;
-assign temp0 = r_VectorM_Coeff_INTT[23 * 0 +: 23];
-assign temp1 = r_VectorM_Coeff_INTT[23 * 1 +: 23];
-assign temp2 = r_VectorM_Coeff_INTT[23 * 2 +: 23];
-assign temp3 = r_VectorM_Coeff_INTT[23 * 3 +: 23];
+// logic   [22 : 0]    temp0, temp1, temp2, temp3;
+// assign temp0 = r_VectorM_Coeff_INTT[23 * 0 +: 23];
+// assign temp1 = r_VectorM_Coeff_INTT[23 * 1 +: 23];
+// assign temp2 = r_VectorM_Coeff_INTT[23 * 2 +: 23];
+// assign temp3 = r_VectorM_Coeff_INTT[23 * 3 +: 23];
 
 always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -1284,7 +1282,7 @@ always_comb begin
         mac_data_in1[i] = 'd0;
         mac_data_in3[i] = 'd0;
     end
-    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin
+    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin        // 计算c*s1 c*s2 c*t0
         case (mac_stage)
             'd0 : begin 
                 mac_data_in1[0] = r_c_hat;
@@ -1311,7 +1309,7 @@ always_comb begin
         mult_res_valid = mac_valid_out;
         mac_valid_in = mac_valid;
     end
-    else begin
+    else begin          // 计算w=A*y_hat
         for (int i = 0 ; i < K ; i = i + 1) begin
             // 输出给 MAC 的操作数
             mac_data_in1[i] = r_MatrixA_Coeff[i];
@@ -1326,25 +1324,18 @@ always_comb begin
     end
 end
 
-always_ff @(posedge clk) begin
-    if (!rstn)
-        mult_res_valid_d <= 1'b0;
-    else 
-        mult_res_valid_d <= mult_res_valid;
-end
-
 always_comb begin
 	for (int i = 0 ; i < K ; i = i + 1) begin
 		w_VectorM_Coeff_valid[i] = 1'b0;
 		w_VectorM_Coeff[i] = 'd0;
 	end
-	if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT) begin
+	if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT) begin      // 写入A_hat*y_hat的结果(矩阵乘法相同的次数前面的系数需要累加)
 		for (int i = 0 ; i < K ; i = i + 1) begin
 			w_VectorM_Coeff_valid[i] = valid_out[i];
 			w_VectorM_Coeff[i] = mac_out_comb[i];
  		end
 	end
-    else if (state <= S_DUMMY0) begin
+    else if (state <= S_DUMMY0) begin                                   // 存储INTT变换结果
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (i == con_coeff_cnt[8 : 6])
                 w_VectorM_Coeff_valid[i] = m_valid;
@@ -1354,7 +1345,7 @@ always_comb begin
             w_VectorM_Coeff[i] = m;
         end
     end
-    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin
+    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin   // w-c_s2覆盖w
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (i == save_w_select)
                 w_VectorM_Coeff_valid[i] = w_minus_c_s2_valid;
@@ -1365,7 +1356,7 @@ always_comb begin
     end
 end
 
-always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay
+always_ff @(posedge clk) begin : w_VectorW_Coeff_valid_delay                // 有效信号打拍用于寻找下降沿从而确定A_hat*y_hat结束
     if (!rstn) begin
 		for (int i = 0 ; i < K ; i = i + 1)
         	w_VectorM_Coeff_valid_d[i] <= 1'b0;
@@ -1380,7 +1371,7 @@ always_ff @(posedge clk) begin
     if (!rstn)
         r_VectorM_Coeff_addr_global <= 'd0;
     else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && (mac_stage == 'd1 || mac_stage == 'd2)) begin
-        if (con_coeff_valid) begin
+        if (con_coeff_valid) begin      // c*s1 c*t0 阶段 分别需要读取原始w和w-c_s2
             if (r_VectorM_Coeff_addr_global == `k * 64 - 1)
                 r_VectorM_Coeff_addr_global <= 'd0;
             else
@@ -1393,7 +1384,7 @@ always_ff @(posedge clk) begin
         r_VectorM_Coeff_addr_global <= r_VectorM_Coeff_addr_global;
 end
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 打拍延迟和读取同步 高3位确定行索引
     if (!rstn)
         r_VectorM_Coeff_addr_global_d <= 'd0;
     else 
@@ -1405,16 +1396,16 @@ always_comb begin : matrix_A_vector_T_read_control
         r_MatrixA_Coeff_addr[i] = 'd0;
         r_VectorM_Coeff_addr[i] = 'd0;
     end
-    if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT && con_coeff_valid) begin		// 取出 A 和上一阶段计算好的T 利用NTT(S1) 计算T_prime+A*S1的MAC结果
+    if (S_Y_NTT_ACK <= state && state <= S_MATRIX_MULT_WAIT && con_coeff_valid) begin	// 取出 A 和上一阶段计算好的w 利用NTT(y) 计算w+A*y的MAC结果
         for (int i = 0 ; i < K ; i = i + 1) begin	
             r_MatrixA_Coeff_addr[i] = con_coeff_cnt;
             r_VectorM_Coeff_addr[i] = con_coeff_cnt[5 : 0];
         end
     end
-    if (state > S_MATRIX_MULT_WAIT && state <= S_M_INTT_WAIT)
+    if (state > S_MATRIX_MULT_WAIT && state <= S_M_INTT_WAIT)       // 读出原始w计算INTT
         for (int i = 0 ; i < K ; i = i + 1) 
             r_VectorM_Coeff_addr[i] =  r_VectorM_Coeff_addr_INTT[5 : 0];
-    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT)
+    if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT)          // 读出原始w和w-c_s2
         for (int i = 0 ; i < K ; i = i + 1) 
             r_VectorM_Coeff_addr[i] = r_VectorM_Coeff_addr_global[5 : 0];
 end
@@ -1430,7 +1421,7 @@ always_ff @(posedge clk) begin : vector_m_write_control
             w_VectorM_Coeff_addr[i] <= 'd0;
         save_w_select <= 'd0;
     end
-    else if ((w_VectorM_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT) ) begin		// 矩阵乘法阶段 根据MAC的输出有效信号更新存储T的地址	
+    else if ((w_VectorM_Coeff_valid[0] && state <= S_MATRIX_MULT_WAIT) ) begin		// 矩阵乘法阶段 根据MAC的输出有效信号更新存储w的地址	
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (w_VectorM_Coeff_addr[i] == 'd63)
                 w_VectorM_Coeff_addr[i] <= 'd0;
@@ -1438,15 +1429,15 @@ always_ff @(posedge clk) begin : vector_m_write_control
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
         end
     end
-    else if (state <= S_DUMMY0) begin
+    else if (state <= S_DUMMY0) begin           // 存储INTT(w)
         for (int i = 0 ; i < K ; i = i + 1) begin
             if (m_valid)
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i] + 1'b1;
             else 
                 w_VectorM_Coeff_addr[i] <= w_VectorM_Coeff_addr[i];
         end
-    end//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin
+    end
+    else if (state >= S_MULT_INTT_ACK && state <= S_MULT_INTT_WAIT) begin   // 存储w-c_s2
         if (w_minus_c_s2_valid) begin
             for (int i = 0 ; i < K ; i = i + 1) begin
                 if (w_VectorM_Coeff_addr[i] == 'd63) begin
@@ -1470,7 +1461,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn) 
         r_VectorM_Coeff_addr_INTT <= 'd0;
-    else if (state == S_M_INTT) begin		// 从存储矩阵中读取 M 并装载到 SHA3 中 进行 INTT 变换
+    else if (state == S_M_INTT) begin		// 从存储矩阵中读取 w 并装载到 SHA3 中 进行 INTT 变换
         if (r_VectorM_Coeff_addr_INTT == `k * 64) 
             r_VectorM_Coeff_addr_INTT <= 'd0;
         else if (r_VectorM_Coeff_addr_INTT > 0 && r_VectorM_Coeff_addr_INTT[5 : 0] == 0) 
@@ -1484,7 +1475,7 @@ always_ff @(posedge clk) begin
         r_VectorM_Coeff_addr_INTT <= r_VectorM_Coeff_addr_INTT;
 end
 
-always_ff @(posedge clk) begin				// 向量 M 存储时时按行存储的 低5位表示列 高3位表示行
+always_ff @(posedge clk) begin				// 向量 w 存储时时按行存储的 低5位表示列 高3位表示行
     if (!rstn)
         r_VectorM_Coeff_addr_INTT_d <= 'd0;
     else 
@@ -1526,7 +1517,7 @@ always_ff @(posedge clk) begin
         r_VectorS2_Coeff_addr_global <= 'd0;
         r_VectorT_Coeff_addr_global <= 'd0;
     end
-    else if (state == S_MULT_INTT) begin
+    else if (state == S_MULT_INTT) begin            // 读取s1_hat s2_hat t0_hat与w进行MAC运算后装载到Poly_PAU中进行INTT变换
         if (r_VectorS1_Coeff_addr == `l * 64 - 1)
             r_VectorS1_Coeff_addr <= 'd0;
         else
@@ -1582,7 +1573,7 @@ end
 //* ==========================================================
 generate
     for (genvar i = 0 ; i < 4 ; i = i + 1) begin
-        assign r[i] = {2'b0, m[23 * i +: 23]};
+        assign r[i] = {2'b0, m[23 * i +: 23]};      // w=INTT(A_hat*y_hat) 这里对w decompose获得高位w1
         assign r_valid[i] = m_valid;
         if (`gamma_2 == 95232) begin
             Decomposes u_Decomposes(
@@ -1611,8 +1602,8 @@ generate
     end
 endgenerate
 
-Serializer u_Serializer(
-	.clk         	( clk          ),
+Serializer u_Serializer(                        // 一个时钟周期同时读出高、低地址2个C系数 安全等级2下单个系数w的位宽是6 安全等级3、5下单个系数 单个系数位宽是4
+	.clk         	( clk          ),    // 该模块自适应不同安全登记下的位宽 组合成8bit输出 给到SHA3 用于生成c_tilde
 	.rstn        	( rstn         ),
 	.w_in_0      	( r1[0]        ),
 	.w_in_1      	( r1[1]        ),
@@ -1647,7 +1638,7 @@ end
 //* ==========================================================
 assign tau_ExpandC = `tau;
 assign seed_ExpandC = {<<8{c_tilde}};
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 开始扩展C的起始信号
     if (!rstn)
         start_expand_ExpandC <= 1'b0;
     else if (state == S_EXPAND_C)   
@@ -1656,7 +1647,7 @@ always_ff @(posedge clk) begin
         start_expand_ExpandC <= 1'b0;
 end
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 读写使能控制
     if (!rstn) begin
         low_rd_en_ExpandC <= 1'b0;
         high_rd_en_ExpandC <= 1'b0;
@@ -1675,7 +1666,7 @@ always_ff @(posedge clk) begin
     end
 end
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 读写地址控制
     if (!rstn) begin
         coeff_low_add_ExpandC <= 'd0;
         coeff_high_add_ExpandC <= 'd1;
@@ -1704,7 +1695,7 @@ always_ff @(posedge clk) begin
     end
 end
 
-always_ff @(posedge clk) begin
+always_ff @(posedge clk) begin          // 读出C计数 共读完256个系数就进入下一个状态 等待Poly_PAU模块输出INTT结果
     if (!rstn)
         data_cnt <= 'd0;
     else if (state == S_SIGN_LOOP_INIT)
@@ -1780,9 +1771,10 @@ ExpandC u_ExpandC(
 //* 15. Rejection
 //* ==========================================================
 
-postMultCalc u_postMultCalc(
+postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_hint和拒绝采样门限判定
     .clk                ( clk                                                   ),
     .rstn               ( rstn                                                  ),
+    .init               ( state == S_SIGN_LOOP_INIT                             ),
     .y                  ( r_VectorY_Coeff                                       ),
     .w                  ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]]   ),
     .c_coeff            ( con_coeff_d                                           ),
