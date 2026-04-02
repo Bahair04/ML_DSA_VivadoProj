@@ -23,8 +23,8 @@ logic           [7 : 0]     sk_keygen ;
 logic                       start_sign = 1'b0;       
 logic                       sign_ready;      
 logic                       done_sign;
-logic           [511 : 0]   mu;
-logic           [255 : 0]   rnd;
+logic           [511 : 0]   mu = 'd0;
+logic           [255 : 0]   rnd = 'd0;
 
 initial
 begin

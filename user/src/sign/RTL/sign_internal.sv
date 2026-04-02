@@ -179,7 +179,8 @@ typedef enum logic [5 : 0] {
     
     S_MULT_INTT_ACK,            // INTT(c*s1) INTT(c*s2) INTT(c*t0) 并进行不同的post mult的处理 判断门限 进行拒绝采样 完成makehint操作
     S_MULT_INTT,                // 装载原始系数
-    S_MULT_INTT_WAIT            // 输出乘法结果 传递到postMultCalc单元 进行后续处理
+    S_MULT_INTT_WAIT,           // 输出乘法结果 传递到postMultCalc单元 进行后续处理
+    S_WAIT
 
 } state_t;
 
@@ -543,38 +544,52 @@ always_ff @(posedge clk) begin
                     state <= S_MULT_INTT;
             end
             S_MULT_INTT_WAIT : begin
-                case (mac_stage)
-                    'd0 : begin
-                        if (con_coeff_cnt == `l * 64 - 1) begin
-                            mac_stage <= 'd1;
-                            state <= S_MULT_INTT_ACK;
+                if (reject_flag) begin
+                    mac_stage <= 'd0;
+                    state <= S_SIGN_LOOP_INIT;
+                end
+                else begin
+                    case (mac_stage)
+                        'd0 : begin
+                            if (con_coeff_cnt == `l * 64 - 1) begin
+                                mac_stage <= 'd1;
+                                state <= S_MULT_INTT_ACK;
+                            end
+                            else if (con_coeff_cnt[5 : 0] == 'd63)
+                                state <= S_MULT_INTT_ACK;
+                            else 
+                                state <= S_MULT_INTT_WAIT;
                         end
-                        else if (con_coeff_cnt[5 : 0] == 'd63)
-                            state <= S_MULT_INTT_ACK;
-                        else 
-                            state <= S_MULT_INTT_WAIT;
-                    end
-                    'd1 : begin 
-                        if (con_coeff_cnt == `k * 64 - 1) begin
-                            mac_stage <= 'd2;
-                            state <= S_MULT_INTT_ACK;
+                        'd1 : begin 
+                            if (con_coeff_cnt == `k * 64 - 1) begin
+                                mac_stage <= 'd2;
+                                state <= S_MULT_INTT_ACK;
+                            end
+                            else if (con_coeff_cnt[5 : 0] == 'd63)
+                                state <= S_MULT_INTT_ACK;
+                            else 
+                                state <= S_MULT_INTT_WAIT;
                         end
-                        else if (con_coeff_cnt[5 : 0] == 'd63)
-                            state <= S_MULT_INTT_ACK;
-                        else 
-                            state <= S_MULT_INTT_WAIT;
-                    end
-                    'd2 : begin 
-                        if (con_coeff_cnt == `k * 64 - 1) begin
-                            mac_stage <= 'd0;
-                            state <= S_SIGN_LOOP_INIT;
+                        'd2 : begin 
+                            if (con_coeff_cnt == `k * 64 - 1) begin
+                                mac_stage <= 'd0;
+                                state <= S_WAIT;
+                            end
+                            else if (con_coeff_cnt[5 : 0] == 'd63)  
+                                state <= S_MULT_INTT_ACK;
+                            else 
+                                state <= S_MULT_INTT_WAIT;
                         end
-                        else if (con_coeff_cnt[5 : 0] == 'd63)  
-                            state <= S_MULT_INTT_ACK;
-                        else 
-                            state <= S_MULT_INTT_WAIT;
-                    end
-                endcase
+                    endcase
+                end
+            end
+            S_WAIT : begin
+                if (reject_flag)
+                    state <= S_SIGN_LOOP_INIT;
+                else if (make_hint_done) 
+                    state <= S_IDLE;
+                else
+                    state <= S_WAIT;
             end
             default : begin
                 state <= S_IDLE;
@@ -588,6 +603,15 @@ always_ff @(posedge clk) begin
         state_d <= S_IDLE;
     else 
         state_d <= state;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        done <= 1'b0;
+    else if (state == S_WAIT && make_hint_done && !reject_flag)
+        done <= 1'b1;
+    else 
+        done <= 1'b0;
 end
 
 always_ff @(posedge clk) begin
@@ -834,7 +858,7 @@ assign t0_idx = poly_cnt - (L[4:0] + K[4:0]);
 always_ff @(posedge clk) begin
     if (!rstn)     
         r_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_INIT) 
+    else if (state == S_INIT || state == S_SIGN_LOOP_INIT) 
         r_VectorY_Coeff_addr <= 'd0;
     else if (state == S_Y_NTT) begin            // 读出随机向量Y进行NTT变换
         if (r_VectorY_Coeff_addr == `l * 64)
@@ -1294,6 +1318,8 @@ always_comb begin
     for (int i = 0 ; i < K ; i = i + 1) begin
         mac_data_in1[i] = 'd0;
         mac_data_in3[i] = 'd0;
+        valid_out[i] = 1'b0;
+        mac_out_comb[i] = 'd0;
     end
     if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT) begin        // 计算c*s1 c*s2 c*t0
         case (mac_stage)
@@ -1382,6 +1408,8 @@ end
 
 always_ff @(posedge clk) begin
     if (!rstn)
+        r_VectorM_Coeff_addr_global <= 'd0;
+    else if (state == S_IDLE || state == S_SIGN_LOOP_INIT)
         r_VectorM_Coeff_addr_global <= 'd0;
     else if (state >= S_MULT_INTT && state <= S_MULT_INTT_WAIT && (mac_stage == 'd1 || mac_stage == 'd2)) begin
         if (con_coeff_valid) begin      // c*s1 c*t0 阶段 分别需要读取原始w和w-c_s2
@@ -1803,7 +1831,8 @@ postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_
     .encoder_valid      ( encoder_valid                                         ),
     .hint               ( hint                                                  ),
     .hint_valid         ( hint_valid                                            ),
-    .reject_flag        ( reject_flag                                           )
+    .reject_flag        ( reject_flag                                           ),
+    .make_hint_done     ( make_hint_done                                        )
 );
 
 

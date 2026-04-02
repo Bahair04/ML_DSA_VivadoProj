@@ -26,7 +26,8 @@ module postMultCalc
     output      logic                       encoder_valid,
     output      logic   [3 : 0]             hint,
     output      logic                       hint_valid,
-    output      logic                       reject_flag
+    output      logic                       reject_flag,
+    output      logic                       make_hint_done
 );
 
 localparam                              z_check_bound = `gamma_1 - `beta;
@@ -43,6 +44,7 @@ logic           [91 : 0]                z;
 logic                                   z_valid;
 logic           [18 : 0]                r0 [0 : 3];
 logic                                   r0_valid [0 : 3];
+logic           [7 : 0]                 hint_valid_cnt;
 
 // ==========================================
 // 1. 利用 mac_stage 在内部进行数据路由
@@ -251,6 +253,30 @@ always_ff @(posedge clk) begin
         hint_cnt <= 'd0;
     else if (hint_valid) 
         hint_cnt <= hint_cnt + hint[0] + hint[1] + hint[2] + hint[3];
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) 
+        hint_valid_cnt <= 'd0;
+    else if (init)
+        hint_valid_cnt <= 'd0;
+    else if (hint_valid) begin
+        if (hint_valid_cnt == 'd255)
+            hint_valid_cnt <= 'd0;
+        else
+            hint_valid_cnt <= hint_valid_cnt + 'd1;
+    end
+    else 
+        hint_valid_cnt <= hint_valid_cnt;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        make_hint_done <= 1'b0;
+    else if (hint_valid && hint_valid_cnt == 'd255)
+        make_hint_done <= 1'b1;
+    else 
+        make_hint_done <= 1'b0;
 end
 
 endmodule
