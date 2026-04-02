@@ -39,7 +39,7 @@ end
 integer fid1, fid2, fid3;
 initial begin
     repeat (60) @(posedge clk);
-    zeta_keygen <= 256'hf73d7deefbc7fc5ad22c863f0955ba28226de5da021e8b0d46a215b0c8181b02;
+    zeta_keygen <= 256'hbc94eae8fe71d03fd0c256c2b461610d69c7993bfd31d98931fe4c7d4d305c95;
     start_keygen <= 1'b1;
     @(posedge clk);
     start_keygen <= 1'b0;
@@ -52,10 +52,10 @@ initial begin
     $fclose(fid3);
     start_sign <= 1'b1;
     @(posedge clk);
-    mu <= 'h55130f6eb76812792e2a8a0e10db54b86e1162a000767fed85af9e898caf26a1e82359b7ca5158e4bc41f56b0a5ef19b6411b04ac989d69d3672229bb3f47354;
-    rnd <= 'h306bf2a7da26dc3e6627a81cce43429dd9335261431f7dc992ffc41f6cdee4d9;
+    mu <= 'h4fef3295fedf52a4733768eced9d385b26335368d32cb3b81c2a9e0a62b41ba3b716413640b09c64d06642e54ff142336d2f835a4c9678643c17743b51df144e;
+    rnd <= 'h33f56a2574cd3acf4fe30f4845f864d58c5b7148f062da65774a6d3719675608;
     start_sign <= 1'b0;
-    while (u_ML_DSA_top.u_sign_internal.state != 13) begin
+    while (u_ML_DSA_top.u_sign_internal.make_hint_done != 1) begin
         @(posedge clk);
     end
     repeat (1000) @(posedge clk);

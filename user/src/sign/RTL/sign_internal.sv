@@ -20,6 +20,7 @@ module sign_internal
 
     input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
     input       logic           [255 : 0]   rnd,            // 32字节 随机数
+    output      logic                       reject_init,    // 拒绝采样初始化标志位
 
     // --- BRAM 总线信号 ---
     output      logic           [91 : 0]    w_MatrixA_Coeff,
@@ -598,6 +599,8 @@ always_ff @(posedge clk) begin
     end
 end
 
+assign reject_init = state == S_SIGN_LOOP_INIT;
+
 always_ff @(posedge clk) begin
     if (!rstn) 
         state_d <= S_IDLE;
@@ -788,6 +791,8 @@ always_ff @(posedge clk) begin
     else if (state == S_PREPROC_NTT_ACK || state == S_SIGN_LOOP_INIT || state == S_MATRIX_MULT_WAIT || 
              state == S_DUMMY0)
         con_coeff_cnt <= 'd0;  // 每次握手前清零
+    else if (state == S_SIGN_LOOP_INIT)
+        con_coeff_cnt <= 'd0;
     else if (con_coeff_valid) begin
         if (state <= S_Y_NTT_WAIT && con_coeff_cnt == `l * 64 - 1)
             con_coeff_cnt <= 'd0;

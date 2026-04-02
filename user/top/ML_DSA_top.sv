@@ -49,6 +49,9 @@ end
 // ==========================================================
 // 内部线网声明：KeyGen 专属线网
 // ==========================================================
+// --- init flag ---
+logic                       reject_init;
+
 // --- BRAM ---
 logic           [91 : 0]    w_MatrixA_Coeff_keygen;
 logic                       w_MatrixA_Coeff_valid_keygen;
@@ -450,6 +453,7 @@ u_sign_internal(
     .done                       ( done_sign               ),
     .mu                         ( mu                      ),
     .rnd                        ( rnd                     ),
+    .reject_init                ( reject_init             ),
 
     .w_MatrixA_Coeff            ( w_MatrixA_Coeff_sign         ),
     .w_MatrixA_Coeff_valid      ( w_MatrixA_Coeff_valid_sign   ),
@@ -640,13 +644,21 @@ u_GlobalBRAMArbitration(
     .r_EncodeSK_Coeff_addr_sign     (r_EncodeSK_Coeff_addr_sign     )
 );
 
+logic                       init_rstn;
+
+always_comb begin
+    case (mode_config)
+        'd0: init_rstn = 1'b1;
+        'd1: init_rstn = ~reject_init;
+    endcase
+end
 
 GlobalComputeArbitration #(
     .K  ( K  ),
     .L  ( L  )
 ) u_GlobalComputeArbitration (
     .clk                            ( clk                            ),
-    .rstn                           ( rstn                           ),
+    .rstn                           ( rstn & init_rstn               ),
     .mode_config                    ( mode_config                    ), 
     
     // --- KeyGen Compute Ports ---
