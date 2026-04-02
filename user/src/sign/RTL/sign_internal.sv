@@ -364,6 +364,7 @@ logic        	                    reject_flag;
 logic           [2 : 0]             save_w_select;
 logic           [3 : 0]             hint;
 logic                               hint_valid;
+logic                               make_hint_done;
 
 //* ==========================================================
 //* 3. 状态机
@@ -566,7 +567,7 @@ always_ff @(posedge clk) begin
                     'd2 : begin 
                         if (con_coeff_cnt == `k * 64 - 1) begin
                             mac_stage <= 'd0;
-                            state <= S_IDLE;
+                            state <= S_SIGN_LOOP_INIT;
                         end
                         else if (con_coeff_cnt[5 : 0] == 'd63)  
                             state <= S_MULT_INTT_ACK;
@@ -623,7 +624,9 @@ always_ff @(posedge clk) begin
                     substate <= S_SUB_SQUEEZE;
             end
             S_SUB_WAIT : begin
-                if (state == S_EXPAND_Y)
+                if (state == S_INIT)
+                    substate <= S_SUB_IDLE;
+                else if (state == S_EXPAND_Y)
                     substate <= S_SUB_INIT_C_TILDE;
                 else 
                     substate <= S_SUB_WAIT;
@@ -645,7 +648,7 @@ always_ff @(posedge clk) begin
             end
             S_SUB_SQUEEZE_C_TILDE : begin
                 if (done_out_seed)
-                    substate <= S_SUB_IDLE;
+                    substate <= S_SUB_WAIT;
                 else 
                     substate <= S_SUB_SQUEEZE_C_TILDE;
             end
@@ -869,7 +872,7 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         w_VectorY_Coeff_addr <= 'd0;
-    else if (state == S_INIT)
+    else if (state == S_INIT || state == S_SIGN_LOOP_INIT)
         w_VectorY_Coeff_addr <= 'd0;
     else if (state == S_STORE_Y && coeff_valid_ExpandY)             // 存储扩展的随机向量Y
         w_VectorY_Coeff_addr <= w_VectorY_Coeff_addr + 1'b1;
@@ -1161,6 +1164,10 @@ always_ff @(posedge clk) begin
         fetch_cnt <= 'd0;
         fetch_valid <= 1'b0;
     end 
+    else if (state == S_INIT) begin
+        fetch_cnt <= 'd0;
+        fetch_valid <= 1'b0;
+    end
     else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1) begin
         fetch_cnt <= 'd0;
         fetch_valid <= 1'b0;
@@ -1182,6 +1189,12 @@ always_ff @(posedge clk) begin
         save_cnt <= 'd0;
         tr_seed <= 'd0;
     end 
+    else if (state == S_INIT) begin
+        rho <= 'd0;
+        k_seed <= 'd0;
+        save_cnt <= 'd0;
+        tr_seed <= 'd0;
+    end
     else if (state == S_PREPROC_NTT_STORE && poly_cnt == TOTAL_POLYS - 1) begin
         save_cnt <= 'd0;
     end 
@@ -1309,7 +1322,7 @@ always_comb begin
         mult_res_valid = mac_valid_out;
         mac_valid_in = mac_valid;
     end
-    else begin          // 计算w=A*y_hat
+    else if (state >= S_Y_NTT_ACK && state <= S_MATRIX_MULT_WAIT) begin          // 计算w=A*y_hat
         for (int i = 0 ; i < K ; i = i + 1) begin
             // 输出给 MAC 的操作数
             mac_data_in1[i] = r_MatrixA_Coeff[i];
@@ -1416,7 +1429,7 @@ always_ff @(posedge clk) begin : vector_m_write_control
             w_VectorM_Coeff_addr[i] <= 'd0;
         save_w_select <= 'd0;
     end
-    else if (state == S_IDLE) begin   
+    else if (state == S_IDLE || state == S_SIGN_LOOP_INIT) begin   
         for (int i = 0 ; i < K ; i = i + 1)
             w_VectorM_Coeff_addr[i] <= 'd0;
         save_w_select <= 'd0;
@@ -1460,6 +1473,8 @@ end
 
 always_ff @(posedge clk) begin
     if (!rstn) 
+        r_VectorM_Coeff_addr_INTT <= 'd0;
+    else if (state == S_SIGN_LOOP_INIT) 
         r_VectorM_Coeff_addr_INTT <= 'd0;
     else if (state == S_M_INTT) begin		// 从存储矩阵中读取 w 并装载到 SHA3 中 进行 INTT 变换
         if (r_VectorM_Coeff_addr_INTT == `k * 64) 

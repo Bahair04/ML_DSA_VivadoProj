@@ -41,6 +41,7 @@ module ExpandC(
 typedef enum logic [2 : 0] {  
     S_IDLE,                             // 空闲状态 等待开始扩展的信号
     S_INIT,                             // 初始化过程 维持 1 个时钟周期 之后切换到下一个状态
+    S_CLEAR_RAM,                        // 清空RAM
     S_NEW_SEED,                         // 装载随机种子
     S_LOAD,                             // 以字节为单位向shake256传输数据
     S_START_SQUEEZE,                    // 输出挤出数据的起始信号
@@ -84,6 +85,8 @@ logic                       ram_run_en_d;
 logic       [7 : 0]         ram_run_data_i, ram_run_data_i_d;
 logic       [7 : 0]         ram_run_data_j, ram_run_data_j_d;
 
+logic       [7 : 0]         clear_cnt;
+
 // ==========================================================
 // 具体控制逻辑实现
 // ==========================================================
@@ -98,6 +101,15 @@ always_ff @(posedge clk or negedge rstn) begin
         init <= 1'b1;
     else 
         init <= 1'b0;
+end
+
+always_ff @(posedge clk or negedge rstn) begin
+    if (!rstn)
+        clear_cnt <= 'd0;
+    else if (state == S_INIT)
+        clear_cnt <= 'd0;
+    else if (state == S_CLEAR_RAM)
+        clear_cnt <= clear_cnt + 1'b1;
 end
 
 // --------------------------------
@@ -235,7 +247,13 @@ always_comb begin
     addrb = 'd0;
     dina = 'd0;
     dinb = 'd0;
-    if (state == S_SQUEEZE) begin
+    if (state == S_CLEAR_RAM) begin
+        ena = 1'b1;
+        wea = 1'b1;
+        addra = clear_cnt;
+        dina = 2'b00;  // 写入 0
+    end
+    else if (state == S_SQUEEZE) begin
         ena = 1'b0;
         enb = 1'b0;
         if (ram_run_en) begin           // First : 读取第 j 个位置的数值; ram_run_en及其延时不会同时有效
@@ -337,9 +355,15 @@ always_ff @(posedge clk or negedge rstn) begin
             end
             S_INIT : begin
                 if (init) 
-                    state <= S_NEW_SEED;
+                    state <= S_CLEAR_RAM;
                 else 
                     state <= S_INIT; 
+            end
+            S_CLEAR_RAM : begin
+                if (clear_cnt == 8'd255)
+                    state <= S_NEW_SEED;  // <--- 256个地址写完，继续原有流程
+                else
+                    state <= S_CLEAR_RAM;
             end
             S_NEW_SEED : begin
                 state <= S_LOAD;
