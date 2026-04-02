@@ -362,6 +362,8 @@ logic           [63 : 0] 	        encode;
 logic        	                    encoder_valid;
 logic        	                    reject_flag;
 logic           [2 : 0]             save_w_select;
+logic           [3 : 0]             hint;
+logic                               hint_valid;
 
 //* ==========================================================
 //* 3. 状态机
@@ -1792,6 +1794,8 @@ postMultCalc u_postMultCalc(
     .w_minus_c_s2_valid ( w_minus_c_s2_valid                                    ),
     .encode             ( encode                                                ),
     .encoder_valid      ( encoder_valid                                         ),
+    .hint               ( hint                                                  ),
+    .hint_valid         ( hint_valid                                            ),
     .reject_flag        ( reject_flag                                           )
 );
 
