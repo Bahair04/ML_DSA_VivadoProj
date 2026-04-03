@@ -228,6 +228,10 @@ logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1];
 logic           [63 : 0]    r_EncodeSK_Coeff_sign;           
 logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign;
 
+logic           [63 : 0]    w_EncodeSig_Coeff_sign;       
+logic                       w_EncodeSig_Coeff_valid_sign;
+logic           [8 : 0]     w_EncodeSig_Coeff_addr_sign;
+
 // --- Compute ---
 logic           [255 : 0]   rho_ExpandA_sign;            
 logic                       start_expand_ExpandA_sign;   
@@ -493,7 +497,11 @@ u_sign_internal(
 
     .r_EncodeSK_Coeff           ( r_EncodeSK_Coeff_sign        ),
     .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr_sign   ),
-    
+
+    .w_EncodeSig_Coeff          ( w_EncodeSig_Coeff_sign       ),
+    .w_EncodeSig_Coeff_valid    ( w_EncodeSig_Coeff_valid_sign ),
+    .w_EncodeSig_Coeff_addr     ( w_EncodeSig_Coeff_addr_sign  ),
+
     .rho_ExpandA                ( rho_ExpandA_sign             ),
     .start_expand_ExpandA       ( start_expand_ExpandA_sign    ),
     .coeff_ExpandA              ( coeff_ExpandA_sign           ),
@@ -641,7 +649,11 @@ u_GlobalBRAMArbitration(
     .r_VectorM_Coeff_addr_sign      (r_VectorM_Coeff_addr_sign      ),
 
     .r_EncodeSK_Coeff_sign          (r_EncodeSK_Coeff_sign          ),           
-    .r_EncodeSK_Coeff_addr_sign     (r_EncodeSK_Coeff_addr_sign     )
+    .r_EncodeSK_Coeff_addr_sign     (r_EncodeSK_Coeff_addr_sign     ),
+
+    .w_EncodeSig_Coeff_sign          (w_EncodeSig_Coeff_sign          ),
+    .w_EncodeSig_Coeff_valid_sign    (w_EncodeSig_Coeff_valid_sign    ),
+    .w_EncodeSig_Coeff_addr_sign     (w_EncodeSig_Coeff_addr_sign     )
 );
 
 logic                       init_rstn;

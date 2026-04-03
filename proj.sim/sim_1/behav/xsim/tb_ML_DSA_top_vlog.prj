@@ -22,6 +22,7 @@ sv xil_defaultlib  \
 "../../../../user/src/Auxilary/RTL/Decomposes2.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/EncodePK.sv" \
 "../../../../user/src/CoeffBlockRAM/RTL/EncodeSK.sv" \
+"../../../../user/src/CoeffBlockRAM/RTL/EncodeSig.sv" \
 "../../../../user/src/En_Decoder/Encoder.sv" \
 "../../../../user/src/En_Decoder/Encoder_single_channel.sv" \
 "../../../../user/src/Sampler/RTL/ExpandA.sv" \

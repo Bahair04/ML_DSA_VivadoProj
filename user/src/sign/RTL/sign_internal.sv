@@ -62,6 +62,10 @@ module sign_internal
     input       logic           [63 : 0]    r_EncodeSK_Coeff,           
     output      logic           [9 : 0]     r_EncodeSK_Coeff_addr,
 
+    output      logic           [63 : 0]    w_EncodeSig_Coeff,       
+    output      logic                       w_EncodeSig_Coeff_valid,
+    output      logic           [8 : 0]     w_EncodeSig_Coeff_addr,
+
     // --- ExpandA 信号 ---
     output      logic           [255 : 0]   rho_ExpandA,            // 256位随机种子
     output      logic                       start_expand_ExpandA,   // 开始扩展A矩阵信号
@@ -1846,13 +1850,65 @@ postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_
     .w_minus_c_s2_valid ( w_minus_c_s2_valid                                    ),
     .encode             ( encode                                                ),
     .encoder_valid      ( encoder_valid                                         ),
-    .pack_out           ( pack_out                                             ),
-    .pack_len_bits      ( pack_len_bits                                        ),
-    .pack_valid         ( pack_valid                                           ),
-    .pack_done          ( pack_done                                            ),
+    .pack_out           ( pack_out                                              ),
+    .pack_len_bits      ( pack_len_bits                                         ),
+    .pack_valid         ( pack_valid                                            ),
+    .pack_done          ( pack_done                                             ),
     .reject_flag        ( reject_flag                                           ),
     .make_hint_done     ( make_hint_done                                        )
 );
 
+logic           [2 : 0]             c_tilde_write_cnt;
+logic           [255 : 0]           c_tilde_temp;
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        c_tilde_write_cnt <= 'd0;
+    else if (state == S_SIGN_LOOP_INIT)
+        c_tilde_write_cnt <= 'd0;
+    else if (start_expand_ExpandC)
+        c_tilde_write_cnt <= c_tilde_write_cnt + 'd1;
+    else if (c_tilde_write_cnt > 'd0 && c_tilde_write_cnt <= 'd4)
+        c_tilde_write_cnt <= c_tilde_write_cnt + 'd1;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        c_tilde_temp <= 'd0;
+    else if (start_expand_ExpandC)
+        c_tilde_temp <= c_tilde;
+    else if (c_tilde_write_cnt >= 'd1 && c_tilde_write_cnt <= 'd4)
+        c_tilde_temp <= c_tilde_temp << 64;
+end
+
+always_comb begin
+    w_EncodeSig_Coeff       = 'd0;
+    w_EncodeSig_Coeff_valid = 1'b0;
+    if (c_tilde_write_cnt >= 'd1 && c_tilde_write_cnt <= 'd4) begin
+        w_EncodeSig_Coeff = c_tilde_temp[255 : 192];
+        w_EncodeSig_Coeff_valid = 1'b1;
+    end
+    else if (encoder_valid) begin
+        w_EncodeSig_Coeff = encode;
+        w_EncodeSig_Coeff_valid = 1'b1;
+    end
+    else if (pack_valid) begin
+        w_EncodeSig_Coeff = pack_out;
+        w_EncodeSig_Coeff_valid = 1'b1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        w_EncodeSig_Coeff_addr  <= 'd0;
+    else if (state == S_SIGN_LOOP_INIT)
+        w_EncodeSig_Coeff_addr <= 'd0;
+    else if (c_tilde_write_cnt >= 'd1 && c_tilde_write_cnt <= 'd4)
+        w_EncodeSig_Coeff_addr <= w_EncodeSig_Coeff_addr + 'd1;
+    else if (encoder_valid || pack_valid)
+        w_EncodeSig_Coeff_addr <= w_EncodeSig_Coeff_addr + 'd1;
+    else 
+        w_EncodeSig_Coeff_addr <= w_EncodeSig_Coeff_addr;
+end
 
 endmodule

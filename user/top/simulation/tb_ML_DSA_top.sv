@@ -39,7 +39,7 @@ end
 integer fid1, fid2, fid3;
 initial begin
     repeat (60) @(posedge clk);
-    zeta_keygen <= 256'ha1410bcab52ac745d4e140bb0c339c1af3dd575432040d9947c03aa711f7a531;
+    zeta_keygen <= 256'h7b1824ee386000f8a14228882568321781a34d755ed7da217e012a655a2d521e;
     start_keygen <= 1'b1;
     @(posedge clk);
     start_keygen <= 1'b0;
@@ -52,8 +52,8 @@ initial begin
     $fclose(fid3);
     start_sign <= 1'b1;
     @(posedge clk);
-    mu <= 'hf25fbb7cca28a573ae8cbb2544744ab9bb67dab74df24252d358a4c3543a5b870fd07acf58c72c64b86c2bfd7b161ad04080a9a1b945f3bf2fc25aefaacb0cf2;
-    rnd <= 'h4cd6425f5e3bca0f42f6e45a35024391b85d6fd9abb52fad7ad492a7ebbcb115;
+    mu <= 'h0093d9e2e3e508cd7c57cddb9e6098566ade34a638fc93f4f54777d5024124b6a2f8f21efadd1f11e45939947a636956fd5b0d125a31a3e08993c31585e23ef8;
+    rnd <= 'hfbf199f560adfa17141bd3a24382f59db8c0285d65bf5cc05469d48c61008338;
     start_sign <= 1'b0;
     while (u_ML_DSA_top.u_sign_internal.make_hint_done != 1) begin
         @(posedge clk);

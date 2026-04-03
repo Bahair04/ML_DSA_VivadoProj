@@ -90,7 +90,11 @@ module GlobalBRAMArbitration
     input       logic           [5 : 0]     r_VectorM_Coeff_addr_sign [0 : K - 1],
 
     output      logic           [63 : 0]    r_EncodeSK_Coeff_sign,           
-    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr_sign,
+
+    input       logic           [63 : 0]    w_EncodeSig_Coeff_sign,       
+    input       logic                       w_EncodeSig_Coeff_valid_sign,
+    input       logic           [8 : 0]     w_EncodeSig_Coeff_addr_sign
 
 );
 
@@ -147,6 +151,11 @@ logic           [9 : 0]     w_EncodeSK_Coeff_addr;
 logic           [63 : 0]    r_EncodeSK_Coeff;           
 logic           [9 : 0]     r_EncodeSK_Coeff_addr;
 
+logic           [63 : 0]    w_EncodeSig_Coeff;       
+logic                       w_EncodeSig_Coeff_valid;
+logic           [9 : 0]     w_EncodeSig_Coeff_addr;
+logic           [63 : 0]    r_EncodeSig_Coeff;           
+logic           [9 : 0]     r_EncodeSig_Coeff_addr;
 
 // ==========================================
 // 广播输出给 KeyGen 和 Sign
@@ -277,6 +286,10 @@ always_comb begin
             r_VectorM_Coeff_addr  	= r_VectorM_Coeff_addr_sign;  
 
             r_EncodeSK_Coeff_addr   = r_EncodeSK_Coeff_addr_sign;
+
+            w_EncodeSig_Coeff        = w_EncodeSig_Coeff_sign;
+            w_EncodeSig_Coeff_valid  = w_EncodeSig_Coeff_valid_sign;
+            w_EncodeSig_Coeff_addr   = w_EncodeSig_Coeff_addr_sign;
         end
     endcase
 end
@@ -336,7 +349,13 @@ u_SharedBRAMPool(
     .w_EncodeSK_Coeff_valid     ( w_EncodeSK_Coeff_valid ),
     .w_EncodeSK_Coeff_addr      ( w_EncodeSK_Coeff_addr  ),
     .r_EncodeSK_Coeff           ( r_EncodeSK_Coeff       ),
-    .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr  )
+    .r_EncodeSK_Coeff_addr      ( r_EncodeSK_Coeff_addr  ),
+
+    .w_EncodeSig_Coeff       	( w_EncodeSig_Coeff        ),
+	.w_EncodeSig_Coeff_valid 	( w_EncodeSig_Coeff_valid  ),
+	.w_EncodeSig_Coeff_addr  	( w_EncodeSig_Coeff_addr   ),
+	.r_EncodeSig_Coeff       	( r_EncodeSig_Coeff        ),
+	.r_EncodeSig_Coeff_addr  	( r_EncodeSig_Coeff_addr   )
 );
 
 endmodule

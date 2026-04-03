@@ -66,7 +66,14 @@ module CoeffBlockRAM
     input       logic                       w_EncodeSK_Coeff_valid,
     input       logic           [9 : 0]     w_EncodeSK_Coeff_addr,
     output      logic           [63 : 0]    r_EncodeSK_Coeff,           
-    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr
+    input       logic           [9 : 0]     r_EncodeSK_Coeff_addr,
+
+    // --- Encode Sig ---
+    input       logic           [63 : 0]    w_EncodeSig_Coeff,       
+    input       logic                       w_EncodeSig_Coeff_valid,
+    input       logic           [9 : 0]     w_EncodeSig_Coeff_addr,
+    output      logic           [63 : 0]    r_EncodeSig_Coeff,           
+    input       logic           [9 : 0]     r_EncodeSig_Coeff_addr
 );
 
 MatrixA #(
@@ -153,6 +160,16 @@ EncodeSK u_EncodeSK(
 	.w_EncodeSK_Coeff_addr  	( w_EncodeSK_Coeff_addr   ),
 	.r_EncodeSK_Coeff       	( r_EncodeSK_Coeff        ),
 	.r_EncodeSK_Coeff_addr  	( r_EncodeSK_Coeff_addr   )
+);
+
+EncodeSig u_EncodeSig(
+	.clk                     	( clk                      ),
+	.rstn                    	( rstn                     ),
+	.w_EncodeSig_Coeff       	( w_EncodeSig_Coeff        ),
+	.w_EncodeSig_Coeff_valid 	( w_EncodeSig_Coeff_valid  ),
+	.w_EncodeSig_Coeff_addr  	( w_EncodeSig_Coeff_addr   ),
+	.r_EncodeSig_Coeff       	( r_EncodeSig_Coeff        ),
+	.r_EncodeSig_Coeff_addr  	( r_EncodeSig_Coeff_addr   )
 );
 
 
