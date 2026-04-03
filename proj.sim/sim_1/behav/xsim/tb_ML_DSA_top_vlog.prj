@@ -68,6 +68,7 @@ sv xil_defaultlib  \
 "../../../../user/src/Hash/RTL/sha3.sv" \
 "../../../../user/src/sign/RTL/sign_internal.sv" \
 "../../../../user/src/En_Decoder/sync_fifo_fwft.sv" \
+"../../../../user/src/verify/RTL/verify_internal.sv" \
 "../../../../user/top/simulation/tb_ML_DSA_top.sv" \
 
 # compile glbl module

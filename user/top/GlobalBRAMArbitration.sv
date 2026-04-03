@@ -94,7 +94,28 @@ module GlobalBRAMArbitration
 
     input       logic           [63 : 0]    w_EncodeSig_Coeff_sign,       
     input       logic                       w_EncodeSig_Coeff_valid_sign,
-    input       logic           [8 : 0]     w_EncodeSig_Coeff_addr_sign
+    input       logic           [8 : 0]     w_EncodeSig_Coeff_addr_sign,
+
+    // ==========================================
+    // Verify 控制器接口
+    // ==========================================
+    input       logic           [91 : 0]    w_MatrixA_Coeff_verify,
+    input       logic                       w_MatrixA_Coeff_valid_verify,
+    input       logic           [11 : 0]    w_MatrixA_Coeff_addr_verify,
+    output      logic           [91 : 0]    r_MatrixA_Coeff_verify [0 : K - 1],
+    input       logic           [8 : 0]     r_MatrixA_Coeff_addr_verify [0 : K - 1],
+
+    input       logic           [91 : 0]    w_VectorT_Coeff_verify [0 : K - 1],
+    input       logic                       w_VectorT_Coeff_valid_verify [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorT_Coeff_addr_verify [0 : K - 1],
+    output      logic           [91 : 0]    r_VectorT_Coeff_verify [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorT_Coeff_addr_verify [0 : K - 1],
+
+    output      logic           [63 : 0]    r_EncodePK_Coeff_verify,           
+    input       logic           [8 : 0]     r_EncodePK_Coeff_addr_verify,
+
+    output      logic           [63 : 0]    r_EncodeSig_Coeff_verify,           
+    input       logic           [9 : 0]     r_EncodeSig_Coeff_addr_verify
 
 );
 
@@ -175,6 +196,11 @@ assign r_VectorT_Coeff_sign    = r_VectorT_Coeff;
 assign r_EncodeSK_Coeff_sign   = r_EncodeSK_Coeff;
 assign r_VectorM_Coeff_sign    = r_VectorM_Coeff;
 
+assign r_MatrixA_Coeff_verify  = r_MatrixA_Coeff;
+assign r_VectorT_Coeff_verify  = r_VectorT_Coeff;
+assign r_EncodePK_Coeff_verify = r_EncodePK_Coeff;
+assign r_EncodeSig_Coeff_verify = r_EncodeSig_Coeff;
+
 // ==========================================
 // 模式仲裁
 // ==========================================
@@ -186,6 +212,7 @@ always_comb begin
     w_VectorY_Coeff_valid  = 1'b0;
     w_EncodePK_Coeff_valid = 1'b0;
     w_EncodeSK_Coeff_valid = 1'b0;
+    w_EncodeSig_Coeff_valid = 1'b0;
 
     for (int i=0; i<K; i++) w_VectorT_Coeff_valid[i] = 1'b0;
 
@@ -205,6 +232,8 @@ always_comb begin
     w_EncodeSK_Coeff      = 'd0;
     w_EncodeSK_Coeff_addr = 'd0;
     r_EncodeSK_Coeff_addr = 'd0;
+    w_EncodeSig_Coeff     = 'd0;
+    w_EncodeSig_Coeff_addr  = 'd0;
 
     for (int i = 0; i < K; i++) begin
         r_MatrixA_Coeff_addr[i]  = 'd0;
@@ -290,6 +319,22 @@ always_comb begin
             w_EncodeSig_Coeff        = w_EncodeSig_Coeff_sign;
             w_EncodeSig_Coeff_valid  = w_EncodeSig_Coeff_valid_sign;
             w_EncodeSig_Coeff_addr   = w_EncodeSig_Coeff_addr_sign;
+        end
+
+        2'd2: begin
+            w_MatrixA_Coeff = w_MatrixA_Coeff_verify;
+            w_MatrixA_Coeff_valid = w_MatrixA_Coeff_valid_verify;
+            w_MatrixA_Coeff_addr = w_MatrixA_Coeff_addr_verify;
+            r_MatrixA_Coeff_addr = r_MatrixA_Coeff_addr_verify;
+
+            w_VectorT_Coeff = w_VectorT_Coeff_verify;
+            w_VectorT_Coeff_valid = w_VectorT_Coeff_valid_verify;
+            w_VectorT_Coeff_addr = w_VectorT_Coeff_addr_verify;
+            r_VectorT_Coeff_addr = r_VectorT_Coeff_addr_verify;
+
+            r_EncodePK_Coeff_addr = r_EncodePK_Coeff_addr_verify;
+
+            r_EncodeSig_Coeff_addr = r_EncodeSig_Coeff_addr_verify;
         end
     endcase
 end

@@ -26,6 +26,11 @@ logic                       done_sign;
 logic           [511 : 0]   mu = 'd0;
 logic           [255 : 0]   rnd = 'd0;
 
+logic                       start_verify;    
+logic                       verify_ready;    
+logic                       done_verify;    
+logic           [511 : 0]   mu_verify;        
+
 initial
 begin
     forever #(PERIOD/2)  clk=~clk;
@@ -58,7 +63,11 @@ initial begin
     while (u_ML_DSA_top.u_sign_internal.make_hint_done != 1) begin
         @(posedge clk);
     end
-    repeat (1000) @(posedge clk);
+    repeat (500) @(posedge clk);
+    start_verify <= 1'b1;
+    @(posedge clk);
+    start_verify <= 1'b0;
+    repeat (500) @(posedge clk);
     $finish;
 end
 
@@ -172,7 +181,12 @@ ML_DSA_top #(
     .sign_ready        (sign_ready),
     .done_sign         (done_sign),
     .mu                (mu),
-    .rnd               (rnd)
+    .rnd               (rnd),
+
+    .start_verify       (start_verify),
+    .verify_ready       (verify_ready),
+    .done_verify        (done_verify),
+    .mu_verify          (mu_verify)
 );
 
 endmodule

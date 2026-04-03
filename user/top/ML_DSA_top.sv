@@ -29,7 +29,13 @@ module ML_DSA_top
     output      logic                       sign_ready,      
     output      logic                       done_sign,
     input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
-    input       logic           [255 : 0]   rnd             // 32字节 随机数
+    input       logic           [255 : 0]   rnd,            // 32字节 随机数
+
+    // --- 控制标志位 ---
+    input       logic                       start_verify,          // 启动标志
+    output      logic                       verify_ready,          // 准备标志
+    output      logic                       done_verify,           // 完成标志
+    input       logic           [511 : 0]   mu_verify              // 64字节 预哈希消息
 );
 
 // ==========================================================
@@ -44,6 +50,8 @@ always_ff @(posedge clk or negedge rstn) begin
         mode_config <= 2'd0;    // 0: KeyGen 接管
     else if (start_sign)
         mode_config <= 2'd1;    // 1: Sign 接管
+    else if (start_verify)
+        mode_config <= 2'd2;    // 2: Verify 接管
 end
 
 // ==========================================================
@@ -305,6 +313,37 @@ logic           [2 : 0]     CoeffModq_coeff_type_sign;
 logic                       CoeffModq_poly_start_pulse_sign; 
 logic           [91 : 0]    CoeffModq_modq_coeff_sign;      
 logic                       CoeffModq_modq_coeff_valid_sign;
+
+// ==========================================================
+// 内部线网声明：Sign 专属线网
+// ==========================================================
+// --- BRAM 总线信号 ---
+logic           [91 : 0]    w_MatrixA_Coeff_verify;
+logic                       w_MatrixA_Coeff_valid_verify;
+logic           [11 : 0]    w_MatrixA_Coeff_addr_verify;
+logic           [91 : 0]    r_MatrixA_Coeff_verify [0 : K - 1];
+logic           [8 : 0]     r_MatrixA_Coeff_addr_verify [0 : K - 1];
+
+logic           [91 : 0]    w_VectorT_Coeff_verify [0 : K - 1];
+logic                       w_VectorT_Coeff_valid_verify [0 : K - 1];
+logic           [5 : 0]     w_VectorT_Coeff_addr_verify [0 : K - 1];
+logic           [91 : 0]    r_VectorT_Coeff_verify [0 : K - 1];
+logic           [5 : 0]     r_VectorT_Coeff_addr_verify [0 : K - 1];
+
+logic           [63 : 0]    r_EncodePK_Coeff_verify;           
+logic           [8 : 0]     r_EncodePK_Coeff_addr_verify;
+
+logic           [63 : 0]    r_EncodeSig_Coeff_verify;           
+logic           [9 : 0]     r_EncodeSig_Coeff_addr_verify;
+
+// --- CoeffModq ---
+logic                       CoeffModq_ram_rd_en_verify;       
+logic           [63 : 0]    CoeffModq_ori_coeff_verify;       
+logic                       CoeffModq_ori_coeff_valid_verify; 
+logic           [2 : 0]     CoeffModq_coeff_type_verify;     
+logic                       CoeffModq_poly_start_pulse_verify; 
+logic           [91 : 0]    CoeffModq_modq_coeff_verify;      
+logic                       CoeffModq_modq_coeff_valid_verify;
 
 // ==========================================================
 // 模块例化区
@@ -578,6 +617,41 @@ u_sign_internal(
     .CoeffModq_modq_coeff_valid ( CoeffModq_modq_coeff_valid_sign )
 );
 
+verify_internal u_verify_internal(
+	.clk                        	( clk                                ),
+	.rstn                       	( rstn                               ),
+	.start                      	( start_verify                       ),
+	.verify_ready               	( verify_ready                       ),
+	.done                       	( done_verify                        ),
+	.mu                         	( mu_verify                          ),
+	
+    .w_MatrixA_Coeff            	( w_MatrixA_Coeff_verify             ),
+	.w_MatrixA_Coeff_valid      	( w_MatrixA_Coeff_valid_verify       ),
+	.w_MatrixA_Coeff_addr       	( w_MatrixA_Coeff_addr_verify        ),
+	.r_MatrixA_Coeff            	( r_MatrixA_Coeff_verify             ),
+	.r_MatrixA_Coeff_addr       	( r_MatrixA_Coeff_addr_verify        ),
+	
+    .w_VectorT_Coeff            	( w_VectorT_Coeff_verify             ),
+	.w_VectorT_Coeff_valid      	( w_VectorT_Coeff_valid_verify       ),
+	.w_VectorT_Coeff_addr       	( w_VectorT_Coeff_addr_verify        ),
+	.r_VectorT_Coeff            	( r_VectorT_Coeff_verify             ),
+	.r_VectorT_Coeff_addr       	( r_VectorT_Coeff_addr_verify        ),
+
+	.r_EncodePK_Coeff           	( r_EncodePK_Coeff_verify            ),
+	.r_EncodePK_Coeff_addr      	( r_EncodePK_Coeff_addr_verify       ),
+
+	.r_EncodeSig_Coeff         	    ( r_EncodeSig_Coeff_verify           ),
+	.r_EncodeSig_Coeff_addr    	    ( r_EncodeSig_Coeff_addr_verify      ),
+
+	.CoeffModq_ram_rd_en        	( CoeffModq_ram_rd_en_verify         ),
+	.CoeffModq_ori_coeff        	( CoeffModq_ori_coeff_verify         ),
+	.CoeffModq_ori_coeff_valid  	( CoeffModq_ori_coeff_valid_verify   ),
+	.CoeffModq_coeff_type       	( CoeffModq_coeff_type_verify        ),
+	.CoeffModq_poly_start_pulse 	( CoeffModq_poly_start_pulse_verify  ),
+	.CoeffModq_modq_coeff       	( CoeffModq_modq_coeff_verify        ),
+	.CoeffModq_modq_coeff_valid 	( CoeffModq_modq_coeff_valid_verify  )
+);
+
 
 GlobalBRAMArbitration #(
     .K  ( K  ),
@@ -624,7 +698,7 @@ u_GlobalBRAMArbitration(
     .r_EncodeSK_Coeff_keygen        (r_EncodeSK_Coeff_keygen        ),           
     .r_EncodeSK_Coeff_addr_keygen   (r_EncodeSK_Coeff_addr_keygen   ),
 
-    // --- Sign BRAM Ports (你需要在 GlobalBRAMArbitration 中补充这些接口) ---
+    // --- Sign BRAM Ports  ---
     .w_MatrixA_Coeff_sign           (w_MatrixA_Coeff_sign           ),
     .w_MatrixA_Coeff_valid_sign     (w_MatrixA_Coeff_valid_sign     ),
     .w_MatrixA_Coeff_addr_sign      (w_MatrixA_Coeff_addr_sign      ),
@@ -666,7 +740,26 @@ u_GlobalBRAMArbitration(
 
     .w_EncodeSig_Coeff_sign          (w_EncodeSig_Coeff_sign          ),
     .w_EncodeSig_Coeff_valid_sign    (w_EncodeSig_Coeff_valid_sign    ),
-    .w_EncodeSig_Coeff_addr_sign     (w_EncodeSig_Coeff_addr_sign     )
+    .w_EncodeSig_Coeff_addr_sign     (w_EncodeSig_Coeff_addr_sign     ),
+
+    // --- Verify BRAM Ports  ---
+    .w_MatrixA_Coeff_verify       	( w_MatrixA_Coeff_verify             ),
+	.w_MatrixA_Coeff_valid_verify  	( w_MatrixA_Coeff_valid_verify       ),
+	.w_MatrixA_Coeff_addr_verify   	( w_MatrixA_Coeff_addr_verify        ),
+	.r_MatrixA_Coeff_verify        	( r_MatrixA_Coeff_verify             ),
+	.r_MatrixA_Coeff_addr_verify   	( r_MatrixA_Coeff_addr_verify        ),
+
+	.w_VectorT_Coeff_verify        	( w_VectorT_Coeff_verify             ),
+	.w_VectorT_Coeff_valid_verify  	( w_VectorT_Coeff_valid_verify       ),
+	.w_VectorT_Coeff_addr_verify   	( w_VectorT_Coeff_addr_verify        ),
+	.r_VectorT_Coeff_verify        	( r_VectorT_Coeff_verify             ),
+	.r_VectorT_Coeff_addr_verify   	( r_VectorT_Coeff_addr_verify        ),
+
+	.r_EncodePK_Coeff_verify       	( r_EncodePK_Coeff_verify            ),
+	.r_EncodePK_Coeff_addr_verify  	( r_EncodePK_Coeff_addr_verify       ),
+
+	.r_EncodeSig_Coeff_verify     	( r_EncodeSig_Coeff_verify          ),
+	.r_EncodeSig_Coeff_addr_verify  ( r_EncodeSig_Coeff_addr_verify     )
 );
 
 logic                       init_rstn;
