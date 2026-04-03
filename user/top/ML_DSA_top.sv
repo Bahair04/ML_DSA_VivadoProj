@@ -260,6 +260,33 @@ logic                       done_out_ExpandA_sign;
 logic           [63 : 0]    st_64bit_ExpandA_sign;       
 logic                       st_64bit_valid_ExpandA_sign; 
 
+// --- ExpandC ---
+logic           [255 : 0]   seed_ExpandC_sign;           
+logic           [7 : 0]     tau_ExpandC_sign;            
+logic                       start_expand_ExpandC_sign;   
+logic                       low_rd_en_ExpandC_sign;      
+logic           [1 : 0]     coeff_low_ExpandC_sign;      
+logic           [7 : 0]     coeff_low_add_ExpandC_sign;  
+logic                       coeff_low_valid_ExpandC_sign;
+logic                       high_rd_en_ExpandC_sign;     
+logic           [1 : 0]     coeff_high_ExpandC_sign;     
+logic           [7 : 0]     coeff_high_add_ExpandC_sign; 
+logic                       coeff_high_valid_ExpandC_sign;
+logic                       expand_done_ExpandC_sign;   
+
+logic           [7 : 0]     dout_ExpandC_sign;           
+logic                       dout_valid_ExpandC_sign;     
+logic           [31 : 0]    dout_len_ExpandC_sign;       
+logic           [7 : 0]     mdlen_ExpandC_sign;          
+logic                       init_ExpandC_sign;           
+logic                       start_ExpandC_sign;          
+logic                       done_ExpandC_sign;           
+logic                       start_out_ExpandC_sign;      
+logic           [31 : 0]    out_len_ExpandC_sign;        
+logic                       done_out_ExpandC_sign;       
+logic           [63 : 0]    st_64bit_ExpandC_sign;       
+logic                       st_64bit_valid_ExpandC_sign;
+
 logic           [91 : 0]    ori_coeff_sign;               
 logic                       ori_coeff_valid_sign;     
 logic                       request_sign;                
@@ -613,6 +640,32 @@ u_sign_internal(
     .st_64bit_ExpandA           ( st_64bit_ExpandA_sign        ),
     .st_64bit_valid_ExpandA     ( st_64bit_valid_ExpandA_sign  ),
     
+    .seed_ExpandC               (seed_ExpandC_sign             ),           
+    .tau_ExpandC                (tau_ExpandC_sign              ),            
+    .start_expand_ExpandC       (start_expand_ExpandC_sign     ),   
+    .low_rd_en_ExpandC          (low_rd_en_ExpandC_sign        ),      
+    .coeff_low_ExpandC          (coeff_low_ExpandC_sign        ),      
+    .coeff_low_add_ExpandC      (coeff_low_add_ExpandC_sign    ),  
+    .coeff_low_valid_ExpandC    (coeff_low_valid_ExpandC_sign  ),
+    .high_rd_en_ExpandC         (high_rd_en_ExpandC_sign       ),     
+    .coeff_high_ExpandC         (coeff_high_ExpandC_sign       ),     
+    .coeff_high_add_ExpandC     (coeff_high_add_ExpandC_sign   ), 
+    .coeff_high_valid_ExpandC   (coeff_high_valid_ExpandC_sign ),
+    .expand_done_ExpandC        (expand_done_ExpandC_sign      ),   
+
+    .dout_ExpandC               (dout_ExpandC_sign             ),           
+    .dout_valid_ExpandC         (dout_valid_ExpandC_sign       ),     
+    .dout_len_ExpandC           (dout_len_ExpandC_sign         ),       
+    .mdlen_ExpandC              (mdlen_ExpandC_sign            ),          
+    .init_ExpandC               (init_ExpandC_sign             ),           
+    .start_ExpandC              (start_ExpandC_sign            ),          
+    .done_ExpandC               (done_ExpandC_sign             ),           
+    .start_out_ExpandC          (start_out_ExpandC_sign        ),      
+    .out_len_ExpandC            (out_len_ExpandC_sign          ),        
+    .done_out_ExpandC           (done_out_ExpandC_sign         ),       
+    .st_64bit_ExpandC           (st_64bit_ExpandC_sign         ),       
+    .st_64bit_valid_ExpandC      (st_64bit_valid_ExpandC_sign  ),
+
     .ori_coeff                  ( ori_coeff_sign               ),
     .ori_coeff_valid            ( ori_coeff_valid_sign         ),
     .request                    ( request_sign                 ),
@@ -984,6 +1037,32 @@ GlobalComputeArbitration #(
     .st_64bit_ExpandA_sign          (st_64bit_ExpandA_sign           ),      
     .st_64bit_valid_ExpandA_sign    (st_64bit_valid_ExpandA_sign     ),
     
+    .seed_ExpandC_sign              (seed_ExpandC_sign             ),           
+    .tau_ExpandC_sign               (tau_ExpandC_sign              ),            
+    .start_expand_ExpandC_sign      (start_expand_ExpandC_sign     ),   
+    .low_rd_en_ExpandC_sign         (low_rd_en_ExpandC_sign        ),      
+    .coeff_low_ExpandC_sign         (coeff_low_ExpandC_sign        ),      
+    .coeff_low_add_ExpandC_sign     (coeff_low_add_ExpandC_sign    ),  
+    .coeff_low_valid_ExpandC_sign   (coeff_low_valid_ExpandC_sign  ),
+    .high_rd_en_ExpandC_sign        (high_rd_en_ExpandC_sign       ),     
+    .coeff_high_ExpandC_sign        (coeff_high_ExpandC_sign       ),     
+    .coeff_high_add_ExpandC_sign    (coeff_high_add_ExpandC_sign   ), 
+    .coeff_high_valid_ExpandC_sign  (coeff_high_valid_ExpandC_sign ),
+    .expand_done_ExpandC_sign       (expand_done_ExpandC_sign      ),   
+
+    .dout_ExpandC_sign              (dout_ExpandC_sign             ),           
+    .dout_valid_ExpandC_sign        (dout_valid_ExpandC_sign       ),     
+    .dout_len_ExpandC_sign          (dout_len_ExpandC_sign         ),       
+    .mdlen_ExpandC_sign             (mdlen_ExpandC_sign            ),          
+    .init_ExpandC_sign              (init_ExpandC_sign             ),           
+    .start_ExpandC_sign             (start_ExpandC_sign            ),          
+    .done_ExpandC_sign              (done_ExpandC_sign             ),           
+    .start_out_ExpandC_sign         (start_out_ExpandC_sign        ),      
+    .out_len_ExpandC_sign           (out_len_ExpandC_sign          ),        
+    .done_out_ExpandC_sign          (done_out_ExpandC_sign         ),       
+    .st_64bit_ExpandC_sign          (st_64bit_ExpandC_sign         ),       
+    .st_64bit_valid_ExpandC_sign    (st_64bit_valid_ExpandC_sign   ),
+
     .ori_coeff_sign                 ( ori_coeff_sign                 ),             
     .ori_coeff_valid_sign           ( ori_coeff_valid_sign           ),     
     .request_sign                   ( request_sign                   ),                

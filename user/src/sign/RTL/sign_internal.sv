@@ -140,7 +140,34 @@ module sign_internal
     output      logic           [2 : 0]     CoeffModq_coeff_type,     
     output      logic                       CoeffModq_poly_start_pulse, 
     input       logic           [91 : 0]    CoeffModq_modq_coeff,      
-    input       logic                       CoeffModq_modq_coeff_valid
+    input       logic                       CoeffModq_modq_coeff_valid,
+
+    // --- ExpandC ---
+    output      logic           [255 : 0]   seed_ExpandC,           
+    output      logic           [7 : 0]     tau_ExpandC,            
+    output      logic                       start_expand_ExpandC,   
+    output      logic                       low_rd_en_ExpandC,      
+    input       logic           [1 : 0]     coeff_low_ExpandC,      
+    output      logic           [7 : 0]     coeff_low_add_ExpandC,  
+    input       logic                       coeff_low_valid_ExpandC,
+    output      logic                       high_rd_en_ExpandC,     
+    input       logic           [1 : 0]     coeff_high_ExpandC,     
+    output      logic           [7 : 0]     coeff_high_add_ExpandC, 
+    input       logic                       coeff_high_valid_ExpandC,
+    input       logic                       expand_done_ExpandC,   
+
+    input       logic           [7 : 0]     dout_ExpandC,           
+    input       logic                       dout_valid_ExpandC,     
+    input       logic           [31 : 0]    dout_len_ExpandC,       
+    input       logic           [7 : 0]     mdlen_ExpandC,          
+    input       logic                       init_ExpandC,           
+    input       logic                       start_ExpandC,          
+    output      logic                       done_ExpandC,           
+    input       logic                       start_out_ExpandC,      
+    input       logic           [31 : 0]    out_len_ExpandC,        
+    output      logic                       done_out_ExpandC,       
+    output      logic           [63 : 0]    st_64bit_ExpandC,       
+    output      logic                       st_64bit_valid_ExpandC 
 );
 
 // 参数维度
@@ -328,34 +355,7 @@ logic      	                        w_out_valid;                    // pack后�
 
 // --- c_tilde ---
 logic           [255 : 0]           c_tilde;
-
-// --- ExpandC ---
-logic           [255 : 0]           seed_ExpandC;           
-logic           [7 : 0]             tau_ExpandC;            
-logic                               start_expand_ExpandC;   
-logic                               low_rd_en_ExpandC;      
-logic           [1 : 0]             coeff_low_ExpandC;      
-logic           [7 : 0]             coeff_low_add_ExpandC;  
-logic                               coeff_low_valid_ExpandC;
-logic                               high_rd_en_ExpandC;     
-logic           [1 : 0]             coeff_high_ExpandC;     
-logic           [7 : 0]             coeff_high_add_ExpandC; 
-logic                               coeff_high_valid_ExpandC;
-logic                               expand_done_ExpandC;   
-
-logic           [7 : 0]             dout_ExpandC;           
-logic                               dout_valid_ExpandC;     
-logic           [31 : 0]            dout_len_ExpandC;       
-logic           [7 : 0]             mdlen_ExpandC;          
-logic                               init_ExpandC;           
-logic                               start_ExpandC;          
-logic                               done_ExpandC;           
-logic                               start_out_ExpandC;      
-logic           [31 : 0]            out_len_ExpandC;        
-logic                               done_out_ExpandC;       
-logic           [63 : 0]            st_64bit_ExpandC;       
-logic                               st_64bit_valid_ExpandC;  
-
+ 
 logic           [91 : 0]            data_out;       // 扩展C时用到的拼接器 连接模块
 logic                               data_valid_out; // 扩展C时用到的拼接器有效信号 连接模块
 logic           [5 : 0]             data_cnt;       // 扩展C时用到的拼接器计数器 连接模块
@@ -1802,38 +1802,6 @@ Gearbox_2to4 u_Gearbox_2to4(
     .data_valid         (coeff_low_valid_ExpandC    ),
     .data_out           (data_out                   ),
     .data_valid_out     (data_valid_out             )
-);
-
-ExpandC u_ExpandC(
-	.clk              	( clk                       ),
-	.rstn             	( rstn                      ),
-	.seed             	( seed_ExpandC              ),
-
-	.tau              	( tau_ExpandC               ),
-	.start_expand     	( start_expand_ExpandC      ),
-
-	.low_rd_en        	( low_rd_en_ExpandC         ),
-	.coeff_low        	( coeff_low_ExpandC         ),
-	.coeff_low_add    	( coeff_low_add_ExpandC     ),
-	.coeff_low_valid  	( coeff_low_valid_ExpandC   ),
-	.high_rd_en       	( high_rd_en_ExpandC        ),
-	.coeff_high       	( coeff_high_ExpandC        ),
-	.coeff_high_add   	( coeff_high_add_ExpandC    ),
-	.coeff_high_valid 	( coeff_high_valid_ExpandC  ),
-
-	.expand_done      	( expand_done_ExpandC       ),
-	.dout             	( dout_ExpandC              ),
-	.dout_valid       	( dout_valid_ExpandC        ),
-	.dout_len         	( dout_len_ExpandC          ),
-	.mdlen            	( mdlen_ExpandC             ),
-	.init             	( init_ExpandC              ),
-	.start            	( start_ExpandC             ),
-	.done             	( done_ExpandC              ),
-	.start_out        	( start_out_ExpandC         ),
-	.out_len          	( out_len_ExpandC           ),
-	.done_out         	( done_out_ExpandC          ),
-	.st_64bit         	( st_64bit_ExpandC          ),
-	.st_64bit_valid   	( st_64bit_valid_ExpandC    )
 );
 
 //* ==========================================================

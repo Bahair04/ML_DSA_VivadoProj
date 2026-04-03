@@ -144,6 +144,37 @@ module GlobalComputeArbitration
     input       logic           [63 : 0]    st_64bit_ExpandA_sign,       
     input       logic                       st_64bit_valid_ExpandA_sign, 
 
+    // --- ExpandC 数据接口 ---
+    input       logic           [255 : 0]   seed_ExpandC_sign,           // 512位随机种子
+    input       logic           [7 : 0]     tau_ExpandC_sign,            // 伪随机数初始值
+    input       logic                       start_expand_ExpandC_sign,   // 开始扩展Y矩阵信号
+
+    input       logic                       low_rd_en_ExpandC_sign,      // 低地址读取使能信号
+    output      logic           [1 : 0]     coeff_low_ExpandC_sign,      // 低地址 2 bit 有效采样系数
+    input       logic           [7 : 0]     coeff_low_add_ExpandC_sign,  // 低地址
+    output      logic                       coeff_low_valid_ExpandC_sign,// 低地址 2 bit 有效采样系数信号
+
+    input       logic                       high_rd_en_ExpandC_sign,     // 高地址读取使能信号
+    output      logic           [1 : 0]     coeff_high_ExpandC_sign,     // 高地址 2 bit 有效采样系数
+    input       logic           [7 : 0]     coeff_high_add_ExpandC_sign, // 高地址
+    output      logic                       coeff_high_valid_ExpandC_sign,// 高地址 2 bit 有效采样系数信号
+
+    output      logic                       expand_done_ExpandC_sign,    // 扩展完成信号
+
+    // --- SHA3 控制接口 ---
+    output      logic           [7 : 0]     dout_ExpandC_sign,           // SHA3 串行输入字节数据
+    output      logic                       dout_valid_ExpandC_sign,     // SHA3 串行输入字节有效信号
+    output      logic           [31 : 0]    dout_len_ExpandC_sign,       // SHA3 串行输入字节长度
+    output      logic           [7 : 0]     mdlen_ExpandC_sign,          // SHA3 Hash长度
+    output      logic                       init_ExpandC_sign,           // SHA3 初始化信号
+    output      logic                       start_ExpandC_sign,          // SHA3 开始装载数据
+    input       logic                       done_ExpandC_sign,           // SHA3 数据装载完成
+    output      logic                       start_out_ExpandC_sign,      // SHA3 开始挤出数据
+    output      logic           [31 : 0]    out_len_ExpandC_sign,        // SHA3 挤出数据长度
+    input       logic                       done_out_ExpandC_sign,       // SHA3 挤出数据完成
+    input       logic           [63 : 0]    st_64bit_ExpandC_sign,       // SHA3 挤出8字节数据
+    input       logic                       st_64bit_valid_ExpandC_sign,  // SHA3 挤出8字节数据有效信号
+
     // --- Poly_PAU 输入输出接口 ---
     input       logic           [91 : 0]    ori_coeff_sign,                  
     input       logic                       ori_coeff_valid_sign,            
@@ -277,6 +308,33 @@ logic           [31 : 0]    out_len_ExpandA;
 logic                       done_out_ExpandA;       
 logic           [63 : 0]    st_64bit_ExpandA;       
 logic                       st_64bit_valid_ExpandA; 
+
+// --- ExpandC ---
+logic           [255 : 0]   seed_ExpandC;           
+logic           [7 : 0]     tau_ExpandC;            
+logic                       start_expand_ExpandC;   
+logic                       low_rd_en_ExpandC;      
+logic           [1 : 0]     coeff_low_ExpandC;      
+logic           [7 : 0]     coeff_low_add_ExpandC;  
+logic                       coeff_low_valid_ExpandC;
+logic                       high_rd_en_ExpandC;     
+logic           [1 : 0]     coeff_high_ExpandC;     
+logic           [7 : 0]     coeff_high_add_ExpandC; 
+logic                       coeff_high_valid_ExpandC;
+logic                       expand_done_ExpandC;   
+
+logic           [7 : 0]     dout_ExpandC;           
+logic                       dout_valid_ExpandC;     
+logic           [31 : 0]    dout_len_ExpandC;       
+logic           [7 : 0]     mdlen_ExpandC;          
+logic                       init_ExpandC;           
+logic                       start_ExpandC;          
+logic                       done_ExpandC;           
+logic                       start_out_ExpandC;      
+logic           [31 : 0]    out_len_ExpandC;        
+logic                       done_out_ExpandC;       
+logic           [63 : 0]    st_64bit_ExpandC;       
+logic                       st_64bit_valid_ExpandC;  
 
 // --- Poly_PAU 内部线声明 ---
 logic           [91 : 0]    pau_ori_coeff;
@@ -439,6 +497,20 @@ assign CoeffModq_ram_rd_en_sign      = CoeffModq_ram_rd_en;
 assign CoeffModq_modq_coeff_sign     = CoeffModq_modq_coeff;
 assign CoeffModq_modq_coeff_valid_sign = CoeffModq_modq_coeff_valid;
 
+assign coeff_low_ExpandC_sign       = coeff_low_ExpandC;
+assign coeff_low_valid_ExpandC_sign = coeff_low_valid_ExpandC;
+assign coeff_high_ExpandC_sign      = coeff_high_ExpandC;
+assign coeff_high_valid_ExpandC_sign= coeff_high_valid_ExpandC;
+assign expand_done_ExpandC_sign     = expand_done_ExpandC;
+assign dout_ExpandC_sign            = dout_ExpandC;
+assign dout_valid_ExpandC_sign      = dout_valid_ExpandC;
+assign dout_len_ExpandC_sign        = dout_len_ExpandC;
+assign mdlen_ExpandC_sign           = mdlen_ExpandC;
+assign init_ExpandC_sign            = init_ExpandC;
+assign start_ExpandC_sign           = start_ExpandC;
+assign start_out_ExpandC_sign       = start_out_ExpandC;
+assign out_len_ExpandC_sign         = out_len_ExpandC;
+
 // ==========================================
 // 广播赋值: 回传给 Verify
 // ==========================================
@@ -470,6 +542,18 @@ always_comb begin
     done_out_ExpandA            = 1'b0;
     st_64bit_ExpandA            = 'd0;
     st_64bit_valid_ExpandA      = 1'b0;
+
+    seed_ExpandC                = 'd0;
+    tau_ExpandC                 = 'd0;
+    start_expand_ExpandC        = 'd0;
+    low_rd_en_ExpandC           = 'd0;
+    coeff_low_add_ExpandC       = 'd0;
+    high_rd_en_ExpandC          = 'd0;
+    coeff_high_add_ExpandC      = 'd0;
+    done_ExpandC                = 'd0;
+    done_out_ExpandC            = 'd0;
+    st_64bit_ExpandC            = 'd0;
+    st_64bit_valid_ExpandC      = 'd0;
 
     pau_ori_coeff       = 'd0;
     pau_ori_coeff_valid = 1'b0;
@@ -605,6 +689,18 @@ always_comb begin
             st_64bit_ExpandA            = st_64bit_ExpandA_sign;
             st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_sign;
 
+            seed_ExpandC                = seed_ExpandC_sign;
+            tau_ExpandC                 = tau_ExpandC_sign;
+            start_expand_ExpandC        = start_expand_ExpandC_sign;
+            low_rd_en_ExpandC           = low_rd_en_ExpandC_sign;
+            coeff_low_add_ExpandC       = coeff_low_add_ExpandC_sign;
+            high_rd_en_ExpandC          = high_rd_en_ExpandC_sign;
+            coeff_high_add_ExpandC      = coeff_high_add_ExpandC_sign;
+            done_ExpandC                = done_ExpandC_sign;
+            done_out_ExpandC            = done_out_ExpandC_sign;
+            st_64bit_ExpandC            = st_64bit_ExpandC_sign;
+            st_64bit_valid_ExpandC      = st_64bit_valid_ExpandC_sign;
+
             pau_ori_coeff       = ori_coeff_sign;
             pau_ori_coeff_valid = ori_coeff_valid_sign;
             pau_request         = request_sign;
@@ -699,6 +795,38 @@ ExpandA u_ExpandA(
     .done_out           ( done_out_ExpandA        ),
     .st_64bit           ( st_64bit_ExpandA        ),
     .st_64bit_valid     ( st_64bit_valid_ExpandA  )
+);
+
+ExpandC u_ExpandC(
+	.clk              	( clk                       ),
+	.rstn             	( rstn                      ),
+	.seed             	( seed_ExpandC              ),
+
+	.tau              	( tau_ExpandC               ),
+	.start_expand     	( start_expand_ExpandC      ),
+
+	.low_rd_en        	( low_rd_en_ExpandC         ),
+	.coeff_low        	( coeff_low_ExpandC         ),
+	.coeff_low_add    	( coeff_low_add_ExpandC     ),
+	.coeff_low_valid  	( coeff_low_valid_ExpandC   ),
+	.high_rd_en       	( high_rd_en_ExpandC        ),
+	.coeff_high       	( coeff_high_ExpandC        ),
+	.coeff_high_add   	( coeff_high_add_ExpandC    ),
+	.coeff_high_valid 	( coeff_high_valid_ExpandC  ),
+
+	.expand_done      	( expand_done_ExpandC       ),
+	.dout             	( dout_ExpandC              ),
+	.dout_valid       	( dout_valid_ExpandC        ),
+	.dout_len         	( dout_len_ExpandC          ),
+	.mdlen            	( mdlen_ExpandC             ),
+	.init             	( init_ExpandC              ),
+	.start            	( start_ExpandC             ),
+	.done             	( done_ExpandC              ),
+	.start_out        	( start_out_ExpandC         ),
+	.out_len          	( out_len_ExpandC           ),
+	.done_out         	( done_out_ExpandC          ),
+	.st_64bit         	( st_64bit_ExpandC          ),
+	.st_64bit_valid   	( st_64bit_valid_ExpandC    )
 );
 
 assign ext_operand              = 'd0;
