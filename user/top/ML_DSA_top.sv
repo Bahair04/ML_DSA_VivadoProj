@@ -315,7 +315,7 @@ logic           [91 : 0]    CoeffModq_modq_coeff_sign;
 logic                       CoeffModq_modq_coeff_valid_sign;
 
 // ==========================================================
-// 内部线网声明：Sign 专属线网
+// 内部线网声明：Verify 专属线网
 // ==========================================================
 // --- BRAM 总线信号 ---
 logic           [91 : 0]    w_MatrixA_Coeff_verify;
@@ -344,6 +344,54 @@ logic           [2 : 0]     CoeffModq_coeff_type_verify;
 logic                       CoeffModq_poly_start_pulse_verify; 
 logic           [91 : 0]    CoeffModq_modq_coeff_verify;      
 logic                       CoeffModq_modq_coeff_valid_verify;
+
+// --- ExpandA 信号 ---
+logic           [255 : 0]   rho_ExpandA_verify;            // 256位随机种子
+logic                       start_expand_ExpandA_verify;   // 开始扩展A矩阵信号
+logic           [91 : 0]    coeff_ExpandA_verify;          // 4*23bit 有效采样系数
+logic                       coeff_valid_ExpandA_verify;    // 4*23bit 有效采样系数信号
+logic                       expand_done_ExpandA_verify;    // 扩展完成信号
+
+logic           [7 : 0]     dout_ExpandA_verify;           // SHA3 串行输入字节数据
+logic                       dout_valid_ExpandA_verify;     // SHA3 串行输入字节有效信号
+logic           [31 : 0]    dout_len_ExpandA_verify;       // SHA3 串行输入字节长度
+logic           [7 : 0]     mdlen_ExpandA_verify;          // SHA3 Hash长度
+logic                       init_ExpandA_verify;           // SHA3 初始化信号
+logic                       start_ExpandA_verify;          // SHA3 开始装载数据
+logic                       done_ExpandA_verify;           // SHA3 数据装载完成
+logic                       start_out_ExpandA_verify;      // SHA3 开始挤出数据
+logic           [31 : 0]    out_len_ExpandA_verify;        // SHA3 挤出数据长度
+logic                       done_out_ExpandA_verify;       // SHA3 挤出数据完成
+logic           [63 : 0]    st_64bit_ExpandA_verify;       // SHA3 挤出8字节数据
+logic                       st_64bit_valid_ExpandA_verify; // SHA3 挤出8字节数据有效信号
+
+// --- SHA3-1 控制接口 ---
+logic           [7 : 0]     dout1_verify; 
+logic                       dout_valid1_verify; 
+logic           [31 : 0]    dout_len1_verify; 
+logic           [7 : 0]     mdlen1_verify; 
+logic                       init1_verify; 
+logic                       start1_verify; 
+logic                       done1_verify; 
+logic                       start_out1_verify; 
+logic           [31 : 0]    out_len1_verify; 
+logic                       done_out1_verify; 
+logic           [63 : 0]    st_64bit1_verify; 
+logic                       st_64bit_valid1_verify;
+
+// --- SHA3-2 控制接口 ---
+logic           [7 : 0]     dout2_verify;
+logic                       dout_valid2_verify;
+logic           [31 : 0]    dout_len2_verify;
+logic           [7 : 0]     mdlen2_verify;
+logic                       init2_verify;
+logic                       start2_verify;
+logic                       done2_verify;
+logic                       start_out2_verify;
+logic           [31 : 0]    out_len2_verify;
+logic                       done_out2_verify;
+logic           [63 : 0]    st_64bit2_verify;
+logic                       st_64bit_valid2_verify;
 
 // ==========================================================
 // 模块例化区
@@ -649,7 +697,53 @@ verify_internal u_verify_internal(
 	.CoeffModq_coeff_type       	( CoeffModq_coeff_type_verify        ),
 	.CoeffModq_poly_start_pulse 	( CoeffModq_poly_start_pulse_verify  ),
 	.CoeffModq_modq_coeff       	( CoeffModq_modq_coeff_verify        ),
-	.CoeffModq_modq_coeff_valid 	( CoeffModq_modq_coeff_valid_verify  )
+	.CoeffModq_modq_coeff_valid 	( CoeffModq_modq_coeff_valid_verify  ),
+
+    .rho_ExpandA                    (rho_ExpandA_verify                 ),
+    .start_expand_ExpandA           (start_expand_ExpandA_verify        ),
+    .coeff_ExpandA                  (coeff_ExpandA_verify               ),
+    .coeff_valid_ExpandA            (coeff_valid_ExpandA_verify         ),
+    .expand_done_ExpandA            (expand_done_ExpandA_verify         ),
+    .dout_ExpandA                   (dout_ExpandA_verify                ),
+    .dout_valid_ExpandA             (dout_valid_ExpandA_verify          ),
+    .dout_len_ExpandA               (dout_len_ExpandA_verify            ),
+    .mdlen_ExpandA                  (mdlen_ExpandA_verify               ),
+    .init_ExpandA                   (init_ExpandA_verify                ),
+    .start_ExpandA                  (start_ExpandA_verify               ),
+    .done_ExpandA                   (done_ExpandA_verify                ),
+    .start_out_ExpandA              (start_out_ExpandA_verify           ),
+    .out_len_ExpandA                (out_len_ExpandA_verify             ),
+    .done_out_ExpandA               (done_out_ExpandA_verify            ),
+    .st_64bit_ExpandA               (st_64bit_ExpandA_verify            ),
+    .st_64bit_valid_ExpandA         (st_64bit_valid_ExpandA_verify      ),
+
+    // --- SHA3-1 控制接口 ---
+    .dout1                          (dout1_verify                              ), 
+    .dout_valid1                    (dout_valid1_verify                        ), 
+    .dout_len1                      (dout_len1_verify                          ), 
+    .mdlen1                         (mdlen1_verify                             ), 
+    .init1                          (init1_verify                              ), 
+    .start1                         (start1_verify                             ), 
+    .done1                          (done1_verify                              ), 
+    .start_out1                     (start_out1_verify                         ), 
+    .out_len1                       (out_len1_verify                           ), 
+    .done_out1                      (done_out1_verify                          ), 
+    .st_64bit1                      (st_64bit1_verify                          ), 
+    .st_64bit_valid1                (st_64bit_valid1_verify                    ),
+
+    // --- SHA3-2 控制接口 ---
+    .dout2                          (dout2_verify                              ), 
+    .dout_valid2                    (dout_valid2_verify                        ), 
+    .dout_len2                      (dout_len2_verify                          ), 
+    .mdlen2                         (mdlen2_verify                             ), 
+    .init2                          (init2_verify                              ), 
+    .start2                         (start2_verify                             ), 
+    .done2                          (done2_verify                              ), 
+    .start_out2                     (start_out2_verify                         ), 
+    .out_len2                       (out_len2_verify                           ), 
+    .done_out2                      (done_out2_verify                          ), 
+    .st_64bit2                      (st_64bit2_verify                          ), 
+    .st_64bit_valid2                (st_64bit_valid2_verify                    )
 );
 
 
@@ -939,7 +1033,51 @@ GlobalComputeArbitration #(
     .CoeffModq_coeff_type_sign      ( CoeffModq_coeff_type_sign      ),
     .CoeffModq_poly_start_pulse_sign( CoeffModq_poly_start_pulse_sign),
     .CoeffModq_modq_coeff_sign      ( CoeffModq_modq_coeff_sign      ),
-    .CoeffModq_modq_coeff_valid_sign( CoeffModq_modq_coeff_valid_sign)
+    .CoeffModq_modq_coeff_valid_sign( CoeffModq_modq_coeff_valid_sign),
+
+    .rho_ExpandA_verify             (rho_ExpandA_verify                 ),
+    .start_expand_ExpandA_verify    (start_expand_ExpandA_verify        ),
+    .coeff_ExpandA_verify           (coeff_ExpandA_verify               ),
+    .coeff_valid_ExpandA_verify     (coeff_valid_ExpandA_verify         ),
+    .expand_done_ExpandA_verify     (expand_done_ExpandA_verify         ),
+    .dout_ExpandA_verify            (dout_ExpandA_verify                ),
+    .dout_valid_ExpandA_verify      (dout_valid_ExpandA_verify          ),
+    .dout_len_ExpandA_verify        (dout_len_ExpandA_verify            ),
+    .mdlen_ExpandA_verify           (mdlen_ExpandA_verify               ),
+    .init_ExpandA_verify            (init_ExpandA_verify                ),
+    .start_ExpandA_verify           (start_ExpandA_verify               ),
+    .done_ExpandA_verify            (done_ExpandA_verify                ),
+    .start_out_ExpandA_verify       (start_out_ExpandA_verify           ),
+    .out_len_ExpandA_verify         (out_len_ExpandA_verify             ),
+    .done_out_ExpandA_verify        (done_out_ExpandA_verify            ),
+    .st_64bit_ExpandA_verify        (st_64bit_ExpandA_verify            ),
+    .st_64bit_valid_ExpandA_verify  (st_64bit_valid_ExpandA_verify      ),
+
+    .dout1_verify                   (dout1_verify                              ), 
+    .dout_valid1_verify             (dout_valid1_verify                        ), 
+    .dout_len1_verify               (dout_len1_verify                          ), 
+    .mdlen1_verify                  (mdlen1_verify                             ), 
+    .init1_verify                   (init1_verify                              ), 
+    .start1_verify                  (start1_verify                             ), 
+    .done1_verify                   (done1_verify                              ), 
+    .start_out1_verify              (start_out1_verify                         ), 
+    .out_len1_verify                (out_len1_verify                           ), 
+    .done_out1_verify               (done_out1_verify                          ), 
+    .st_64bit1_verify               (st_64bit1_verify                          ), 
+    .st_64bit_valid1_verify         (st_64bit_valid1_verify                    ),
+
+    .dout2_verify                   (dout2_verify                              ), 
+    .dout_valid2_verify             (dout_valid2_verify                        ), 
+    .dout_len2_verify               (dout_len2_verify                          ), 
+    .mdlen2_verify                  (mdlen2_verify                             ), 
+    .init2_verify                   (init2_verify                              ), 
+    .start2_verify                  (start2_verify                             ), 
+    .done2_verify                   (done2_verify                              ), 
+    .start_out2_verify              (start_out2_verify                         ), 
+    .out_len2_verify                (out_len2_verify                           ), 
+    .done_out2_verify               (done_out2_verify                          ), 
+    .st_64bit2_verify               (st_64bit2_verify                          ), 
+    .st_64bit_valid2_verify         (st_64bit_valid2_verify                    )
 );
 
 endmodule

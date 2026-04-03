@@ -26,10 +26,10 @@ logic                       done_sign;
 logic           [511 : 0]   mu = 'd0;
 logic           [255 : 0]   rnd = 'd0;
 
-logic                       start_verify;    
+logic                       start_verify = 1'b0;    
 logic                       verify_ready;    
 logic                       done_verify;    
-logic           [511 : 0]   mu_verify;        
+logic           [511 : 0]   mu_verify = 'd0;        
 
 initial
 begin
@@ -65,6 +65,7 @@ initial begin
     end
     repeat (500) @(posedge clk);
     start_verify <= 1'b1;
+    mu_verify <= 'h0093d9e2e3e508cd7c57cddb9e6098566ade34a638fc93f4f54777d5024124b6a2f8f21efadd1f11e45939947a636956fd5b0d125a31a3e08993c31585e23ef8;
     @(posedge clk);
     start_verify <= 1'b0;
     repeat (500) @(posedge clk);

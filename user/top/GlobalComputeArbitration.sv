@@ -69,7 +69,7 @@ module GlobalComputeArbitration
     input       logic           [4 * T0_BIT_LEN - 1 : 0]    t0_0_keygen,         
     input       logic                                       t0_valid_0_keygen,
 
-    input       logic           [4 * Z_BIT_LEN - 1 : 0]     z_0_keygen,
+    input       logic           [4 * 23 - 1 : 0]            z_0_keygen,
     input       logic                                       z_valid_0_keygen,
 
     output      logic           [63 : 0]    encode_0_keygen,
@@ -199,7 +199,58 @@ module GlobalComputeArbitration
     input       logic           [2 : 0]     CoeffModq_coeff_type_sign,     
     input       logic                       CoeffModq_poly_start_pulse_sign, 
     output      logic           [91 : 0]    CoeffModq_modq_coeff_sign,      
-    output      logic                       CoeffModq_modq_coeff_valid_sign
+    output      logic                       CoeffModq_modq_coeff_valid_sign,
+
+    // ==========================================
+    // Verify 控制器接口
+    // ==========================================  
+    // --- ExpandA 信号 ---
+    input       logic           [255 : 0]   rho_ExpandA_verify,            
+    input       logic                       start_expand_ExpandA_verify,   
+    output      logic           [91 : 0]    coeff_ExpandA_verify,          
+    output      logic                       coeff_valid_ExpandA_verify,    
+    output      logic                       expand_done_ExpandA_verify,    
+
+    output      logic           [7 : 0]     dout_ExpandA_verify,           
+    output      logic                       dout_valid_ExpandA_verify,     
+    output      logic           [31 : 0]    dout_len_ExpandA_verify,       
+    output      logic           [7 : 0]     mdlen_ExpandA_verify,          
+    output      logic                       init_ExpandA_verify,           
+    output      logic                       start_ExpandA_verify,          
+    input       logic                       done_ExpandA_verify,           
+    output      logic                       start_out_ExpandA_verify,      
+    output      logic           [31 : 0]    out_len_ExpandA_verify,        
+    input       logic                       done_out_ExpandA_verify,       
+    input       logic           [63 : 0]    st_64bit_ExpandA_verify,       
+    input       logic                       st_64bit_valid_ExpandA_verify,
+
+    // --- SHA3-1 控制接口 ---
+    input       logic           [7 : 0]     dout1_verify, 
+    input       logic                       dout_valid1_verify, 
+    input       logic           [31 : 0]    dout_len1_verify, 
+    input       logic           [7 : 0]     mdlen1_verify, 
+    input       logic                       init1_verify, 
+    input       logic                       start1_verify, 
+    output      logic                       done1_verify, 
+    input       logic                       start_out1_verify, 
+    input       logic           [31 : 0]    out_len1_verify, 
+    output      logic                       done_out1_verify, 
+    output      logic           [63 : 0]    st_64bit1_verify, 
+    output      logic                       st_64bit_valid1_verify,
+
+    // --- SHA3-2 控制接口 ---
+    input       logic           [7 : 0]     dout2_verify, 
+    input       logic                       dout_valid2_verify, 
+    input       logic           [31 : 0]    dout_len2_verify, 
+    input       logic           [7 : 0]     mdlen2_verify, 
+    input       logic                       init2_verify, 
+    input       logic                       start2_verify, 
+    output      logic                       done2_verify, 
+    input       logic                       start_out2_verify, 
+    input       logic           [31 : 0]    out_len2_verify, 
+    output      logic                       done_out2_verify, 
+    output      logic           [63 : 0]    st_64bit2_verify, 
+    output      logic                       st_64bit_valid2_verify
 );
 
 // ==========================================
@@ -256,7 +307,7 @@ logic           [4 * 23 - 1 : 0]                s2_0;
 logic                                           s2_valid_0;
 logic           [4 * T0_BIT_LEN - 1 : 0]        t0_0;         
 logic                                           t0_valid_0;
-logic           [4 * Z_BIT_LEN - 1 : 0]         z_0;
+logic           [4 * 23 - 1 : 0]                z_0;
 logic                                           z_valid_0;
 logic           [63 : 0]                        encode_0;
 logic                                           encoder_valid_0;
@@ -388,6 +439,25 @@ assign CoeffModq_ram_rd_en_sign      = CoeffModq_ram_rd_en;
 assign CoeffModq_modq_coeff_sign     = CoeffModq_modq_coeff;
 assign CoeffModq_modq_coeff_valid_sign = CoeffModq_modq_coeff_valid;
 
+// ==========================================
+// 广播赋值: 回传给 Verify
+// ==========================================
+assign coeff_ExpandA_verify            = coeff_ExpandA;
+assign coeff_valid_ExpandA_verify      = coeff_valid_ExpandA;
+assign expand_done_ExpandA_verify      = expand_done_ExpandA;
+assign dout_ExpandA_verify             = dout_ExpandA;
+assign dout_valid_ExpandA_verify       = dout_valid_ExpandA;
+assign dout_len_ExpandA_verify         = dout_len_ExpandA;
+assign mdlen_ExpandA_verify            = mdlen_ExpandA;
+assign init_ExpandA_verify             = init_ExpandA;
+assign start_ExpandA_verify            = start_ExpandA;
+assign start_out_ExpandA_verify        = start_out_ExpandA;
+assign out_len_ExpandA_verify          = out_len_ExpandA;
+
+assign done1_verify                    = done1;
+assign done_out1_verify                = done_out1;
+assign st_64bit1_verify                = st_64bit1;
+assign st_64bit_valid1_verify          = st_64bit_valid1;
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
 // ==========================================
@@ -572,6 +642,33 @@ always_comb begin
             CoeffModq_poly_start_pulse = CoeffModq_poly_start_pulse_sign;
         end
 
+        2'd2: begin             // --- Verify 获取控制权 ---
+            rho_ExpandA                 = rho_ExpandA_verify;
+            start_expand_ExpandA        = start_expand_ExpandA_verify;
+            done_ExpandA                = done_ExpandA_verify;
+            done_out_ExpandA            = done_out_ExpandA_verify;
+            st_64bit_ExpandA            = st_64bit_ExpandA_verify;
+            st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_verify;
+
+            dout1                       = dout1_verify;
+            dout_valid1                 = dout_valid1_verify;
+            dout_len1                   = dout_len1_verify;
+            mdlen1                      = mdlen1_verify;
+            init1                       = init1_verify;
+            start1                      = start1_verify;
+            start_out1                  = start_out1_verify;
+            out_len1                    = out_len1_verify;
+
+            dout2                       = dout2_verify;
+            dout_valid2                 = dout_valid2_verify;
+            dout_len2                   = dout_len2_verify;
+            mdlen2                      = mdlen2_verify;
+            init2                       = init2_verify;
+            start2                      = start2_verify;
+            start_out2                  = start_out2_verify;
+            out_len2                    = out_len2_verify;
+
+        end
         default: ; // 默认所有控制信号为0，保持空闲
     endcase
 end
