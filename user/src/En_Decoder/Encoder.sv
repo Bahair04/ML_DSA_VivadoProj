@@ -35,8 +35,6 @@ module Encoder
     // output   logic                                   encoder_ready 
 );
 
-// ... (此处省略与你原代码相同的 4 通道 Encoder_single_channel 例化部分) ...
-
 logic   [T1_BIT_LEN - 1 : 0] 	                        pk_encode [0 : 3];              // 总长度 40 bit
 logic                  	                                pk_encode_valid [0 : 3];
 logic   [T0_BIT_LEN - 1 : 0] 	                        sk_encode [0 : 3];              // 总长度 12/16/52 bit
