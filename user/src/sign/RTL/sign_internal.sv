@@ -364,8 +364,10 @@ logic           [63 : 0] 	        encode;
 logic        	                    encoder_valid;
 logic        	                    reject_flag;
 logic           [2 : 0]             save_w_select;
-logic           [3 : 0]             hint;
-logic                               hint_valid;
+logic           [63 : 0]            pack_out;
+logic           [6:0]               pack_len_bits;
+logic                               pack_valid;
+logic                               pack_done;
 logic                               make_hint_done;
 
 //* ==========================================================
@@ -597,7 +599,7 @@ always_ff @(posedge clk) begin
                     mac_stage <= 'd0;
                     state <= S_SIGN_LOOP_INIT;
                 end
-                else if (make_hint_done) 
+                else if (pack_done) 
                     state <= S_IDLE;
                 else
                     state <= S_WAIT;
@@ -1844,8 +1846,10 @@ postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_
     .w_minus_c_s2_valid ( w_minus_c_s2_valid                                    ),
     .encode             ( encode                                                ),
     .encoder_valid      ( encoder_valid                                         ),
-    .hint               ( hint                                                  ),
-    .hint_valid         ( hint_valid                                            ),
+    .pack_out           ( pack_out                                             ),
+    .pack_len_bits      ( pack_len_bits                                        ),
+    .pack_valid         ( pack_valid                                           ),
+    .pack_done          ( pack_done                                            ),
     .reject_flag        ( reject_flag                                           ),
     .make_hint_done     ( make_hint_done                                        )
 );

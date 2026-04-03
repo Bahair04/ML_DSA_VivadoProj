@@ -24,8 +24,10 @@ module postMultCalc
     output      logic                       w_minus_c_s2_valid,
     output      logic   [63 : 0]            encode,
     output      logic                       encoder_valid,
-    output      logic   [3 : 0]             hint,
-    output      logic                       hint_valid,
+    output      logic   [63 : 0]            pack_out,
+    output      logic   [6:0]               pack_len_bits,
+    output      logic                       pack_valid,
+    output      logic                       pack_done,
     output      logic                       reject_flag,
     output      logic                       make_hint_done
 );
@@ -45,6 +47,10 @@ logic                                   z_valid;
 logic           [18 : 0]                r0 [0 : 3];
 logic                                   r0_valid [0 : 3];
 logic           [7 : 0]                 hint_valid_cnt;
+
+logic           [3 : 0]                 hint;
+logic                                   hint_valid;
+
 
 // ==========================================
 // 1. 利用 mac_stage 在内部进行数据路由
@@ -289,12 +295,6 @@ always_ff @(posedge clk) begin
     else 
         make_hint_done <= 1'b0;
 end
-
-// outports wire
-wire [63:0] 	pack_out;
-wire [6:0]  	pack_len_bits;
-wire        	pack_valid;
-wire        	pack_done;
 
 HintBitPack_64bit u_HintBitPack_64bit(
 	.clk           	( clk            ),
