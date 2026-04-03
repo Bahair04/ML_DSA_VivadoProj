@@ -269,8 +269,6 @@ logic           [91 : 0]    mac_data_in3_sign [0 : K - 1];
 logic                       mac_valid_out_sign;
 logic           [91 : 0]    mac_data_out_sign [0 : K - 1];
 
-// (Sign如需用到 Encoder 接口可增加相应的 _sign 线网，目前略)
-
 // --- SHA3-1 ---
 logic           [7 : 0]     dout1_sign; 
 logic                       dout_valid1_sign; 
@@ -299,6 +297,14 @@ logic                       done_out2_sign;
 logic           [63 : 0]    st_64bit2_sign; 
 logic                       st_64bit_valid2_sign;
 
+// --- coeffModq ---
+logic                       CoeffModq_ram_rd_en_sign;       
+logic           [63 : 0]    CoeffModq_ori_coeff_sign;       
+logic                       CoeffModq_ori_coeff_valid_sign; 
+logic           [2 : 0]     CoeffModq_coeff_type_sign;     
+logic                       CoeffModq_poly_start_pulse_sign; 
+logic           [91 : 0]    CoeffModq_modq_coeff_sign;      
+logic                       CoeffModq_modq_coeff_valid_sign;
 
 // ==========================================================
 // 模块例化区
@@ -530,7 +536,6 @@ u_sign_internal(
     .con_coeff                  ( con_coeff_sign               ),
     .con_coeff_valid            ( con_coeff_valid_sign         ),
     
-    // (注意内部虽然叫 _keygen，但是这里需要映射给 _sign)
     .mac_valid_in               ( mac_valid_in_sign            ),
     .mac_data_in1               ( mac_data_in1_sign            ),
     .mac_data_in2               ( mac_data_in2_sign            ),
@@ -562,7 +567,15 @@ u_sign_internal(
     .out_len2                   ( out_len2_sign                ),
     .done_out2                  ( done_out2_sign               ),
     .st_64bit2                  ( st_64bit2_sign               ),
-    .st_64bit_valid2            ( st_64bit_valid2_sign         )
+    .st_64bit_valid2            ( st_64bit_valid2_sign         ),
+
+    .CoeffModq_ram_rd_en        ( CoeffModq_ram_rd_en_sign     ),
+    .CoeffModq_ori_coeff        ( CoeffModq_ori_coeff_sign     ),
+    .CoeffModq_ori_coeff_valid  ( CoeffModq_ori_coeff_valid_sign ),
+    .CoeffModq_coeff_type       ( CoeffModq_coeff_type_sign    ),
+    .CoeffModq_poly_start_pulse ( CoeffModq_poly_start_pulse_sign ),
+    .CoeffModq_modq_coeff       ( CoeffModq_modq_coeff_sign    ),
+    .CoeffModq_modq_coeff_valid ( CoeffModq_modq_coeff_valid_sign )
 );
 
 
@@ -825,7 +838,15 @@ GlobalComputeArbitration #(
     .out_len2_sign                  ( out_len2_sign                  ), 
     .done_out2_sign                 ( done_out2_sign                 ), 
     .st_64bit2_sign                 ( st_64bit2_sign                 ), 
-    .st_64bit_valid2_sign           ( st_64bit_valid2_sign           )
+    .st_64bit_valid2_sign           ( st_64bit_valid2_sign           ),
+
+    .CoeffModq_ram_rd_en_sign       ( CoeffModq_ram_rd_en_sign       ),
+    .CoeffModq_ori_coeff_sign       ( CoeffModq_ori_coeff_sign       ),
+    .CoeffModq_ori_coeff_valid_sign ( CoeffModq_ori_coeff_valid_sign ),
+    .CoeffModq_coeff_type_sign      ( CoeffModq_coeff_type_sign      ),
+    .CoeffModq_poly_start_pulse_sign( CoeffModq_poly_start_pulse_sign),
+    .CoeffModq_modq_coeff_sign      ( CoeffModq_modq_coeff_sign      ),
+    .CoeffModq_modq_coeff_valid_sign( CoeffModq_modq_coeff_valid_sign)
 );
 
 endmodule

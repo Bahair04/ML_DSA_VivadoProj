@@ -132,7 +132,15 @@ module sign_internal
     output      logic           [31 : 0]    out_len2, 
     input       logic                       done_out2, 
     input       logic           [63 : 0]    st_64bit2, 
-    input       logic                       st_64bit_valid2
+    input       logic                       st_64bit_valid2,
+
+    input       logic                       CoeffModq_ram_rd_en,       
+    output      logic           [63 : 0]    CoeffModq_ori_coeff,       
+    output      logic                       CoeffModq_ori_coeff_valid, 
+    output      logic           [2 : 0]     CoeffModq_coeff_type,     
+    output      logic                       CoeffModq_poly_start_pulse, 
+    input       logic           [91 : 0]    CoeffModq_modq_coeff,      
+    input       logic                       CoeffModq_modq_coeff_valid
 );
 
 // 参数维度
@@ -260,7 +268,7 @@ logic           [8 : 0]             con_coeff_cnt_d;                // NTT/INTT 
 // --- coeffModq 控制信号 ---
 logic                               ram_rd_en;
 logic                               coeff_valid_d;
-logic           [1 : 0]             current_coeff_type;             // 区分当前读取的向量类型 0-s1 1-s2 2-t0
+logic           [2 : 0]             current_coeff_type;             // 区分当前读取的向量类型 0-s1 1-s2 2-t0
 
 // --- Expand Y ---
 logic           [511 : 0]           rho_prime_ExpandY;      
@@ -757,17 +765,14 @@ logic           [63 : 0]            reverse_temp;
 logic           [91 : 0]            ori_coeff_Modq;
 logic                               ori_coeff_valid_Modq;
 assign reverse_temp = {<<8{r_EncodeSK_Coeff}};
-coeffModq u_coeffModq(
-    .clk                ( clk                                                               ),
-    .rstn               ( rstn                                                              ),
-    .ram_rd_en          ( ram_rd_en                                                         ),
-    .ori_coeff          ( reverse_temp                                                      ),
-    .ori_coeff_valid    ( coeff_valid_d                                                     ),
-    .coeff_type         ( current_coeff_type                                                ),
-    .poly_start_pulse   ( state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1    ),
-    .modq_coeff         ( ori_coeff_Modq                                                    ), 
-    .modq_coeff_valid   ( ori_coeff_valid_Modq                                              )
-);
+
+assign ram_rd_en = CoeffModq_ram_rd_en;
+assign CoeffModq_ori_coeff = reverse_temp;
+assign CoeffModq_ori_coeff_valid = coeff_valid_d;
+assign CoeffModq_coeff_type = current_coeff_type;
+assign CoeffModq_poly_start_pulse = (state == S_PREPROC_NTT_ACK && ready == 1'b0 && request == 1'b1);
+assign ori_coeff_Modq = CoeffModq_modq_coeff;
+assign ori_coeff_valid_Modq = CoeffModq_modq_coeff_valid;
 
 //* ==========================================================
 //* 5. Poly_PAU 控制逻辑

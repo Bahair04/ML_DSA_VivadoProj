@@ -190,7 +190,16 @@ module GlobalComputeArbitration
     input       logic           [31 : 0]    out_len2_sign, 
     output      logic                       done_out2_sign, 
     output      logic           [63 : 0]    st_64bit2_sign, 
-    output      logic                       st_64bit_valid2_sign
+    output      logic                       st_64bit_valid2_sign,
+
+    // --- CoeffModq ---
+    output      logic                       CoeffModq_ram_rd_en_sign,       
+    input       logic           [63 : 0]    CoeffModq_ori_coeff_sign,       
+    input       logic                       CoeffModq_ori_coeff_valid_sign, 
+    input       logic           [2 : 0]     CoeffModq_coeff_type_sign,     
+    input       logic                       CoeffModq_poly_start_pulse_sign, 
+    output      logic           [91 : 0]    CoeffModq_modq_coeff_sign,      
+    output      logic                       CoeffModq_modq_coeff_valid_sign
 );
 
 // ==========================================
@@ -295,6 +304,14 @@ logic                       done_out2;
 logic           [63 : 0]    st_64bit2; 
 logic                       st_64bit_valid2;
 
+// --- CoeffModq 内部线声明 ---
+logic                       CoeffModq_ram_rd_en;       
+logic           [63 : 0]    CoeffModq_ori_coeff;       
+logic                       CoeffModq_ori_coeff_valid; 
+logic           [2 : 0]     CoeffModq_coeff_type;      
+logic                       CoeffModq_poly_start_pulse; 
+logic           [91 : 0]    CoeffModq_modq_coeff;      
+logic                       CoeffModq_modq_coeff_valid;
 
 // ==========================================
 // 广播赋值: 回传给 KeyGen
@@ -357,9 +374,6 @@ assign con_coeff_valid_sign          = pau_con_coeff_valid;
 assign mac_valid_out_sign            = mac_valid_out;
 assign mac_data_out_sign             = mac_data_out;
 
-// (虽然 Sign 不一定用到 Encoder，但保持接口对称)
-// 也可以不连接，取决于你的 Encoder 逻辑是否在 Sign 中复用
-
 assign done1_sign                    = done1;
 assign done_out1_sign                = done_out1;
 assign st_64bit1_sign                = st_64bit1;
@@ -370,6 +384,9 @@ assign done_out2_sign                = done_out2;
 assign st_64bit2_sign                = st_64bit2;
 assign st_64bit_valid2_sign          = st_64bit_valid2;
 
+assign CoeffModq_ram_rd_en_sign      = CoeffModq_ram_rd_en;
+assign CoeffModq_modq_coeff_sign     = CoeffModq_modq_coeff;
+assign CoeffModq_modq_coeff_valid_sign = CoeffModq_modq_coeff_valid;
 
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
@@ -438,6 +455,11 @@ always_comb begin
     start2      = 1'b0;
     start_out2  = 1'b0;
     out_len2    = 'd0;
+
+    CoeffModq_ori_coeff    = 'd0;
+    CoeffModq_ori_coeff_valid = 1'b0;
+    CoeffModq_coeff_type = 'd0;
+    CoeffModq_poly_start_pulse = 1'b0;
 
     // 根据 mode_config，让对应的控制器接管算力池
     case (mode_config)
@@ -526,10 +548,6 @@ always_comb begin
                 mac_data_in3[i] = mac_data_in3_sign[i];
             end
 
-            // Sign 模块可能暂时不用 Encoder，如果用的话在这里赋值
-            // system_done_0 = system_done_0_sign;
-            // ...以此类推
-
             dout1                       = dout1_sign;
             dout_valid1                 = dout_valid1_sign;
             dout_len1                   = dout_len1_sign;
@@ -547,6 +565,11 @@ always_comb begin
             start2                      = start2_sign;
             start_out2                  = start_out2_sign;
             out_len2                    = out_len2_sign;
+
+            CoeffModq_ori_coeff = CoeffModq_ori_coeff_sign;
+            CoeffModq_ori_coeff_valid = CoeffModq_ori_coeff_valid_sign;
+            CoeffModq_coeff_type = CoeffModq_coeff_type_sign;
+            CoeffModq_poly_start_pulse = CoeffModq_poly_start_pulse_sign;
         end
 
         default: ; // 默认所有控制信号为0，保持空闲
@@ -678,6 +701,18 @@ sha3 u_sha3_2(
     .done_out           ( done_out2       ),
     .st_64bit           ( st_64bit2       ),
     .st_64bit_valid     ( st_64bit_valid2 )
+);
+
+coeffModq u_coeffModq(
+    .clk                ( clk                         ),
+    .rstn               ( rstn                        ),
+    .ram_rd_en          ( CoeffModq_ram_rd_en         ),
+    .ori_coeff          ( CoeffModq_ori_coeff         ),
+    .ori_coeff_valid    ( CoeffModq_ori_coeff_valid   ),
+    .coeff_type         ( CoeffModq_coeff_type        ),
+    .poly_start_pulse   ( CoeffModq_poly_start_pulse  ),
+    .modq_coeff         ( CoeffModq_modq_coeff        ), 
+    .modq_coeff_valid   ( CoeffModq_modq_coeff_valid  )
 );
 
 endmodule

@@ -1,7 +1,9 @@
 `include "../../param_conf.v"
 module coeffModq #(
     parameter S1_S2_BIT_LEN = $clog2(2 * `eta) + 1,
-    parameter T0_BIT_LEN = `d
+    parameter T0_BIT_LEN = `d,
+    parameter T1_BIT_LEN = $clog2(`q - 1) - `d,  // 新增: t1 默认 10-bit
+    parameter Z_BIT_LEN = `bit_count             // 新增: z 默认 18 或 20-bit
 )(
     input  logic                clk,
     input  logic                rstn,
@@ -12,7 +14,7 @@ module coeffModq #(
     input  logic                ori_coeff_valid, 
     
     // --- 控制与状态 ---
-    input  logic [1 : 0]        coeff_type,      
+    input  logic [2 : 0]        coeff_type,      // 修改: 位宽从 [1:0] 扩大到 [2:0]
 
     // --- Poly_PAU 握手与输出接口 ---
     input  logic                poly_start_pulse, // 短脉冲握手条件: (ready == 1'b0 && request == 1'b1)
@@ -62,10 +64,13 @@ logic [7 : 0]   consume_len;
 assign ram_rd_en = (buffer_len <= 9'd128);
 
 always_comb begin
-    if (coeff_type == 2'd2) 
-        consume_len = T0_BIT_LEN * 4;
-    else                    
-        consume_len = S1_S2_BIT_LEN * 4;
+    case (coeff_type)
+        3'd0, 3'd1: consume_len = S1_S2_BIT_LEN * 4; // s1, s2
+        3'd2:       consume_len = T0_BIT_LEN * 4;    // t0
+        3'd3:       consume_len = Z_BIT_LEN * 4;     // z
+        3'd4:       consume_len = T1_BIT_LEN * 4;    // t1
+        default:    consume_len = S1_S2_BIT_LEN * 4;
+    endcase
 end
 
 logic [127 : 0] extracted_bits;
@@ -115,7 +120,8 @@ always_comb begin
     for (int i = 0; i < 4; i++) begin
         logic [22 : 0] single_coeff;
         
-        if (coeff_type == 2'd2) begin
+        if (coeff_type == 3'd2) begin 
+            // ====================== 处理 t0 ======================
             logic [12 : 0] packed_t0;
             logic signed [13 : 0] t0_signed; 
             
@@ -127,14 +133,36 @@ always_comb begin
             else 
                 single_coeff = t0_signed;
         end 
-        else begin
+        else if (coeff_type == 3'd3) begin 
+            // ====================== 处理 z =======================
+            logic [Z_BIT_LEN - 1 : 0] z_raw;
+            z_raw = extracted_bits[i * Z_BIT_LEN +: Z_BIT_LEN];
+            
+            // FIPS 204 打包公式: z_encoded = gamma_1 - z
+            // 所以数学真值: z = gamma_1 - z_encoded
+            if (`gamma_1 >= z_raw)
+                single_coeff = `gamma_1 - z_raw;          // z 是正数
+            else
+                single_coeff = `q + `gamma_1 - z_raw;     // z 是负数，转换为模 q 正数
+        end
+        else if (coeff_type == 3'd4) begin 
+            // ====================== 处理 t1 ======================
+            logic [T1_BIT_LEN - 1 : 0] t1_raw;
+            t1_raw = extracted_bits[i * T1_BIT_LEN +: T1_BIT_LEN];
+            
+            // t1 是标准正数，直接零扩展到 23-bit
+            single_coeff = { {(23 - T1_BIT_LEN){1'b0}}, t1_raw };
+        end
+        else begin 
+            // ================== 处理 s1 和 s2 ====================
             logic [4 : 0] s_raw;
             s_raw = extracted_bits[i * S1_S2_BIT_LEN +: S1_S2_BIT_LEN];
             
+            // FIPS 204 打包公式: s_encoded = eta - s
             if (`eta >= s_raw)
-                single_coeff = `eta - s_raw;
+                single_coeff = `eta - s_raw;              // s 是正数
             else
-                single_coeff = `q + `eta - s_raw;
+                single_coeff = `q + `eta - s_raw;         // s 是负数，转换为模 q 正数
         end
         
         modq_coeff[i * 23 +: 23] = single_coeff;
