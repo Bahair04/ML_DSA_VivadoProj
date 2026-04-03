@@ -121,7 +121,7 @@ generate                                            // r = low_bits(w - c_s2)
         if (`gamma_2 == 95232) begin
             Decomposes u_Decomposes(
                 .clk        ( clk          ),
-                .rstn       ( rstn         ),
+                .rstn       ( rstn & (!init)),
                 .r          ( r            ),
                 .r_valid    ( r_valid      ),
                 .r0         ( r0[i]        ),
@@ -131,7 +131,7 @@ generate                                            // r = low_bits(w - c_s2)
         else begin
             Decomposes2 u_Decomposes2(
                 .clk        ( clk          ),
-                .rstn       ( rstn         ),
+                .rstn       ( rstn & (!init)),
                 .r          ( r            ),
                 .r_valid    ( r_valid      ),
                 .r0         ( r0[i]        ),
@@ -143,6 +143,10 @@ endgenerate
 
 always_ff @(posedge clk) begin
     if (!rstn) begin
+        z <= 'd0;
+        z_valid <= 1'b0;
+    end
+    else if (init) begin
         z <= 'd0;
         z_valid <= 1'b0;
     end
@@ -159,7 +163,7 @@ end
 logic           [63 : 0]            encode_temp;
 Encoder u_Encoder(                                          
     .clk            ( clk            ),
-    .rstn           ( rstn           ),
+    .rstn           ( rstn  & (!init)),
     .system_done    ( system_done    ), 
     .z              ( z              ),
     .z_valid        ( z_valid        ),
@@ -211,6 +215,9 @@ always_ff @(posedge clk) begin
     if (!rstn) begin
         reject_flag <= 1'b0;
     end
+    else if (init) begin
+        reject_flag <= 1'b0;
+    end
     else begin
         // 判断条件加上了对应的 valid 触发与阶段指示
         if (z_valid && (|reject_z))
@@ -235,7 +242,7 @@ generate
         wire                        o_valid;
         make_hint u_make_hint(
             .clk      	( clk       ),
-            .rstn     	( rstn      ),
+            .rstn     	( rstn & (!init)),
             .r_d      	( r_d       ),
             .r_plus_z 	( r_plus_z  ),
             .i_valid  	( i_valid   ),
@@ -275,10 +282,33 @@ end
 always_ff @(posedge clk) begin
     if (!rstn)
         make_hint_done <= 1'b0;
+    else if (init)
+        make_hint_done <= 1'b0;
     else if (hint_valid && hint_valid_cnt == 'd255)
         make_hint_done <= 1'b1;
     else 
         make_hint_done <= 1'b0;
 end
+
+// outports wire
+wire [63:0] 	pack_out;
+wire [6:0]  	pack_len_bits;
+wire        	pack_valid;
+wire        	pack_done;
+
+HintBitPack_64bit u_HintBitPack_64bit(
+	.clk           	( clk            ),
+	.rstn          	( rstn           ),
+	.init          	( init           ),
+	.hint          	( hint           ),
+	.hint_valid    	( hint_valid     ),
+    .hint_valid_cnt ( hint_valid_cnt ),
+    .make_hint_done ( make_hint_done ),
+	.pack_out      	( pack_out       ),
+	.pack_valid    	( pack_valid     ),
+	.pack_done     	( pack_done      ),
+	.pack_len_bits 	( pack_len_bits  )
+);
+
 
 endmodule

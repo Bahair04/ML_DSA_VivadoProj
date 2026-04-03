@@ -1831,7 +1831,7 @@ ExpandC u_ExpandC(
 
 postMultCalc u_postMultCalc(            // post_mult 操作 同时包括了make_hint和拒绝采样门限判定
     .clk                ( clk                                                   ),
-    .rstn               ( rstn & (~reject_init)                                 ),
+    .rstn               ( rstn                                                  ),
     .init               ( state == S_SIGN_LOOP_INIT                             ),
     .y                  ( r_VectorY_Coeff                                       ),
     .w                  ( r_VectorM_Coeff[r_VectorM_Coeff_addr_global_d[8:6]]   ),
