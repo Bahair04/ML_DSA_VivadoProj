@@ -301,6 +301,7 @@ always_ff @(posedge clk) begin
             end
             S_STAGE3: begin
                 load_mu_start <= 1'b0;
+                read_t1_start <= 1'b0;
                 if (load_mu_done && read_t1_done) begin
                     state <= S_STAGE4;
                 end
@@ -442,6 +443,29 @@ always_ff @(posedge clk) begin
         automatic logic coeff_3 = hint_out[3];
         
         hint[current_poly][current_group] <= hint_out;
+    end
+end
+
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        w_VectorT_Coeff[i] = 'd0;
+        w_VectorT_Coeff_valid[i] = 1'b0;
+        w_VectorT_Coeff_addr[i] = 'd0;
+    end
+    
+    if (state == S_STAGE3) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            if (i == read_t1_ntt_cnt[8 : 6]) begin
+                w_VectorT_Coeff[i] = con_coeff;
+                w_VectorT_Coeff_valid[i] = con_coeff_valid;
+                w_VectorT_Coeff_addr[i] = read_t1_ntt_cnt[5 : 0];
+            end
+            else begin
+                w_VectorT_Coeff[i] = 'd0;
+                w_VectorT_Coeff_valid[i] = 1'b0;
+                w_VectorT_Coeff_addr[i] = 'd0;
+            end
+        end
     end
 end
 
@@ -1022,18 +1046,20 @@ always_ff @(posedge clk) begin
     else
         read_t1_ntt_cnt <= read_t1_ntt_cnt;
 end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         read_t1_done <= 1'b0;
-//     else if (state == S_INIT)
-//         read_t1_done <= 1'b0;
-//     else if ((read_t1_from_pk_addr == T1_IN_PK_ADDR_START + T1_IN_PK_ADDR_LEN) && CoeffModq_ram_rd_en && state == S_STAGE3)
-//         read_t1_done <= 1'b1;
-//     else if (state == S_STAGE4)
-//         read_t1_done <= 1'b0;
-//     else
-//         read_t1_done <= read_t1_done;
-// end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_t1_done <= 1'b0;
+    else if (state == S_INIT)
+        read_t1_done <= 1'b0;
+    else if (con_coeff_valid && read_t1_ntt_cnt == `k * 64 - 1)
+        read_t1_done <= 1'b1;
+    else if (state == S_STAGE4)
+        read_t1_done <= 1'b0;
+    else
+        read_t1_done <= read_t1_done;
+end
+
 always_ff @(posedge clk) begin
     if (!rstn)
         read_t1_start_d <= 'd0;
