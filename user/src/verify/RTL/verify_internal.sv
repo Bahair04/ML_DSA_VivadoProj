@@ -272,7 +272,13 @@ logic           [8 : 0]                         read_t1_ntt_cnt;
 
 // --- STAGE4 ---
 // 从BRAM中读取t1
+logic           [5 : 0]                         read_t1_absolute_addr;
+logic           [5 : 0]                         read_t1_absolute_addr_d;
+
 // 从BRAM中读取A
+logic           [8 : 0]                         read_A_absolute_addr;
+logic           [8 : 0]                         read_A_absolute_addr_d;
+
 // 从SIG中读取z NTT变换后做矩阵乘法 使用存储空间M作为计算缓存
 logic                                           read_z_start;
 logic           [2 : 0]                         read_z_start_d;
@@ -284,7 +290,12 @@ logic           [2 : 0]                         read_z_CoeffModq_coeff_type;
 logic                                           read_z_CoeffModq_poly_start_pulse; 
 logic           [8 : 0]                         read_z_CoeffModq_modq_coeff_valid_cnt;  
 logic           [8 : 0]                         read_z_ntt_cnt;
-// 从LUTRAM中读取C
+logic           [91 : 0]                        z_ntt_coeff;
+logic                                           z_ntt_coeff_valid;
+
+// 从BRAM中读取M
+logic           [5 : 0]                         write_m_absolute_addr;
+logic           [5 : 0]                         read_m_absolute_addr;
 
 //* ==========================================================
 //* 3. 状态机
@@ -562,6 +573,40 @@ always_comb begin
                 w_VectorT_Coeff_valid[i] = 1'b0;
                 w_VectorT_Coeff_addr[i] = 'd0;
             end
+        end
+    end
+end
+//    output      logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
+    // output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
+        // output      logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
+    // output      logic                       w_VectorM_Coeff_valid [0 : K - 1],
+    // output      logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        r_MatrixA_Coeff_addr[i] = 'd0;
+        r_VectorT_Coeff_addr[i] = 'd0;
+        r_VectorM_Coeff_addr[i] = 'd0;
+    end
+    if (state == S_STAGE4) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            r_MatrixA_Coeff_addr[i] = read_A_absolute_addr;
+            r_VectorT_Coeff_addr[i] = read_t1_absolute_addr;
+            r_VectorM_Coeff_addr[i] = read_m_absolute_addr;
+        end
+    end
+end
+
+always_comb begin
+    for (int i = 0 ; i < K ; i = i + 1) begin
+        w_VectorM_Coeff[i]         = 'd0;
+        w_VectorM_Coeff_valid[i]   = 1'b0;
+        w_VectorM_Coeff_addr[i]    = 'd0;
+    end
+    if (state == S_STAGE4) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            w_VectorM_Coeff[i] = mac_data_out[i];
+            w_VectorM_Coeff_valid[i] = mac_valid_out;
+            w_VectorM_Coeff_addr[i] = write_m_absolute_addr;
         end
     end
 end
@@ -1265,4 +1310,146 @@ always_ff @(posedge clk) begin
     else
         read_z_start_d <= {read_z_start_d[1 : 0], read_z_start};
 end
+
+// 读取A t1 C
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_A_absolute_addr <= 'd0;
+    else if (state == S_INIT)
+        read_A_absolute_addr <= 'd0;
+    else if (con_coeff_valid && (state == S_STAGE4)) begin
+        if (read_A_absolute_addr == `l * 64 - 1)
+            read_A_absolute_addr <= 'd0;
+        else 
+            read_A_absolute_addr <= read_A_absolute_addr + 'd1;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_A_absolute_addr_d <= 'd0;
+    else 
+        read_A_absolute_addr_d <= read_A_absolute_addr;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_t1_absolute_addr <= 'd0;
+    else if (state == S_INIT)
+        read_t1_absolute_addr <= 'd0;
+    else if (con_coeff_valid && (state == S_STAGE4)) begin
+        if (read_t1_absolute_addr == 'd63)
+            read_t1_absolute_addr <= 'd0;
+        else 
+            read_t1_absolute_addr <= read_t1_absolute_addr + 'd1;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_t1_absolute_addr_d <= 'd0;
+    else    
+        read_t1_absolute_addr_d <= read_t1_absolute_addr;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_c_hat_addr <= 'd0;
+    else if (state == S_INIT)
+        r_c_hat_addr <= 'd0;
+    else if (con_coeff_valid && (state == S_STAGE4)) begin
+        if (r_c_hat_addr == 'd63)
+            r_c_hat_addr <= 'd0;
+        else 
+            r_c_hat_addr <= r_c_hat_addr + 'd1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_m_absolute_addr <= 'd0;
+    else if (state == S_INIT)
+        read_m_absolute_addr <= 'd0;
+    else if (con_coeff_valid && (state == S_STAGE4)) begin
+        if (read_m_absolute_addr == 'd63)
+            read_m_absolute_addr <= 'd0;
+        else 
+            read_m_absolute_addr <= read_m_absolute_addr + 'd1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        z_ntt_coeff <= 'd0;
+    else 
+        z_ntt_coeff <= con_coeff;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        z_ntt_coeff_valid <= 1'b0;
+    else 
+        z_ntt_coeff_valid <= con_coeff_valid && (state == S_STAGE4);
+end
+
+//* ==========================================================
+//* 10. MAC
+//* ==========================================================
+logic [22 : 0]  mac_data_in1_debug [0 : K - 1] [0 : 3];
+logic [22 : 0]  mac_data_in3_debug [0 : K - 1] [0 : 3];
+logic [22 : 0]  mac_data_in2_debug [0 : 3];
+logic [22 : 0]  mac_data_out_debug [0 : K - 1] [0 : 3];
+logic           mac_valid_out_debug;
+always_comb begin
+    mac_valid_in = 1'b0;
+    mac_data_in1 = '{default: 0};
+    mac_data_in2 = 'd0;
+    mac_data_in3 = '{default: 0};
+    
+    if (state == S_STAGE4) begin : mac_block
+        mac_valid_in = z_ntt_coeff_valid;
+
+        
+        for (int i = 0 ; i < K ; i = i + 1) begin : mac_data
+            mac_data_in1[i] = r_MatrixA_Coeff[i];
+            mac_data_in3[i] = (read_A_absolute_addr_d <= 'd63) ? 'd0 : r_VectorM_Coeff[i];
+            
+            mac_data_in1_debug[i][0] = mac_data_in1[i][23 * 0 +: 23];
+            mac_data_in1_debug[i][1] = mac_data_in1[i][23 * 1 +: 23];
+            mac_data_in1_debug[i][2] = mac_data_in1[i][23 * 2 +: 23];
+            mac_data_in1_debug[i][3] = mac_data_in1[i][23 * 3 +: 23];
+
+            mac_data_in3_debug[i][0] = mac_data_in3[i][23 * 0 +: 23];
+            mac_data_in3_debug[i][1] = mac_data_in3[i][23 * 1 +: 23];
+            mac_data_in3_debug[i][2] = mac_data_in3[i][23 * 2 +: 23];
+            mac_data_in3_debug[i][3] = mac_data_in3[i][23 * 3 +: 23];
+        end
+        
+        mac_data_in2 = z_ntt_coeff;
+        
+        mac_data_in2_debug[0] = mac_data_in2[23 * 0 +: 23];
+        mac_data_in2_debug[1] = mac_data_in2[23 * 1 +: 23];
+        mac_data_in2_debug[2] = mac_data_in2[23 * 2 +: 23];
+        mac_data_in2_debug[3] = mac_data_in2[23 * 3 +: 23];
+    
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            mac_data_out_debug[i][0] = mac_data_out[i][23 * 0 +: 23];
+            mac_data_out_debug[i][1] = mac_data_out[i][23 * 1 +: 23];
+            mac_data_out_debug[i][2] = mac_data_out[i][23 * 2 +: 23];
+            mac_data_out_debug[i][3] = mac_data_out[i][23 * 3 +: 23];
+        end
+        mac_valid_out_debug = mac_valid_out;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        write_m_absolute_addr <= 'd0;
+    else if (state == S_INIT)
+        write_m_absolute_addr <= 'd0;
+    else if (mac_valid_out) begin
+        if (write_m_absolute_addr == 'd63)
+            write_m_absolute_addr <= 'd0;
+        else 
+            write_m_absolute_addr <= write_m_absolute_addr + 'd1;
+    end
+end
+
 endmodule
