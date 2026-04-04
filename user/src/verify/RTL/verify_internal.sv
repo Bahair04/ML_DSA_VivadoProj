@@ -172,6 +172,7 @@ typedef enum logic [3 : 0] {
     S_STAGE3,
     S_STAGE4,
     S_STAGE5,
+    S_STAGE6,
     S_STAGE_ERROR 
 }state_t;
 
@@ -191,9 +192,18 @@ typedef enum logic [2 : 0] {
     S_SUBZ_NTT_WAIT
 }read_z_substate_t;
 
+typedef enum logic [2 : 0] {  
+    S_FINAL_IDLE,
+    S_FINAL_INIT,
+    S_FINAL_ACK,
+    S_FINAL_READ_LOAD,
+    S_FINAL_NTT_WAIT
+}final_ntt_state_t;
+
 state_t                             state, state_d;
 read_t_substate_t                   read_t_substate, read_t_substate_d;
 read_z_substate_t                   read_z_substate, read_z_substate_d;
+final_ntt_state_t                   final_ntt_state, final_ntt_state_d;
 
 //* ==========================================================
 //* 2. 内部信号统一定义
@@ -271,10 +281,6 @@ logic           [8 : 0]                         read_t1_CoeffModq_modq_coeff_val
 logic           [8 : 0]                         read_t1_ntt_cnt;
 
 // --- STAGE4 ---
-// 从BRAM中读取t1
-logic           [5 : 0]                         read_t1_absolute_addr;
-logic           [5 : 0]                         read_t1_absolute_addr_d;
-
 // 从BRAM中读取A
 logic           [8 : 0]                         read_A_absolute_addr;
 logic           [8 : 0]                         read_A_absolute_addr_d;
@@ -297,6 +303,17 @@ logic                                           z_ntt_coeff_valid;
 logic           [5 : 0]                         write_m_absolute_addr;
 logic           [5 : 0]                         read_m_absolute_addr;
 
+// --- STAGE5 ---
+// 从BRAM中读取t1
+logic           [5 : 0]                         read_t1_absolute_addr;
+logic                                           load_start;
+logic                                           load_done;
+logic           [8 : 0]                         get_m_absolute_addr;
+logic           [8 : 0]                         get_m_absolute_addr_d;
+logic           [8 : 0]                         final_ntt_cnt;
+logic           [91 : 0]                        m_data_d [0 : 6];
+logic           [91 : 0]                        load_ntt_data;
+logic                                           load_ntt_data_valid;
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -311,6 +328,7 @@ always_ff @(posedge clk) begin
         load_mu_start <= 1'b0;
         read_t1_start <= 1'b0;
         read_z_start <= 1'b0;
+        load_start <= 1'b0;
     end
     else begin
         case (state)
@@ -365,10 +383,19 @@ always_ff @(posedge clk) begin
             S_STAGE4 : begin
                 read_z_start <= 1'b0;
                 if (read_z_done) begin
+                    load_start <= 1'b1;
                     state <= S_STAGE5;
                 end
                 else 
                     state <= S_STAGE4;
+            end
+            S_STAGE5 : begin
+                load_start <= 1'b0;
+                if (load_done) begin
+                    state <= S_STAGE6;
+                end
+                else 
+                    state <= S_STAGE5;
             end
             S_STAGE_ERROR : begin
                 state <= S_STAGE_ERROR;
@@ -486,6 +513,50 @@ always_ff @(posedge clk) begin
         read_z_substate_d <= read_z_substate;
 end
 
+always_ff @(posedge clk) begin
+    if (!rstn)
+        final_ntt_state <= S_FINAL_IDLE;
+    else begin
+        case (final_ntt_state)
+            S_FINAL_IDLE : begin
+                if (load_start)
+                    final_ntt_state <= S_FINAL_INIT;
+                else
+                    final_ntt_state <= S_FINAL_IDLE;
+            end
+            S_FINAL_INIT : begin
+                final_ntt_state <= S_FINAL_ACK;
+            end
+            S_FINAL_ACK : begin
+                if (ready == 1'b0 && request)
+                    final_ntt_state <= S_FINAL_READ_LOAD;
+                else 
+                    final_ntt_state <= S_FINAL_ACK;
+            end
+            S_FINAL_READ_LOAD : begin
+                if (get_m_absolute_addr[5 : 0] == 'd63)
+                    final_ntt_state <= S_FINAL_NTT_WAIT;
+                else    
+                    final_ntt_state <= S_FINAL_READ_LOAD;
+            end
+            S_FINAL_NTT_WAIT : begin
+                if (final_ntt_cnt == `k * 64 - 1)
+                    final_ntt_state <= S_FINAL_IDLE;
+                else if (final_ntt_cnt[5 : 0] == 'd63 && con_coeff_valid)
+                    final_ntt_state <= S_FINAL_ACK;
+                else 
+                    final_ntt_state <= S_FINAL_NTT_WAIT;
+            end
+        endcase
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        final_ntt_state_d <= S_FINAL_IDLE;
+    else 
+        final_ntt_state_d <= final_ntt_state;
+end
+
 //* ==========================================================
 //* 4. BRAM
 //* ==========================================================
@@ -576,11 +647,7 @@ always_comb begin
         end
     end
 end
-//    output      logic           [8 : 0]     r_MatrixA_Coeff_addr [0 : K - 1],
-    // output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
-        // output      logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
-    // output      logic                       w_VectorM_Coeff_valid [0 : K - 1],
-    // output      logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+
 always_comb begin
     for (int i = 0 ; i < K ; i = i + 1) begin
         r_MatrixA_Coeff_addr[i] = 'd0;
@@ -590,8 +657,13 @@ always_comb begin
     if (state == S_STAGE4) begin
         for (int i = 0 ; i < K ; i = i + 1) begin
             r_MatrixA_Coeff_addr[i] = read_A_absolute_addr;
-            r_VectorT_Coeff_addr[i] = read_t1_absolute_addr;
             r_VectorM_Coeff_addr[i] = read_m_absolute_addr;
+        end
+    end
+    if (state == S_STAGE5) begin
+        for (int i = 0 ; i < K ; i = i + 1) begin
+            r_VectorT_Coeff_addr[i] = read_t1_absolute_addr;
+            r_VectorM_Coeff_addr[i] = get_m_absolute_addr[5 : 0];
         end
     end
 end
@@ -693,6 +765,12 @@ always_comb begin
         ori_coeff_valid = CoeffModq_modq_coeff_valid;
     end
 
+    if (state == S_STAGE5) begin
+        mode_config = 'd1;
+        ori_coeff = load_ntt_data;
+        ori_coeff_valid = load_ntt_data_valid;
+    end
+
 end
 always_ff @(posedge clk) begin
     if (!rstn)
@@ -702,6 +780,8 @@ always_ff @(posedge clk) begin
     else if (ready && read_t_substate == S_SUB_ACK)
         request <= 1'b1;
     else if (ready && read_z_substate == S_SUBZ_ACK)
+        request <= 1'b1;
+    else if (ready && final_ntt_state == S_FINAL_ACK)
         request <= 1'b1;
     else if (!ready)
         request <= 1'b0;
@@ -1290,20 +1370,6 @@ always_ff @(posedge clk) begin
     else
         read_z_ntt_cnt <= read_z_ntt_cnt;
 end
-
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         read_t1_done <= 1'b0;
-//     else if (state == S_INIT)
-//         read_t1_done <= 1'b0;
-//     else if (con_coeff_valid && read_t1_ntt_cnt == `k * 64 - 1)
-//         read_t1_done <= 1'b1;
-//     else if (state == S_STAGE4)
-//         read_t1_done <= 1'b0;
-//     else
-//         read_t1_done <= read_t1_done;
-// end
-
 always_ff @(posedge clk) begin
     if (!rstn)
         read_z_start_d <= 'd0;
@@ -1311,7 +1377,7 @@ always_ff @(posedge clk) begin
         read_z_start_d <= {read_z_start_d[1 : 0], read_z_start};
 end
 
-// 读取A t1 C
+// 读取A 
 always_ff @(posedge clk) begin
     if (!rstn)
         read_A_absolute_addr <= 'd0;
@@ -1329,38 +1395,6 @@ always_ff @(posedge clk) begin
         read_A_absolute_addr_d <= 'd0;
     else 
         read_A_absolute_addr_d <= read_A_absolute_addr;
-end
-
-always_ff @(posedge clk) begin
-    if (!rstn)
-        read_t1_absolute_addr <= 'd0;
-    else if (state == S_INIT)
-        read_t1_absolute_addr <= 'd0;
-    else if (con_coeff_valid && (state == S_STAGE4)) begin
-        if (read_t1_absolute_addr == 'd63)
-            read_t1_absolute_addr <= 'd0;
-        else 
-            read_t1_absolute_addr <= read_t1_absolute_addr + 'd1;
-    end
-end
-always_ff @(posedge clk) begin
-    if (!rstn)
-        read_t1_absolute_addr_d <= 'd0;
-    else    
-        read_t1_absolute_addr_d <= read_t1_absolute_addr;
-end
-
-always_ff @(posedge clk) begin
-    if (!rstn)
-        r_c_hat_addr <= 'd0;
-    else if (state == S_INIT)
-        r_c_hat_addr <= 'd0;
-    else if (con_coeff_valid && (state == S_STAGE4)) begin
-        if (r_c_hat_addr == 'd63)
-            r_c_hat_addr <= 'd0;
-        else 
-            r_c_hat_addr <= r_c_hat_addr + 'd1;
-    end
 end
 
 always_ff @(posedge clk) begin
@@ -1389,9 +1423,7 @@ always_ff @(posedge clk) begin
         z_ntt_coeff_valid <= con_coeff_valid && (state == S_STAGE4);
 end
 
-//* ==========================================================
-//* 10. MAC
-//* ==========================================================
+// MAC
 logic [22 : 0]  mac_data_in1_debug [0 : K - 1] [0 : 3];
 logic [22 : 0]  mac_data_in3_debug [0 : K - 1] [0 : 3];
 logic [22 : 0]  mac_data_in2_debug [0 : 3];
@@ -1451,5 +1483,146 @@ always_ff @(posedge clk) begin
             write_m_absolute_addr <= write_m_absolute_addr + 'd1;
     end
 end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_done <= 1'b0;
+    else if (state == S_INIT)
+        read_z_done <= 1'b0;
+    else if (mac_valid_out && write_m_absolute_addr == 'd63 && read_A_absolute_addr == 'd0)
+        read_z_done <= 1'b1;
+    else if (state == S_STAGE5)
+        read_z_done <= 1'b0;
+    else
+        read_z_done <= read_z_done;
+end
+
+//* ==========================================================
+//* 10. STAGE5
+//* ==========================================================
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_t1_absolute_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        read_t1_absolute_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_READ_LOAD) begin
+        if (read_t1_absolute_addr == 'd63)
+            read_t1_absolute_addr <= 'd0;
+        else 
+            read_t1_absolute_addr <= read_t1_absolute_addr + 'd1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_c_hat_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        r_c_hat_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_READ_LOAD) begin
+        if (r_c_hat_addr == 'd63)
+            r_c_hat_addr <= 'd0;
+        else 
+            r_c_hat_addr <= r_c_hat_addr + 'd1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        get_m_absolute_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        get_m_absolute_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_READ_LOAD) begin
+        if (get_m_absolute_addr == `k * 64 - 1)
+            get_m_absolute_addr <= 'd0;
+        else 
+            get_m_absolute_addr <= get_m_absolute_addr + 'd1;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        get_m_absolute_addr_d <= 'd0;
+    else 
+        get_m_absolute_addr_d <= get_m_absolute_addr;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        final_ntt_cnt <= 'd0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        final_ntt_cnt <= 'd0;
+    else if (state == S_STAGE5 && con_coeff_valid) begin
+        if (final_ntt_cnt == `k * 64 - 1)
+            final_ntt_cnt <= 'd0;
+        else 
+            final_ntt_cnt <= final_ntt_cnt + 'd1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        for (int i = 0 ; i < 7 ; i = i + 1)
+            m_data_d[i] <= 'd0;
+    end
+    else begin
+        m_data_d[0] <= r_VectorM_Coeff[get_m_absolute_addr_d[8 : 6]];
+        for (int i = 1 ; i < 7 ; i = i + 1)
+            m_data_d[i] <= m_data_d[i - 1];
+    end
+end
+
+generate
+    for (genvar i = 0 ; i < 4 ; i = i + 1) begin : gen_mult_sub
+        
+        // ==========================================
+        // 1. 乘法器连线定义与赋值
+        // ==========================================
+        wire            ModuleMult_valid_in;
+        wire [22 : 0]   ModuleMult_data_in1;
+        wire [22 : 0]   ModuleMult_data_in2;
+        wire            ModuleMult_valid_out;
+        wire [22 : 0]   ModuleMult_data_out;
+
+        assign ModuleMult_valid_in = (final_ntt_state_d == S_FINAL_READ_LOAD);
+        assign ModuleMult_data_in1 = r_VectorT_Coeff[get_m_absolute_addr_d[8 : 6]][23 * i +: 23];
+        assign ModuleMult_data_in2 = r_c_hat[23 * i +: 23];
+
+        ModuleMult u_ModuleMult(
+            .clk        ( clk ),
+            .rstn       ( rstn ),
+            .valid_in   ( ModuleMult_valid_in ),
+            .data_in1   ( ModuleMult_data_in1 ),
+            .data_in2   ( ModuleMult_data_in2 ),
+            .valid_out  ( ModuleMult_valid_out ),
+            .data_out   ( ModuleMult_data_out )
+        );
+
+        // ==========================================
+        // 2. 减法器连线定义与赋值
+        // ==========================================
+        wire            ModuleSub_valid_in;
+        wire [22 : 0]   ModuleSub_data_in1;
+        wire [22 : 0]   ModuleSub_data_in2;
+        wire            ModuleSub_valid_out;
+        wire [22 : 0]   ModuleSub_data_out;
+
+        assign ModuleSub_valid_in = ModuleMult_valid_out;
+        assign ModuleSub_data_in1 = m_data_d[6][23 * i +: 23]; 
+        assign ModuleSub_data_in2 = ModuleMult_data_out;       
+
+        ModuleSub u_ModuleSub(
+            .clk        ( clk ),
+            .rstn       ( rstn ),
+            .valid_in   ( ModuleSub_valid_in ),
+            .data_in1   ( ModuleSub_data_in1 ),
+            .data_in2   ( ModuleSub_data_in2 ),
+            .valid_out  ( ModuleSub_valid_out ),
+            .data_out   ( ModuleSub_data_out )
+        );
+
+        assign load_ntt_data[23 * i +: 23] = ModuleSub_data_out;
+        if (i == 0)
+            assign load_ntt_data_valid = ModuleSub_valid_out;
+    end
+endgenerate
+
 
 endmodule
