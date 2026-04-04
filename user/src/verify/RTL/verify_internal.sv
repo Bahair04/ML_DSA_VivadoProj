@@ -94,6 +94,18 @@ module verify_internal
     output      logic           [63 : 0]    st_64bit_ExpandC,       
     output      logic                       st_64bit_valid_ExpandC, 
 
+    // --- Poly_PAU 输入输出接口 ---
+    output      logic           [91 : 0]    ori_coeff,                  // 向Poly_PAU填充原始系数
+    output      logic                       ori_coeff_valid,            // 原始系数有效信号
+    output      logic                       request,                    // 上游请求信号
+    output      logic           [91 : 0]    ext_operand,                // 外部输入的计算数
+    input       logic                       ext_operand_request,        // 请求获取外部输入的计算数
+    output      logic           [4 : 0]     mode_config,                // 模式选择 0: NTT 1: INTT 2: 模乘 3: 模加 4: 模减
+
+    input       logic                       ready,                      // 下游准备信号
+    input       logic           [91 : 0]    con_coeff,                  // NTT/INTT 结果输出
+    input       logic                       con_coeff_valid,            // NTT/INTT 输出有效信号
+
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
     output      logic                       dout_valid1, 
@@ -176,13 +188,13 @@ logic           [11 : 0]                        ExpandA_store_addr;
 logic                                           ExpandC_start;
 logic           [2 : 0]                         ExpandC_start_d;
 logic                                           ExpandC_done;
-logic           [11 : 0]                        ExpandC_store_addr;
 logic           [91 : 0]                        data_out;       // 扩展C时用到的拼接器 连接模块
 logic                                           data_valid_out; // 扩展C时用到的拼接器有效信号 连接模块
 logic           [5 : 0]                         data_cnt;       // 扩展C时用到的拼接器计数器 连接模块
 (* ram_style = "distributed" *) logic [91 : 0]  c_hat [0 : 63];
 logic           [91 : 0]                        r_c_hat;
 logic           [5 : 0]                         r_c_hat_addr;
+logic           [5 : 0]                         con_coeff_cnt;
 
 //* ==========================================================
 //* 3. 状态机
@@ -287,15 +299,15 @@ initial begin
         c_hat[i] <= 'd0;
 end
 always_ff @(posedge clk) begin
-    if (data_valid_out)
-        c_hat[ExpandC_store_addr] <= data_out;
+    if (state == S_STAGE2 && con_coeff_valid)
+        c_hat[con_coeff_cnt] <= con_coeff;
     else 
-        c_hat[ExpandC_store_addr] <= c_hat[ExpandC_store_addr];
+        c_hat[con_coeff_cnt] <= c_hat[con_coeff_cnt];
     r_c_hat <= c_hat[r_c_hat_addr]; 
 end
 
 //* ==========================================================
-//* 5. SHA3
+//* 5. SHA3 & Poly_PAU
 //* ==========================================================
 // always_comb begin
 //     dout1 = 'd0;
@@ -346,7 +358,28 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         st_64bit_ExpandC       = st_64bit2;
         st_64bit_valid_ExpandC = st_64bit_valid2;   
     end
+end
 
+always_comb begin
+    mode_config = 'd0;
+    ext_operand = 'd0;
+    ori_coeff = 'd0;
+    ori_coeff_valid = 1'b0;
+    if (state == S_STAGE2) begin
+        mode_config = 'd0;
+        ori_coeff = data_out;
+        ori_coeff_valid = data_valid_out;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        request <= 1'b0;
+    else if (ready && ExpandC_start)
+        request <= 1'b1;
+    else if (!ready)
+        request <= 1'b0;
+    else 
+        request <= request;
 end
 
 //* ==========================================================
@@ -667,25 +700,27 @@ always_ff @(posedge clk) begin
 end
 always_ff @(posedge clk) begin
     if (!rstn)
-        ExpandC_done <= 1'b0;
+        con_coeff_cnt <= 'd0;
     else if (state == S_INIT)
-        ExpandC_done <= 1'b0;
-    else if (data_cnt == 'd63 && data_valid_out)
-        ExpandC_done <= 1'b1;
-    else if (state == S_STAGE3)
-        ExpandC_done <= 1'b0;
+        con_coeff_cnt <= 'd0;
+    else if (con_coeff_valid) begin
+        if (con_coeff_cnt == 'd63)
+            con_coeff_cnt <= 'd0;
+        else
+            con_coeff_cnt <= con_coeff_cnt + 'd1; 
+    end
+    else 
+        con_coeff_cnt <= con_coeff_cnt;
 end
 always_ff @(posedge clk) begin
     if (!rstn)
-        ExpandC_store_addr <= 'd0;
+        ExpandC_done <= 1'b0;
     else if (state == S_INIT)
-        ExpandC_store_addr <= 'd0;
-    else if (data_valid_out) 
-        ExpandC_store_addr <= ExpandC_store_addr + 1'b1;
+        ExpandC_done <= 1'b0;
+    else if (con_coeff_cnt == 'd63 && con_coeff_valid)
+        ExpandC_done <= 1'b1;
     else if (state == S_STAGE3)
-        ExpandC_store_addr <= 'd0;
-    else
-        ExpandC_store_addr <= ExpandC_store_addr;
+        ExpandC_done <= 1'b0;
 end
 always_ff @(posedge clk) begin
     if (!rstn)
@@ -693,4 +728,5 @@ always_ff @(posedge clk) begin
     else
         ExpandC_start_d <= {ExpandC_start_d[1 : 0], ExpandC_start};
 end
+
 endmodule

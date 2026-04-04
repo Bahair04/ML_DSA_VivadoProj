@@ -419,6 +419,15 @@ logic                       done_out_ExpandC_verify;
 logic           [63 : 0]    st_64bit_ExpandC_verify;       
 logic                       st_64bit_valid_ExpandC_verify;
 
+logic           [91 : 0]    ori_coeff_verify;                  // 向Poly_PAU填充原始系数
+logic                       ori_coeff_valid_verify;            // 原始系数有效信号
+logic                       request_verify;                    // 上游请求信号
+logic           [91 : 0]    ext_operand_verify;                // 外部输入的计算数
+logic                       ext_operand_request_verify;        // 请求获取外部输入的计算数
+logic           [4 : 0]     mode_config_verify;                // 模式选择 0: NTT 1: INTT 2: 模乘 3: 模加 4: 模减
+logic                       ready_verify;                      // 下游准备信号
+logic           [91 : 0]    con_coeff_verify;                  // NTT/INTT 结果输出
+logic                       con_coeff_valid_verify;            // NTT/INTT 输出有效信号
 
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_verify; 
@@ -822,7 +831,17 @@ verify_internal u_verify_internal(
     .out_len_ExpandC            (out_len_ExpandC_verify          ),        
     .done_out_ExpandC           (done_out_ExpandC_verify         ),       
     .st_64bit_ExpandC           (st_64bit_ExpandC_verify         ),       
-    .st_64bit_valid_ExpandC      (st_64bit_valid_ExpandC_verify  ),
+    .st_64bit_valid_ExpandC     (st_64bit_valid_ExpandC_verify   ),
+
+    .ori_coeff                  (ori_coeff_verify                   ),
+    .ori_coeff_valid            (ori_coeff_valid_verify             ),
+    .request                    (request_verify                     ),
+    .ext_operand                (ext_operand_verify                 ),
+    .ext_operand_request        (ext_operand_request_verify         ),
+    .mode_config                (mode_config_verify                 ),
+    .ready                      (ready_verify                       ),
+    .con_coeff                  (con_coeff_verify                   ),
+    .con_coeff_valid            (con_coeff_valid_verify             ),
 
     // --- SHA3-1 控制接口 ---
     .dout1                          (dout1_verify                              ), 
@@ -1211,6 +1230,16 @@ GlobalComputeArbitration #(
     .done_out_ExpandC_verify          (done_out_ExpandC_verify         ),       
     .st_64bit_ExpandC_verify          (st_64bit_ExpandC_verify         ),       
     .st_64bit_valid_ExpandC_verify    (st_64bit_valid_ExpandC_verify   ),
+
+    .ori_coeff_verify                 (ori_coeff_verify                   ),
+    .ori_coeff_valid_verify           (ori_coeff_valid_verify             ),
+    .request_verify                   (request_verify                     ),
+    .ext_operand_verify               (ext_operand_verify                 ),
+    .ext_operand_request_verify       (ext_operand_request_verify         ),
+    .mode_config_verify               (mode_config_verify                 ),
+    .ready_verify                     (ready_verify                       ),
+    .con_coeff_verify                 (con_coeff_verify                   ),
+    .con_coeff_valid_verify           (con_coeff_valid_verify             ),
 
     .dout1_verify                   (dout1_verify                              ), 
     .dout_valid1_verify             (dout_valid1_verify                        ), 

@@ -282,6 +282,18 @@ module GlobalComputeArbitration
     input       logic           [63 : 0]    st_64bit_ExpandC_verify,       // SHA3 挤出8字节数据
     input       logic                       st_64bit_valid_ExpandC_verify,  // SHA3 挤出8字节数据有效信号
 
+    // --- Poly_PAU 输入输出接口 ---
+    input       logic           [91 : 0]    ori_coeff_verify,                  
+    input       logic                       ori_coeff_valid_verify,            
+    input       logic                       request_verify,                    
+    input       logic           [91 : 0]    ext_operand_verify,                
+    output      logic                       ext_operand_request_verify,        
+    input       logic           [4 : 0]     mode_config_verify,                
+
+    output      logic                       ready_verify,                      
+    output      logic           [91 : 0]    con_coeff_verify,                  
+    output      logic                       con_coeff_valid_verify,   
+
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_verify, 
     input       logic                       dout_valid1_verify, 
@@ -567,6 +579,11 @@ assign start_ExpandC_verify            = start_ExpandC;
 assign start_out_ExpandC_verify        = start_out_ExpandC;
 assign out_len_ExpandC_verify          = out_len_ExpandC;
 
+assign ext_operand_request_verify      = pau_ext_operand_request;
+assign ready_verify                    = pau_ready;
+assign con_coeff_verify                = pau_con_coeff;
+assign con_coeff_valid_verify          = pau_con_coeff_valid;
+
 assign done1_verify                    = done1;
 assign done_out1_verify                = done_out1;
 assign st_64bit1_verify                = st_64bit1;
@@ -804,6 +821,12 @@ always_comb begin
             done_out_ExpandC            = done_out_ExpandC_verify;
             st_64bit_ExpandC            = st_64bit_ExpandC_verify;
             st_64bit_valid_ExpandC      = st_64bit_valid_ExpandC_verify;
+
+            pau_ori_coeff               = ori_coeff_verify;
+            pau_ori_coeff_valid         = ori_coeff_valid_verify;
+            pau_request                 = request_verify;
+            pau_ext_operand             = ext_operand_verify;
+            pau_mode_config             = mode_config_verify;
 
             dout1                       = dout1_verify;
             dout_valid1                 = dout_valid1_verify;
