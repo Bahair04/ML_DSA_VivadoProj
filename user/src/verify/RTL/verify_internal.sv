@@ -143,6 +143,10 @@ localparam  RHO_IN_PK_ADDR_START = `k * 256 * T1_BIT_LEN / 64;
 localparam  RHO_IN_PK_ADDR_LEN = 32 * 8 / 64;
 localparam  C_TILDE_IN_SIG_ADDR_START = 0;
 localparam  C_TILDE_IN_SIG_ADDR_LEN = `c_tilde_bytes * 8 / 64;
+localparam  Z_IN_SIG_ADDR_START = C_TILDE_IN_SIG_ADDR_START + C_TILDE_IN_SIG_ADDR_LEN;
+localparam  Z_IN_SIG_ADDR_LEN = `l * 256 * Z_BIT_LEN / 64;
+localparam  H_IN_SIG_ADDR_START = Z_IN_SIG_ADDR_START + Z_IN_SIG_ADDR_LEN;
+localparam  H_IN_SIG_ADDR_LEN = ((`omega + `k) * 8 + 32) / 64;
 
 typedef enum logic [2 : 0] { 
     S_IDLE,
@@ -196,6 +200,21 @@ logic           [91 : 0]                        r_c_hat;
 logic           [5 : 0]                         r_c_hat_addr;
 logic           [5 : 0]                         con_coeff_cnt;
 
+// 获得h
+logic                                           read_h_start;
+logic           [2 : 0]                         read_h_start_d;
+(* ram_style = "distributed" *) logic [3 : 0]   hint [0 : K - 1] [63 : 0];
+logic                                           init;
+logic           [63 : 0]                        unpack_in;
+logic                                           unpack_valid;
+logic           [3 : 0]  	                    hint_out;
+logic        	                                hint_valid;
+logic           [7 : 0]  	                    hint_valid_cnt;
+logic        	                                unpack_done;
+logic       	                                decode_err;
+logic           [9 : 0]                         read_h_from_sig_addr;
+logic                                           read_h_done;
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -230,6 +249,7 @@ always_ff @(posedge clk) begin
                 if (read_rho_done && read_c_tilde_done) begin
                     ExpandA_start <= 1'b1;
                     ExpandC_start <= 1'b1;
+                    read_h_start <= 1'b1;
                     state <= S_STAGE2;
                 end
                 else 
@@ -238,7 +258,8 @@ always_ff @(posedge clk) begin
             S_STAGE2 : begin
                 ExpandA_start <= 1'b0;
                 ExpandC_start <= 1'b0;
-                if (ExpandA_done && ExpandC_done) begin
+                read_h_start <= 1'b0;
+                if (ExpandA_done && ExpandC_done && read_h_done) begin
                     state <= S_STAGE3;
                 end                
                 else
@@ -282,6 +303,10 @@ always_comb begin
         r_EncodeSig_Coeff_addr   = read_c_tilde_from_sig_addr;
     end
 
+    if (state == S_STAGE2) begin
+        r_EncodeSig_Coeff_addr   = read_h_from_sig_addr;
+    end
+
 end
 always_comb begin
     w_MatrixA_Coeff = 'd0;
@@ -304,6 +329,26 @@ always_ff @(posedge clk) begin
     else 
         c_hat[con_coeff_cnt] <= c_hat[con_coeff_cnt];
     r_c_hat <= c_hat[r_c_hat_addr]; 
+end
+
+initial begin
+    for (int i = 0; i < K; i = i + 1) begin
+        for (int j = 0 ; j < 64 ; j = j + 1)
+            hint[i][j] <= 'd0;     
+    end
+end
+always_ff @(posedge clk) begin
+    if (hint_valid) begin
+        logic [1 : 0] current_poly = hint_valid_cnt[7 : 6]; 
+        logic [5 : 0] current_group = hint_valid_cnt[5 : 0];
+        
+        logic coeff_0 = hint_out[0];
+        logic coeff_1 = hint_out[1];
+        logic coeff_2 = hint_out[2];
+        logic coeff_3 = hint_out[3];
+        
+        hint[current_poly][current_group] <= hint_out;
+    end
 end
 
 //* ==========================================================
@@ -728,5 +773,75 @@ always_ff @(posedge clk) begin
     else
         ExpandC_start_d <= {ExpandC_start_d[1 : 0], ExpandC_start};
 end
+
+// 获得h
+
+// logic                                           read_h_start;
+// (* ram_style = "distributed" *) logic [255 : 0] hint [0 : K - 1];
+// logic           [63 : 0]                        unpack_in;
+// logic                                           unpack_valid;
+// logic           [3 : 0]  	                    hint_out;
+// logic        	                                hint_valid;
+// logic           [7 : 0]  	                    hint_valid_cnt;
+// logic        	                                unpack_done;
+// wire        	                                decode_err;
+// logic           [9 : 0]                         read_h_from_sig_addr;
+// logic                                           read_h_done;
+always_ff @(posedge clk) begin
+    if (!rstn)
+        init <= 1'b0;
+    else if (state == S_INIT)
+        init <= 1'b0;
+    else if (read_h_start)
+        init <= 1'b1;
+    else 
+        init <= 1'b0;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_h_from_sig_addr <= H_IN_SIG_ADDR_START;
+    else if (state == S_INIT)
+        read_h_from_sig_addr <= H_IN_SIG_ADDR_START;
+    else if (read_h_start_d[0])
+        read_h_from_sig_addr <= read_h_from_sig_addr + 'd1;
+    else if (read_h_from_sig_addr > H_IN_SIG_ADDR_START) begin
+        if (read_h_from_sig_addr == H_IN_SIG_ADDR_START + H_IN_SIG_ADDR_LEN)
+            read_h_from_sig_addr <= H_IN_SIG_ADDR_START;
+        else
+            read_h_from_sig_addr <= read_h_from_sig_addr + 'd1; 
+    end
+end
+assign unpack_in = r_EncodeSig_Coeff;
+assign unpack_valid = (read_h_from_sig_addr > H_IN_SIG_ADDR_START) && (read_h_from_sig_addr <= H_IN_SIG_ADDR_START + H_IN_SIG_ADDR_LEN);
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_h_start_d <= 'd0;
+    else 
+        read_h_start_d <= {read_h_start_d[1 : 0], read_h_start};
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_h_done <= 1'b0;
+    else if (state == S_INIT)
+        read_h_done <= 1'b0;
+    else if (hint_valid && hint_valid_cnt[7 : 6] == `k - 1 && hint_valid_cnt[5 : 0] == 'd63)
+        read_h_done <= 1'b1;
+    else if (decode_err)
+        read_h_done <= 1'b1; 
+    else 
+        read_h_done <= 1'b0;
+end
+HintBitUnpack_64bit u_HintBitUnpack_64bit(
+	.clk            	( clk             ),
+	.rstn           	( rstn            ),
+	.init           	( init            ),
+	.unpack_in      	( unpack_in       ),
+	.unpack_valid   	( unpack_valid    ),
+	.hint_out       	( hint_out        ),
+	.hint_valid     	( hint_valid      ),
+	.hint_valid_cnt 	( hint_valid_cnt  ),
+	.unpack_done    	( unpack_done     ),
+	.decode_err     	( decode_err      )
+);
 
 endmodule

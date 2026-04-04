@@ -165,6 +165,29 @@ always_ff @(posedge clk) begin
     end
 end
 
+integer fid4;
+initial begin
+    fid4 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_hint.txt", "w");
+    $fwrite(fid4, "[");
+end
+integer i5 = 0;
+always_ff @(posedge clk) begin
+    if (u_ML_DSA_top.u_verify_internal.hint_valid) begin
+        $fwrite(fid4, "%d, %d, %d, %d", u_ML_DSA_top.u_verify_internal.hint_out[0],
+                                        u_ML_DSA_top.u_verify_internal.hint_out[1],
+                                        u_ML_DSA_top.u_verify_internal.hint_out[2],
+                                        u_ML_DSA_top.u_verify_internal.hint_out[3]);
+        i5 = i5 + 1;
+        if (i5 % 64 == 0) begin
+            $fwrite(fid4, "]\n\n[");
+        end
+        else begin
+            $fwrite(fid4, ", ");
+        end
+        $fflush(fid4);
+    end
+end
+
 ML_DSA_top #(
     .K ( K ),
     .L ( L ))

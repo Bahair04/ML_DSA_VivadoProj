@@ -37,6 +37,7 @@ sv xil_defaultlib  \
 "../../../../user/top/GlobalBRAMArbitration.sv" \
 "../../../../user/top/GlobalComputeArbitration.sv" \
 "../../../../user/src/sign/RTL/HintBitPack_64bit.sv" \
+"../../../../user/src/verify/RTL/HintBitUnpack_64bit.sv" \
 "../../../../user/src/Polynomials/RTL/INTT_BU.sv" \
 "../../../../user/src/Polynomials/RTL/MAC_Array_Pool.sv" \
 "../../../../user/top/ML_DSA_top.sv" \
