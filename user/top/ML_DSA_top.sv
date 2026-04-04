@@ -392,6 +392,34 @@ logic                       done_out_ExpandA_verify;       // SHA3 挤出数据�
 logic           [63 : 0]    st_64bit_ExpandA_verify;       // SHA3 挤出8字节数据
 logic                       st_64bit_valid_ExpandA_verify; // SHA3 挤出8字节数据有效信号
 
+// --- ExpandC ---
+logic           [255 : 0]   seed_ExpandC_verify;           
+logic           [7 : 0]     tau_ExpandC_verify;            
+logic                       start_expand_ExpandC_verify;   
+logic                       low_rd_en_ExpandC_verify;      
+logic           [1 : 0]     coeff_low_ExpandC_verify;      
+logic           [7 : 0]     coeff_low_add_ExpandC_verify;  
+logic                       coeff_low_valid_ExpandC_verify;
+logic                       high_rd_en_ExpandC_verify;     
+logic           [1 : 0]     coeff_high_ExpandC_verify;     
+logic           [7 : 0]     coeff_high_add_ExpandC_verify; 
+logic                       coeff_high_valid_ExpandC_verify;
+logic                       expand_done_ExpandC_verify;   
+
+logic           [7 : 0]     dout_ExpandC_verify;           
+logic                       dout_valid_ExpandC_verify;     
+logic           [31 : 0]    dout_len_ExpandC_verify;       
+logic           [7 : 0]     mdlen_ExpandC_verify;          
+logic                       init_ExpandC_verify;           
+logic                       start_ExpandC_verify;          
+logic                       done_ExpandC_verify;           
+logic                       start_out_ExpandC_verify;      
+logic           [31 : 0]    out_len_ExpandC_verify;        
+logic                       done_out_ExpandC_verify;       
+logic           [63 : 0]    st_64bit_ExpandC_verify;       
+logic                       st_64bit_valid_ExpandC_verify;
+
+
 // --- SHA3-1 控制接口 ---
 logic           [7 : 0]     dout1_verify; 
 logic                       dout_valid1_verify; 
@@ -770,6 +798,32 @@ verify_internal u_verify_internal(
     .st_64bit_ExpandA               (st_64bit_ExpandA_verify            ),
     .st_64bit_valid_ExpandA         (st_64bit_valid_ExpandA_verify      ),
 
+    .seed_ExpandC               (seed_ExpandC_verify             ),           
+    .tau_ExpandC                (tau_ExpandC_verify              ),            
+    .start_expand_ExpandC       (start_expand_ExpandC_verify     ),   
+    .low_rd_en_ExpandC          (low_rd_en_ExpandC_verify        ),      
+    .coeff_low_ExpandC          (coeff_low_ExpandC_verify        ),      
+    .coeff_low_add_ExpandC      (coeff_low_add_ExpandC_verify    ),  
+    .coeff_low_valid_ExpandC    (coeff_low_valid_ExpandC_verify  ),
+    .high_rd_en_ExpandC         (high_rd_en_ExpandC_verify       ),     
+    .coeff_high_ExpandC         (coeff_high_ExpandC_verify       ),     
+    .coeff_high_add_ExpandC     (coeff_high_add_ExpandC_verify   ), 
+    .coeff_high_valid_ExpandC   (coeff_high_valid_ExpandC_verify ),
+    .expand_done_ExpandC        (expand_done_ExpandC_verify      ),   
+
+    .dout_ExpandC               (dout_ExpandC_verify             ),           
+    .dout_valid_ExpandC         (dout_valid_ExpandC_verify       ),     
+    .dout_len_ExpandC           (dout_len_ExpandC_verify         ),       
+    .mdlen_ExpandC              (mdlen_ExpandC_verify            ),          
+    .init_ExpandC               (init_ExpandC_verify             ),           
+    .start_ExpandC              (start_ExpandC_verify            ),          
+    .done_ExpandC               (done_ExpandC_verify             ),           
+    .start_out_ExpandC          (start_out_ExpandC_verify        ),      
+    .out_len_ExpandC            (out_len_ExpandC_verify          ),        
+    .done_out_ExpandC           (done_out_ExpandC_verify         ),       
+    .st_64bit_ExpandC           (st_64bit_ExpandC_verify         ),       
+    .st_64bit_valid_ExpandC      (st_64bit_valid_ExpandC_verify  ),
+
     // --- SHA3-1 控制接口 ---
     .dout1                          (dout1_verify                              ), 
     .dout_valid1                    (dout_valid1_verify                        ), 
@@ -1131,6 +1185,32 @@ GlobalComputeArbitration #(
     .done_out_ExpandA_verify        (done_out_ExpandA_verify            ),
     .st_64bit_ExpandA_verify        (st_64bit_ExpandA_verify            ),
     .st_64bit_valid_ExpandA_verify  (st_64bit_valid_ExpandA_verify      ),
+
+    .seed_ExpandC_verify            (seed_ExpandC_verify             ),           
+    .tau_ExpandC_verify             (tau_ExpandC_verify              ),            
+    .start_expand_ExpandC_verify    (start_expand_ExpandC_verify     ),   
+    .low_rd_en_ExpandC_verify       (low_rd_en_ExpandC_verify        ),      
+    .coeff_low_ExpandC_verify       (coeff_low_ExpandC_verify        ),      
+    .coeff_low_add_ExpandC_verify   (coeff_low_add_ExpandC_verify    ),  
+    .coeff_low_valid_ExpandC_verify (coeff_low_valid_ExpandC_verify  ),
+    .high_rd_en_ExpandC_verify      (high_rd_en_ExpandC_verify       ),     
+    .coeff_high_ExpandC_verify      (coeff_high_ExpandC_verify       ),     
+    .coeff_high_add_ExpandC_verify  (coeff_high_add_ExpandC_verify   ), 
+    .coeff_high_valid_ExpandC_verify(coeff_high_valid_ExpandC_verify ),
+    .expand_done_ExpandC_verify     (expand_done_ExpandC_verify      ),   
+
+    .dout_ExpandC_verify              (dout_ExpandC_verify             ),           
+    .dout_valid_ExpandC_verify        (dout_valid_ExpandC_verify       ),     
+    .dout_len_ExpandC_verify          (dout_len_ExpandC_verify         ),       
+    .mdlen_ExpandC_verify             (mdlen_ExpandC_verify            ),          
+    .init_ExpandC_verify              (init_ExpandC_verify             ),           
+    .start_ExpandC_verify             (start_ExpandC_verify            ),          
+    .done_ExpandC_verify              (done_ExpandC_verify             ),           
+    .start_out_ExpandC_verify         (start_out_ExpandC_verify        ),      
+    .out_len_ExpandC_verify           (out_len_ExpandC_verify          ),        
+    .done_out_ExpandC_verify          (done_out_ExpandC_verify         ),       
+    .st_64bit_ExpandC_verify          (st_64bit_ExpandC_verify         ),       
+    .st_64bit_valid_ExpandC_verify    (st_64bit_valid_ExpandC_verify   ),
 
     .dout1_verify                   (dout1_verify                              ), 
     .dout_valid1_verify             (dout_valid1_verify                        ), 

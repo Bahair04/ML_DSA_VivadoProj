@@ -255,6 +255,33 @@ module GlobalComputeArbitration
     input       logic           [63 : 0]    st_64bit_ExpandA_verify,       
     input       logic                       st_64bit_valid_ExpandA_verify,
 
+    // --- ExpandC 信号 ---
+    input       logic           [255 : 0]   seed_ExpandC_verify,           // 512位随机种子
+    input       logic           [7 : 0]     tau_ExpandC_verify,            // 伪随机数初始值
+    input       logic                       start_expand_ExpandC_verify,   // 开始扩展Y矩阵信号
+    input       logic                       low_rd_en_ExpandC_verify,      // 低地址读取使能信号
+    output      logic           [1 : 0]     coeff_low_ExpandC_verify,      // 低地址 2 bit 有效采样系数
+    input       logic           [7 : 0]     coeff_low_add_ExpandC_verify,  // 低地址
+    output      logic                       coeff_low_valid_ExpandC_verify,// 低地址 2 bit 有效采样系数信号
+    input       logic                       high_rd_en_ExpandC_verify,     // 高地址读取使能信号
+    output      logic           [1 : 0]     coeff_high_ExpandC_verify,     // 高地址 2 bit 有效采样系数
+    input       logic           [7 : 0]     coeff_high_add_ExpandC_verify, // 高地址
+    output      logic                       coeff_high_valid_ExpandC_verify,// 高地址 2 bit 有效采样系数信号
+    output      logic                       expand_done_ExpandC_verify,    // 扩展完成信号
+
+    output      logic           [7 : 0]     dout_ExpandC_verify,           // SHA3 串行输入字节数据
+    output      logic                       dout_valid_ExpandC_verify,     // SHA3 串行输入字节有效信号
+    output      logic           [31 : 0]    dout_len_ExpandC_verify,       // SHA3 串行输入字节长度
+    output      logic           [7 : 0]     mdlen_ExpandC_verify,          // SHA3 Hash长度
+    output      logic                       init_ExpandC_verify,           // SHA3 初始化信号
+    output      logic                       start_ExpandC_verify,          // SHA3 开始装载数据
+    input       logic                       done_ExpandC_verify,           // SHA3 数据装载完成
+    output      logic                       start_out_ExpandC_verify,      // SHA3 开始挤出数据
+    output      logic           [31 : 0]    out_len_ExpandC_verify,        // SHA3 挤出数据长度
+    input       logic                       done_out_ExpandC_verify,       // SHA3 挤出数据完成
+    input       logic           [63 : 0]    st_64bit_ExpandC_verify,       // SHA3 挤出8字节数据
+    input       logic                       st_64bit_valid_ExpandC_verify,  // SHA3 挤出8字节数据有效信号
+
     // --- SHA3-1 控制接口 ---
     input       logic           [7 : 0]     dout1_verify, 
     input       logic                       dout_valid1_verify, 
@@ -526,10 +553,30 @@ assign start_ExpandA_verify            = start_ExpandA;
 assign start_out_ExpandA_verify        = start_out_ExpandA;
 assign out_len_ExpandA_verify          = out_len_ExpandA;
 
+assign coeff_low_ExpandC_verify        = coeff_low_ExpandC;
+assign coeff_low_valid_ExpandC_verify  = coeff_low_valid_ExpandC;
+assign coeff_high_ExpandC_verify       = coeff_high_ExpandC;
+assign coeff_high_valid_ExpandC_verify = coeff_high_valid_ExpandC;
+assign expand_done_ExpandC_verify      = expand_done_ExpandC;
+assign dout_ExpandC_verify             = dout_ExpandC;
+assign dout_valid_ExpandC_verify       = dout_valid_ExpandC;
+assign dout_len_ExpandC_verify         = dout_len_ExpandC;
+assign mdlen_ExpandC_verify            = mdlen_ExpandC;
+assign init_ExpandC_verify             = init_ExpandC;
+assign start_ExpandC_verify            = start_ExpandC;
+assign start_out_ExpandC_verify        = start_out_ExpandC;
+assign out_len_ExpandC_verify          = out_len_ExpandC;
+
 assign done1_verify                    = done1;
 assign done_out1_verify                = done_out1;
 assign st_64bit1_verify                = st_64bit1;
 assign st_64bit_valid1_verify          = st_64bit_valid1;
+
+assign done2_verify                    = done2;
+assign done_out2_verify                = done_out2;
+assign st_64bit2_verify                = st_64bit2;
+assign st_64bit_valid2_verify          = st_64bit_valid2;
+
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
 // ==========================================
@@ -745,6 +792,18 @@ always_comb begin
             done_out_ExpandA            = done_out_ExpandA_verify;
             st_64bit_ExpandA            = st_64bit_ExpandA_verify;
             st_64bit_valid_ExpandA      = st_64bit_valid_ExpandA_verify;
+
+            seed_ExpandC                = seed_ExpandC_verify;
+            tau_ExpandC                 = tau_ExpandC_verify;
+            start_expand_ExpandC        = start_expand_ExpandC_verify;
+            low_rd_en_ExpandC           = low_rd_en_ExpandC_verify;
+            coeff_low_add_ExpandC       = coeff_low_add_ExpandC_verify;
+            high_rd_en_ExpandC          = high_rd_en_ExpandC_verify;
+            coeff_high_add_ExpandC      = coeff_high_add_ExpandC_verify;
+            done_ExpandC                = done_ExpandC_verify;
+            done_out_ExpandC            = done_out_ExpandC_verify;
+            st_64bit_ExpandC            = st_64bit_ExpandC_verify;
+            st_64bit_valid_ExpandC      = st_64bit_valid_ExpandC_verify;
 
             dout1                       = dout1_verify;
             dout_valid1                 = dout_valid1_verify;

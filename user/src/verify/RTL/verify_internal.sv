@@ -67,6 +67,33 @@ module verify_internal
     output      logic           [63 : 0]    st_64bit_ExpandA,       // SHA3 挤出8字节数据
     output      logic                       st_64bit_valid_ExpandA, // SHA3 挤出8字节数据有效信号
 
+    // --- ExpandC ---
+    output      logic           [255 : 0]   seed_ExpandC,           
+    output      logic           [7 : 0]     tau_ExpandC,            
+    output      logic                       start_expand_ExpandC,   
+    output      logic                       low_rd_en_ExpandC,      
+    input       logic           [1 : 0]     coeff_low_ExpandC,      
+    output      logic           [7 : 0]     coeff_low_add_ExpandC,  
+    input       logic                       coeff_low_valid_ExpandC,
+    output      logic                       high_rd_en_ExpandC,     
+    input       logic           [1 : 0]     coeff_high_ExpandC,     
+    output      logic           [7 : 0]     coeff_high_add_ExpandC, 
+    input       logic                       coeff_high_valid_ExpandC,
+    input       logic                       expand_done_ExpandC,   
+
+    input       logic           [7 : 0]     dout_ExpandC,           
+    input       logic                       dout_valid_ExpandC,     
+    input       logic           [31 : 0]    dout_len_ExpandC,       
+    input       logic           [7 : 0]     mdlen_ExpandC,          
+    input       logic                       init_ExpandC,           
+    input       logic                       start_ExpandC,          
+    output      logic                       done_ExpandC,           
+    input       logic                       start_out_ExpandC,      
+    input       logic           [31 : 0]    out_len_ExpandC,        
+    output      logic                       done_out_ExpandC,       
+    output      logic           [63 : 0]    st_64bit_ExpandC,       
+    output      logic                       st_64bit_valid_ExpandC, 
+
     // --- SHA3-1 控制接口 ---
     output      logic           [7 : 0]     dout1, 
     output      logic                       dout_valid1, 
@@ -150,6 +177,12 @@ logic                                           ExpandC_start;
 logic           [2 : 0]                         ExpandC_start_d;
 logic                                           ExpandC_done;
 logic           [11 : 0]                        ExpandC_store_addr;
+logic           [91 : 0]                        data_out;       // 扩展C时用到的拼接器 连接模块
+logic                                           data_valid_out; // 扩展C时用到的拼接器有效信号 连接模块
+logic           [5 : 0]                         data_cnt;       // 扩展C时用到的拼接器计数器 连接模块
+(* ram_style = "distributed" *) logic [91 : 0]  c_hat [0 : 63];
+logic           [91 : 0]                        r_c_hat;
+logic           [5 : 0]                         r_c_hat_addr;
 
 //* ==========================================================
 //* 3. 状态机
@@ -162,6 +195,7 @@ always_ff @(posedge clk) begin
         read_c_tilde_start <= 1'b0;
         // load_mu_start <= 1'b0;
         ExpandA_start <= 1'b0;
+        ExpandC_start <= 1'b0;
     end
     else begin
         case (state)
@@ -183,6 +217,7 @@ always_ff @(posedge clk) begin
                 // load_mu_start <= 1'b0;
                 if (read_rho_done && read_c_tilde_done) begin
                     ExpandA_start <= 1'b1;
+                    ExpandC_start <= 1'b1;
                     state <= S_STAGE2;
                 end
                 else 
@@ -190,7 +225,8 @@ always_ff @(posedge clk) begin
             end
             S_STAGE2 : begin
                 ExpandA_start <= 1'b0;
-                if (ExpandA_done) begin
+                ExpandC_start <= 1'b0;
+                if (ExpandA_done && ExpandC_done) begin
                     state <= S_STAGE3;
                 end                
                 else
@@ -246,6 +282,18 @@ always_comb begin
     end
 end
 
+initial begin
+    for (int i = 0; i < 64; i = i + 1)
+        c_hat[i] <= 'd0;
+end
+always_ff @(posedge clk) begin
+    if (data_valid_out)
+        c_hat[ExpandC_store_addr] <= data_out;
+    else 
+        c_hat[ExpandC_store_addr] <= c_hat[ExpandC_store_addr];
+    r_c_hat <= c_hat[r_c_hat_addr]; 
+end
+
 //* ==========================================================
 //* 5. SHA3
 //* ==========================================================
@@ -265,6 +313,7 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
     init2 = 'd0; start2 = 'd0; start_out2 = 'd0; out_len2 = 'd0;
 
     done_ExpandA = 'd0; done_out_ExpandA = 'd0; st_64bit_ExpandA = 'd0; st_64bit_valid_ExpandA = 'd0;
+    done_ExpandC = 'd0; done_out_ExpandC = 'd0; st_64bit_ExpandC = 'd0; st_64bit_valid_ExpandC = 'd0;
 
     if (state == S_STAGE2) begin
         dout1       = dout_ExpandA; 
@@ -282,24 +331,21 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         st_64bit_valid_ExpandA = st_64bit_valid1; 
     end
 
-    // if (state == S_STAGE2) begin
-    //     // ==========================================
-    //     // 状态为 EXPAND_Y 时，SHA3-1 分配给 ExpandY
-    //     // ==========================================
-    //     dout1       = dout_ExpandY; 
-    //     dout_valid1 = dout_valid_ExpandY; 
-    //     dout_len1   = dout_len_ExpandY; 
-    //     mdlen1      = mdlen_ExpandY; 
-    //     init1       = init_ExpandY; 
-    //     start1      = start_ExpandY; 
-    //     start_out1  = start_out_ExpandY; 
-    //     out_len1    = out_len_ExpandY; 
-        
-    //     done_ExpandY           = done1; 
-    //     done_out_ExpandY       = done_out1; 
-    //     st_64bit_ExpandY       = st_64bit1; 
-    //     st_64bit_valid_ExpandY = st_64bit_valid1;
-    // end
+    if (state == S_STAGE2) begin
+        dout2       = dout_ExpandC;
+        dout_valid2 = dout_valid_ExpandC;
+        dout_len2   = dout_len_ExpandC;
+        mdlen2      = mdlen_ExpandC;
+        init2       = init_ExpandC;
+        start2      = start_ExpandC;
+        start_out2  = start_out_ExpandC;
+        out_len2    = out_len_ExpandC;
+
+        done_ExpandC           = done2;
+        done_out_ExpandC       = done_out2;
+        st_64bit_ExpandC       = st_64bit2;
+        st_64bit_valid_ExpandC = st_64bit_valid2;   
+    end
 
 end
 
@@ -515,53 +561,136 @@ always_ff @(posedge clk) begin
         ExpandA_start_d <= {ExpandA_start_d[1 : 0], ExpandA_start};
 end
 
-//ExpandC
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         rho_ExpandC <= 'd0;
-//     else if (state == S_INIT)
-//         rho_ExpandC <= 'd0;
-//     else if (ExpandC_start)
-//         rho_ExpandC <= rho;
-//     else
-//         rho_ExpandC <= rho_ExpandC;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         start_expand_ExpandC <= 1'b0;
-//     else if (state == S_INIT)
-//         start_expand_ExpandC <= 1'b0;
-//     else if (ExpandC_start_d[0])
-//         start_expand_ExpandC <= 1'b1;
-//     else
-//         start_expand_ExpandC <= 1'b0;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         ExpandC_done <= 1'b0;
-//     else if (state == S_INIT)
-//         ExpandC_done <= 1'b0;
-//     else if (expand_done_ExpandC)
-//         ExpandC_done <= 1'b1;
-//     else if (state == S_STCGE3)
-//         ExpandC_done <= 1'b0;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         ExpandC_store_addr <= 'd0;
-//     else if (state == S_INIT)
-//         ExpandC_store_addr <= 'd0;
-//     else if (coeff_valid_ExpandC) 
-//         ExpandC_store_addr <= ExpandC_store_addr + 1'b1;
-//     else if (state == S_STCGE3)
-//         ExpandC_store_addr <= 'd0;
-//     else
-//         ExpandC_store_addr <= ExpandC_store_addr;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         ExpandC_start_d <= 'd0;
-//     else
-//         ExpandC_start_d <= {ExpandC_start_d[1 : 0], ExpandC_start};
-// end
+// ExpandC
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        seed_ExpandC <= 'd0;
+        tau_ExpandC <= 'd0;
+    end
+    else if (state == S_INIT) begin
+        seed_ExpandC <= 'd0;
+        tau_ExpandC <= 'd0;
+    end
+    else if (ExpandC_start) begin
+        seed_ExpandC <= {<<8{c_tilde}};
+        tau_ExpandC <= `tau;
+    end
+    else begin
+        seed_ExpandC <= seed_ExpandC;
+        tau_ExpandC <= tau_ExpandC;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_expand_ExpandC <= 1'b0;
+    else if (state == S_INIT)
+        start_expand_ExpandC <= 1'b0;
+    else if (ExpandC_start_d[0])
+        start_expand_ExpandC <= 1'b1;
+    else
+        start_expand_ExpandC <= 1'b0;
+end
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        low_rd_en_ExpandC <= 1'b0;
+        high_rd_en_ExpandC <= 1'b0;
+    end
+    else if (state == S_INIT) begin
+        low_rd_en_ExpandC <= 1'b0;
+        high_rd_en_ExpandC <= 1'b0;
+    end
+    else if (expand_done_ExpandC) begin
+        low_rd_en_ExpandC <= 1'b1;
+        high_rd_en_ExpandC <= 1'b1;
+    end 
+    else if (coeff_low_add_ExpandC == 'd254 && coeff_high_add_ExpandC == 'd255) begin
+        low_rd_en_ExpandC <= 1'b0;
+        high_rd_en_ExpandC <= 1'b0;
+    end
+    else begin
+        low_rd_en_ExpandC <= low_rd_en_ExpandC;
+        high_rd_en_ExpandC <= high_rd_en_ExpandC;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        coeff_low_add_ExpandC <= 'd0;
+        coeff_high_add_ExpandC <= 'd1;
+    end
+    else if (state == S_INIT) begin
+        coeff_low_add_ExpandC <= 'd0;
+        coeff_high_add_ExpandC <= 'd1;
+    end
+    else begin
+        if (low_rd_en_ExpandC) begin
+            if (coeff_low_add_ExpandC == 'd254)
+                coeff_low_add_ExpandC <= 'd0;
+            else 
+                coeff_low_add_ExpandC <= coeff_low_add_ExpandC + 'd2;
+        end
+        else 
+            coeff_low_add_ExpandC <= coeff_low_add_ExpandC;
+        if (high_rd_en_ExpandC) begin
+            if (coeff_high_add_ExpandC == 'd255)
+                coeff_high_add_ExpandC <= 'd1;
+            else 
+                coeff_high_add_ExpandC <= coeff_high_add_ExpandC + 'd2;
+        end
+        else 
+            coeff_high_add_ExpandC <= coeff_high_add_ExpandC;
+    end
+end
+
+// --- 每次只能同时读出2个C系数 这里将C系数对q取模并4个为一组进行输出 ---
+Gearbox_2to4 u_Gearbox_2to4(
+    .clk                (clk                        ),
+    .rstn               (rstn                       ),
+    .data_low           (coeff_low_ExpandC          ),
+    .data_high          (coeff_high_ExpandC         ),
+    .data_valid         (coeff_low_valid_ExpandC    ),
+    .data_out           (data_out                   ),
+    .data_valid_out     (data_valid_out             )
+);
+always_ff @(posedge clk) begin
+    if (!rstn)
+        data_cnt <= 'd0;
+    else if (state == S_INIT)
+        data_cnt <= 'd0;
+    else if (data_valid_out) begin
+        if (data_cnt == 'd63)
+            data_cnt <= 'd0;
+        else
+            data_cnt <= data_cnt + 'd1;
+    end
+    else 
+        data_cnt <= data_cnt;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        ExpandC_done <= 1'b0;
+    else if (state == S_INIT)
+        ExpandC_done <= 1'b0;
+    else if (data_cnt == 'd63 && data_valid_out)
+        ExpandC_done <= 1'b1;
+    else if (state == S_STAGE3)
+        ExpandC_done <= 1'b0;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        ExpandC_store_addr <= 'd0;
+    else if (state == S_INIT)
+        ExpandC_store_addr <= 'd0;
+    else if (data_valid_out) 
+        ExpandC_store_addr <= ExpandC_store_addr + 1'b1;
+    else if (state == S_STAGE3)
+        ExpandC_store_addr <= 'd0;
+    else
+        ExpandC_store_addr <= ExpandC_store_addr;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        ExpandC_start_d <= 'd0;
+    else
+        ExpandC_start_d <= {ExpandC_start_d[1 : 0], ExpandC_start};
+end
 endmodule
