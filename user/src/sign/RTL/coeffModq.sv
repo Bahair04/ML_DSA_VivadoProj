@@ -7,6 +7,7 @@ module coeffModq #(
 )(
     input  logic                clk,
     input  logic                rstn,
+    input  logic                init,
 
     // --- BRAM 读取接口 (反控顶层) ---
     output logic                ram_rd_en,       
@@ -33,6 +34,10 @@ always_ff @(posedge clk or negedge rstn) begin
         burst_cnt   <= 'd0;
         is_bursting <= 1'b0;
     end 
+    else if (init) begin
+        burst_cnt   <= 'd0;
+        is_bursting <= 1'b0;
+    end
     else begin
         // 收到握手脉冲，启动新一轮装载 (256个系数 = 64拍)
         if (poly_start_pulse) begin
@@ -82,7 +87,14 @@ always_ff @(posedge clk or negedge rstn) begin
         buffer_len      <= 'd0;
         extracted_bits  <= 'd0;
         extracted_valid <= 1'b0;
-    end else begin
+    end 
+    else if (init) begin
+        buffer          <= 'd0;
+        buffer_len      <= 'd0;
+        extracted_bits  <= 'd0;
+        extracted_valid <= 1'b0;
+    end
+    else begin
         logic [255 : 0] next_buffer;
         logic [8 : 0]   next_buffer_len;
 

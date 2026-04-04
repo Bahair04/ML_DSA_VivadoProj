@@ -111,6 +111,12 @@ module GlobalBRAMArbitration
     output      logic           [91 : 0]    r_VectorT_Coeff_verify [0 : K - 1],
     input       logic           [5 : 0]     r_VectorT_Coeff_addr_verify [0 : K - 1],
 
+    input       logic           [91 : 0]    w_VectorM_Coeff_verify [0 : K - 1],
+    input       logic                       w_VectorM_Coeff_valid_verify [0 : K - 1],
+    input       logic           [5 : 0]     w_VectorM_Coeff_addr_verify [0 : K - 1],
+    output      logic           [91 : 0]    r_VectorM_Coeff_verify [0 : K - 1],
+    input       logic           [5 : 0]     r_VectorM_Coeff_addr_verify [0 : K - 1],
+
     output      logic           [63 : 0]    r_EncodePK_Coeff_verify,           
     input       logic           [8 : 0]     r_EncodePK_Coeff_addr_verify,
 
@@ -200,6 +206,7 @@ assign r_MatrixA_Coeff_verify  = r_MatrixA_Coeff;
 assign r_VectorT_Coeff_verify  = r_VectorT_Coeff;
 assign r_EncodePK_Coeff_verify = r_EncodePK_Coeff;
 assign r_EncodeSig_Coeff_verify = r_EncodeSig_Coeff;
+assign r_VectorM_Coeff_verify  = r_VectorM_Coeff;
 
 // ==========================================
 // 模式仲裁
@@ -331,6 +338,11 @@ always_comb begin
             w_VectorT_Coeff_valid = w_VectorT_Coeff_valid_verify;
             w_VectorT_Coeff_addr = w_VectorT_Coeff_addr_verify;
             r_VectorT_Coeff_addr = r_VectorT_Coeff_addr_verify;
+
+            w_VectorM_Coeff       	= w_VectorM_Coeff_verify;       
+            w_VectorM_Coeff_valid 	= w_VectorM_Coeff_valid_verify; 
+            w_VectorM_Coeff_addr  	= w_VectorM_Coeff_addr_verify;        
+            r_VectorM_Coeff_addr  	= r_VectorM_Coeff_addr_verify;  
 
             r_EncodePK_Coeff_addr = r_EncodePK_Coeff_addr_verify;
 

@@ -323,13 +323,22 @@ module GlobalComputeArbitration
     output      logic                       st_64bit_valid2_verify,
 
     // --- CoeffModq ---
+    input       logic                       coeffModq_init_verify,
     output      logic                       CoeffModq_ram_rd_en_verify,       
     input       logic           [63 : 0]    CoeffModq_ori_coeff_verify,       
     input       logic                       CoeffModq_ori_coeff_valid_verify, 
     input       logic           [2 : 0]     CoeffModq_coeff_type_verify,     
     input       logic                       CoeffModq_poly_start_pulse_verify, 
     output      logic           [91 : 0]    CoeffModq_modq_coeff_verify,      
-    output      logic                       CoeffModq_modq_coeff_valid_verify
+    output      logic                       CoeffModq_modq_coeff_valid_verify,
+
+    // --- MAC 阵列接口 ---
+    input       logic                       mac_valid_in_verify,
+    input       logic           [91 : 0]    mac_data_in1_verify [0 : K - 1],
+    input       logic           [91 : 0]    mac_data_in2_verify,
+    input       logic           [91 : 0]    mac_data_in3_verify [0 : K - 1],
+    output      logic                       mac_valid_out_verify,
+    output      logic           [91 : 0]    mac_data_out_verify [0 : K - 1]
 );
 
 // ==========================================
@@ -462,6 +471,7 @@ logic           [63 : 0]    st_64bit2;
 logic                       st_64bit_valid2;
 
 // --- CoeffModq 内部线声明 ---
+logic                       coeffModq_init;
 logic                       CoeffModq_ram_rd_en;       
 logic           [63 : 0]    CoeffModq_ori_coeff;       
 logic                       CoeffModq_ori_coeff_valid; 
@@ -607,6 +617,9 @@ assign CoeffModq_ram_rd_en_verify      = CoeffModq_ram_rd_en;
 assign CoeffModq_modq_coeff_verify     = CoeffModq_modq_coeff;
 assign CoeffModq_modq_coeff_valid_verify = CoeffModq_modq_coeff_valid;
 
+assign mac_valid_out_verify          = mac_valid_out;
+assign mac_data_out_verify           = mac_data_out;
+
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
 // ==========================================
@@ -687,6 +700,7 @@ always_comb begin
     start_out2  = 1'b0;
     out_len2    = 'd0;
 
+    coeffModq_init = 1'b0;
     CoeffModq_ori_coeff    = 'd0;
     CoeffModq_ori_coeff_valid = 1'b0;
     CoeffModq_coeff_type = 'd0;
@@ -809,6 +823,7 @@ always_comb begin
             start_out2                  = start_out2_sign;
             out_len2                    = out_len2_sign;
 
+            coeffModq_init = 1'b0;
             CoeffModq_ori_coeff = CoeffModq_ori_coeff_sign;
             CoeffModq_ori_coeff_valid = CoeffModq_ori_coeff_valid_sign;
             CoeffModq_coeff_type = CoeffModq_coeff_type_sign;
@@ -859,11 +874,18 @@ always_comb begin
             start_out2                  = start_out2_verify;
             out_len2                    = out_len2_verify;
 
+            coeffModq_init = coeffModq_init_verify;
             CoeffModq_ori_coeff = CoeffModq_ori_coeff_verify;
             CoeffModq_ori_coeff_valid = CoeffModq_ori_coeff_valid_verify;
             CoeffModq_coeff_type = CoeffModq_coeff_type_verify;
             CoeffModq_poly_start_pulse = CoeffModq_poly_start_pulse_verify;
 
+            mac_valid_in = mac_valid_in_verify;
+            mac_data_in2 = mac_data_in2_verify;
+            for (int i=0; i<K; i++) begin
+                mac_data_in1[i] = mac_data_in1_verify[i];
+                mac_data_in3[i] = mac_data_in3_verify[i];
+            end
         end
         default: ; // 默认所有控制信号为0，保持空闲
     endcase
@@ -1031,6 +1053,7 @@ sha3 u_sha3_2(
 coeffModq u_coeffModq(
     .clk                ( clk                         ),
     .rstn               ( rstn                        ),
+    .init               ( coeffModq_init              ),
     .ram_rd_en          ( CoeffModq_ram_rd_en         ),
     .ori_coeff          ( CoeffModq_ori_coeff         ),
     .ori_coeff_valid    ( CoeffModq_ori_coeff_valid   ),

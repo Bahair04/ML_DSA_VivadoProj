@@ -33,6 +33,12 @@ module verify_internal
     input       logic           [91 : 0]    r_VectorT_Coeff [0 : K - 1],
     output      logic           [5 : 0]     r_VectorT_Coeff_addr [0 : K - 1],
 
+    output      logic           [91 : 0]    w_VectorM_Coeff [0 : K - 1],
+    output      logic                       w_VectorM_Coeff_valid [0 : K - 1],
+    output      logic           [5 : 0]     w_VectorM_Coeff_addr [0 : K - 1],
+    input       logic           [91 : 0]    r_VectorM_Coeff [0 : K - 1],
+    output      logic           [5 : 0]     r_VectorM_Coeff_addr [0 : K - 1],
+
     input       logic           [63 : 0]    r_EncodePK_Coeff,           
     output      logic           [8 : 0]     r_EncodePK_Coeff_addr,
 
@@ -126,13 +132,22 @@ module verify_internal
     input       logic           [63 : 0]    st_64bit2, 
     input       logic                       st_64bit_valid2,
 
+    output      logic                       coeffModq_init,
     input       logic                       CoeffModq_ram_rd_en,       
     output      logic           [63 : 0]    CoeffModq_ori_coeff,       
     output      logic                       CoeffModq_ori_coeff_valid, 
     output      logic           [2 : 0]     CoeffModq_coeff_type,     
     output      logic                       CoeffModq_poly_start_pulse, 
     input       logic           [91 : 0]    CoeffModq_modq_coeff,      
-    input       logic                       CoeffModq_modq_coeff_valid
+    input       logic                       CoeffModq_modq_coeff_valid,
+
+    // --- MAC 阵列接口 ---
+    output      logic                       mac_valid_in,
+    output      logic           [91 : 0]    mac_data_in1 [0 : K - 1],
+    output      logic           [91 : 0]    mac_data_in2,
+    output      logic           [91 : 0]    mac_data_in3 [0 : K - 1],
+    input       logic                       mac_valid_out,
+    input       logic           [91 : 0]    mac_data_out [0 : K - 1]
 );
 
 //* ==========================================================
@@ -156,6 +171,7 @@ typedef enum logic [3 : 0] {
     S_STAGE2, 
     S_STAGE3,
     S_STAGE4,
+    S_STAGE5,
     S_STAGE_ERROR 
 }state_t;
 
@@ -167,8 +183,17 @@ typedef enum logic [2 : 0] {
     S_SUB_NTT_WAIT
 }read_t_substate_t;
 
+typedef enum logic [2 : 0] {  
+    S_SUBZ_IDLE,
+    S_SUBZ_INIT,
+    S_SUBZ_ACK,
+    S_SUBZ_READ_LOAD,
+    S_SUBZ_NTT_WAIT
+}read_z_substate_t;
+
 state_t                             state, state_d;
 read_t_substate_t                   read_t_substate, read_t_substate_d;
+read_z_substate_t                   read_z_substate, read_z_substate_d;
 
 //* ==========================================================
 //* 2. 内部信号统一定义
@@ -245,6 +270,22 @@ logic                                           read_t1_CoeffModq_poly_start_pul
 logic           [8 : 0]                         read_t1_CoeffModq_modq_coeff_valid_cnt;  
 logic           [8 : 0]                         read_t1_ntt_cnt;
 
+// --- STAGE4 ---
+// 从BRAM中读取t1
+// 从BRAM中读取A
+// 从SIG中读取z NTT变换后做矩阵乘法 使用存储空间M作为计算缓存
+logic                                           read_z_start;
+logic           [2 : 0]                         read_z_start_d;
+logic           [9 : 0]                         read_z_from_sig_addr;
+logic                                           read_z_done;
+logic           [63 : 0]                        read_z_CoeffModq_ori_coeff;       
+logic                                           read_z_CoeffModq_ori_coeff_valid; 
+logic           [2 : 0]                         read_z_CoeffModq_coeff_type;     
+logic                                           read_z_CoeffModq_poly_start_pulse; 
+logic           [8 : 0]                         read_z_CoeffModq_modq_coeff_valid_cnt;  
+logic           [8 : 0]                         read_z_ntt_cnt;
+// 从LUTRAM中读取C
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -258,6 +299,7 @@ always_ff @(posedge clk) begin
         ExpandC_start <= 1'b0;
         load_mu_start <= 1'b0;
         read_t1_start <= 1'b0;
+        read_z_start <= 1'b0;
     end
     else begin
         case (state)
@@ -303,13 +345,19 @@ always_ff @(posedge clk) begin
                 load_mu_start <= 1'b0;
                 read_t1_start <= 1'b0;
                 if (load_mu_done && read_t1_done) begin
+                    read_z_start <= 1'b1;
                     state <= S_STAGE4;
                 end
                 else 
                     state <= S_STAGE3;
             end
             S_STAGE4 : begin
-                state <= S_STAGE4;
+                read_z_start <= 1'b0;
+                if (read_z_done) begin
+                    state <= S_STAGE5;
+                end
+                else 
+                    state <= S_STAGE4;
             end
             S_STAGE_ERROR : begin
                 state <= S_STAGE_ERROR;
@@ -382,6 +430,51 @@ always_ff @(posedge clk) begin
         read_t_substate_d <= read_t_substate;
 end
 
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_substate <= S_SUBZ_IDLE;
+    else begin
+        case (read_z_substate)
+            S_SUBZ_IDLE : begin
+                if (read_z_start)
+                    read_z_substate <= S_SUBZ_INIT;
+                else 
+                    read_z_substate <= S_SUBZ_IDLE;
+            end
+            S_SUBZ_INIT : begin
+                read_z_substate <= S_SUBZ_ACK;
+            end
+            S_SUBZ_ACK : begin
+                if (ready == 1'b0 && request)
+                    read_z_substate <= S_SUBZ_READ_LOAD;
+                else
+                    read_z_substate <= S_SUBZ_ACK;
+            end
+            S_SUBZ_READ_LOAD : begin
+                if (read_z_CoeffModq_modq_coeff_valid_cnt[5 : 0] == 'd63) 
+                    read_z_substate <= S_SUBZ_NTT_WAIT;
+                else 
+                    read_z_substate <= S_SUBZ_READ_LOAD;
+            end
+            S_SUBZ_NTT_WAIT : begin
+                if (read_z_ntt_cnt == `l * 64 - 1)
+                    read_z_substate <= S_SUBZ_IDLE;
+                else if (read_z_ntt_cnt[5 : 0] == 'd63 && con_coeff_valid) 
+                    read_z_substate <= S_SUBZ_ACK;
+                else 
+                    read_z_substate <= S_SUBZ_NTT_WAIT;
+            end
+        endcase
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_substate_d <= S_SUBZ_IDLE;
+    else 
+        read_z_substate_d <= read_z_substate;
+end
+
 //* ==========================================================
 //* 4. BRAM
 //* ==========================================================
@@ -400,6 +493,10 @@ always_comb begin
 
     if (state == S_STAGE3) begin
         r_EncodePK_Coeff_addr = read_t1_from_pk_addr;
+    end
+
+    if (state == S_STAGE4) begin
+        r_EncodeSig_Coeff_addr = read_z_from_sig_addr;
     end
 
 end
@@ -544,6 +641,13 @@ always_comb begin
         end
         ori_coeff_valid = CoeffModq_modq_coeff_valid;
     end
+
+    if (state == S_STAGE4) begin
+        mode_config = 'd0;
+        ori_coeff = CoeffModq_modq_coeff;
+        ori_coeff_valid = CoeffModq_modq_coeff_valid;
+    end
+
 end
 always_ff @(posedge clk) begin
     if (!rstn)
@@ -552,6 +656,8 @@ always_ff @(posedge clk) begin
         request <= 1'b1;
     else if (ready && read_t_substate == S_SUB_ACK)
         request <= 1'b1;
+    else if (ready && read_z_substate == S_SUBZ_ACK)
+        request <= 1'b1;
     else if (!ready)
         request <= 1'b0;
     else 
@@ -559,6 +665,7 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
+    coeffModq_init                  = 1'b0;
     CoeffModq_ori_coeff             = 'd0;
     CoeffModq_ori_coeff_valid       = 1'b0;
     CoeffModq_coeff_type            = 'd0;
@@ -568,6 +675,14 @@ always_comb begin
         CoeffModq_ori_coeff_valid = read_t1_CoeffModq_ori_coeff_valid;
         CoeffModq_coeff_type = read_t1_CoeffModq_coeff_type;
         CoeffModq_poly_start_pulse = read_t1_CoeffModq_poly_start_pulse;
+    end
+    if (state == S_STAGE3 && read_t1_done)
+        coeffModq_init = 1'b1;
+    if (state == S_STAGE4) begin
+        CoeffModq_ori_coeff = read_z_CoeffModq_ori_coeff;
+        CoeffModq_ori_coeff_valid = read_z_CoeffModq_ori_coeff_valid;
+        CoeffModq_coeff_type = read_z_CoeffModq_coeff_type;
+        CoeffModq_poly_start_pulse = read_z_CoeffModq_poly_start_pulse;
     end
 end
 
@@ -907,7 +1022,6 @@ HintBitUnpack_64bit u_HintBitUnpack_64bit(
 	.decode_err     	( decode_err      )
 );
 
-
 //* ==========================================================
 //* 8. STAGE3
 //* ==========================================================
@@ -1065,5 +1179,90 @@ always_ff @(posedge clk) begin
         read_t1_start_d <= 'd0;
     else
         read_t1_start_d <= {read_t1_start_d[1 : 0], read_t1_start};
+end
+
+//* ==========================================================
+//* 9. STAGE4
+//* ==========================================================
+// 读取z
+assign read_z_CoeffModq_coeff_type = 'd3;
+assign read_z_CoeffModq_ori_coeff = {<<8{r_EncodeSig_Coeff}};
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_CoeffModq_poly_start_pulse <= 1'b0;
+    else if (read_z_substate == S_SUBZ_INIT)
+        read_z_CoeffModq_poly_start_pulse <= 1'b0;
+    else if (read_z_substate_d == S_SUBZ_ACK && read_z_substate == S_SUBZ_READ_LOAD)
+        read_z_CoeffModq_poly_start_pulse <= 1'b1;
+    else 
+        read_z_CoeffModq_poly_start_pulse <= 1'b0;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_from_sig_addr <= Z_IN_SIG_ADDR_START;
+    else if (read_z_substate == S_SUBZ_INIT)
+        read_z_from_sig_addr <= Z_IN_SIG_ADDR_START;
+    else if (CoeffModq_ram_rd_en && read_z_substate == S_SUBZ_READ_LOAD) begin
+        if (read_z_from_sig_addr == Z_IN_SIG_ADDR_START + Z_IN_SIG_ADDR_LEN)
+            read_z_from_sig_addr <= Z_IN_SIG_ADDR_START;
+        else 
+            read_z_from_sig_addr <= read_z_from_sig_addr + 'd1;
+    end
+    else
+        read_z_from_sig_addr <= read_z_from_sig_addr;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_CoeffModq_ori_coeff_valid <= 1'b0;
+    else 
+        read_z_CoeffModq_ori_coeff_valid <= CoeffModq_ram_rd_en && read_z_substate == S_SUBZ_READ_LOAD; 
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_CoeffModq_modq_coeff_valid_cnt <= 'd0;
+    else if (read_z_substate == S_SUBZ_INIT)
+        read_z_CoeffModq_modq_coeff_valid_cnt <= 'd0;
+    else if (CoeffModq_modq_coeff_valid) begin
+        if (read_z_CoeffModq_modq_coeff_valid_cnt == `l * 64 - 1)
+            read_z_CoeffModq_modq_coeff_valid_cnt <= 'd0;
+        else
+            read_z_CoeffModq_modq_coeff_valid_cnt <= read_z_CoeffModq_modq_coeff_valid_cnt + 1;
+    end
+    else 
+        read_z_CoeffModq_modq_coeff_valid_cnt <= read_z_CoeffModq_modq_coeff_valid_cnt;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_ntt_cnt <= 'd0;
+    else if (read_z_substate == S_SUBZ_INIT)
+        read_z_ntt_cnt <= 'd0;
+    else if (read_z_substate == S_SUBZ_NTT_WAIT && con_coeff_valid) begin
+        if (read_z_ntt_cnt == `l * 64 - 1)
+            read_z_ntt_cnt <= 'd0;
+        else 
+            read_z_ntt_cnt <= read_z_ntt_cnt + 1; 
+    end
+    else
+        read_z_ntt_cnt <= read_z_ntt_cnt;
+end
+
+// always_ff @(posedge clk) begin
+//     if (!rstn)
+//         read_t1_done <= 1'b0;
+//     else if (state == S_INIT)
+//         read_t1_done <= 1'b0;
+//     else if (con_coeff_valid && read_t1_ntt_cnt == `k * 64 - 1)
+//         read_t1_done <= 1'b1;
+//     else if (state == S_STAGE4)
+//         read_t1_done <= 1'b0;
+//     else
+//         read_t1_done <= read_t1_done;
+// end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        read_z_start_d <= 'd0;
+    else
+        read_z_start_d <= {read_z_start_d[1 : 0], read_z_start};
 end
 endmodule

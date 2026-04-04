@@ -357,6 +357,12 @@ logic           [5 : 0]     w_VectorT_Coeff_addr_verify [0 : K - 1];
 logic           [91 : 0]    r_VectorT_Coeff_verify [0 : K - 1];
 logic           [5 : 0]     r_VectorT_Coeff_addr_verify [0 : K - 1];
 
+logic           [91 : 0]    w_VectorM_Coeff_verify [0 : K - 1];
+logic                       w_VectorM_Coeff_valid_verify [0 : K - 1];
+logic           [5 : 0]     w_VectorM_Coeff_addr_verify [0 : K - 1];
+logic           [91 : 0]    r_VectorM_Coeff_verify [0 : K - 1];
+logic           [5 : 0]     r_VectorM_Coeff_addr_verify [0 : K - 1];
+
 logic           [63 : 0]    r_EncodePK_Coeff_verify;           
 logic           [8 : 0]     r_EncodePK_Coeff_addr_verify;
 
@@ -457,6 +463,7 @@ logic                       done_out2_verify;
 logic           [63 : 0]    st_64bit2_verify;
 logic                       st_64bit_valid2_verify;
 
+logic                       coeffModq_init_verify;
 logic                       CoeffModq_ram_rd_en_verify;       
 logic           [63 : 0]    CoeffModq_ori_coeff_verify;       
 logic                       CoeffModq_ori_coeff_valid_verify; 
@@ -464,6 +471,13 @@ logic           [2 : 0]     CoeffModq_coeff_type_verify;
 logic                       CoeffModq_poly_start_pulse_verify; 
 logic           [91 : 0]    CoeffModq_modq_coeff_verify;      
 logic                       CoeffModq_modq_coeff_valid_verify;
+
+logic                       mac_valid_in_verify;
+logic           [91 : 0]    mac_data_in1_verify [0 : K - 1];
+logic           [91 : 0]    mac_data_in2_verify;
+logic           [91 : 0]    mac_data_in3_verify [0 : K - 1];
+logic                       mac_valid_out_verify;
+logic           [91 : 0]    mac_data_out_verify [0 : K - 1];
 
 // ==========================================================
 // 模块例化区
@@ -783,6 +797,12 @@ verify_internal u_verify_internal(
 	.r_VectorT_Coeff            	( r_VectorT_Coeff_verify             ),
 	.r_VectorT_Coeff_addr       	( r_VectorT_Coeff_addr_verify        ),
 
+    .w_VectorM_Coeff                (w_VectorM_Coeff_verify              ),
+    .w_VectorM_Coeff_valid          (w_VectorM_Coeff_valid_verify        ),
+    .w_VectorM_Coeff_addr           (w_VectorM_Coeff_addr_verify         ),
+    .r_VectorM_Coeff                (r_VectorM_Coeff_verify              ),
+    .r_VectorM_Coeff_addr           (r_VectorM_Coeff_addr_verify         ),
+
 	.r_EncodePK_Coeff           	( r_EncodePK_Coeff_verify            ),
 	.r_EncodePK_Coeff_addr      	( r_EncodePK_Coeff_addr_verify       ),
 
@@ -871,13 +891,22 @@ verify_internal u_verify_internal(
     .st_64bit2                      (st_64bit2_verify                          ), 
     .st_64bit_valid2                (st_64bit_valid2_verify                    ),
 
+    .coeffModq_init                 (coeffModq_init_verify                      ),
     .CoeffModq_ram_rd_en            (CoeffModq_ram_rd_en_verify                 ),       
     .CoeffModq_ori_coeff            (CoeffModq_ori_coeff_verify                 ),       
     .CoeffModq_ori_coeff_valid      (CoeffModq_ori_coeff_valid_verify           ), 
     .CoeffModq_coeff_type           (CoeffModq_coeff_type_verify                ),     
     .CoeffModq_poly_start_pulse     (CoeffModq_poly_start_pulse_verify          ), 
     .CoeffModq_modq_coeff           (CoeffModq_modq_coeff_verify                ),      
-    .CoeffModq_modq_coeff_valid     (CoeffModq_modq_coeff_valid_verify          )
+    .CoeffModq_modq_coeff_valid     (CoeffModq_modq_coeff_valid_verify          ),
+
+    .mac_valid_in               ( mac_valid_in_verify            ),
+    .mac_data_in1               ( mac_data_in1_verify            ),
+    .mac_data_in2               ( mac_data_in2_verify            ),
+    .mac_data_in3               ( mac_data_in3_verify            ),
+    .mac_valid_out              ( mac_valid_out_verify           ),
+    .mac_data_out               ( mac_data_out_verify            )
+    
 );
 
 
@@ -982,6 +1011,12 @@ u_GlobalBRAMArbitration(
 	.w_VectorT_Coeff_addr_verify   	( w_VectorT_Coeff_addr_verify        ),
 	.r_VectorT_Coeff_verify        	( r_VectorT_Coeff_verify             ),
 	.r_VectorT_Coeff_addr_verify   	( r_VectorT_Coeff_addr_verify        ),
+
+    .w_VectorM_Coeff_verify         (w_VectorM_Coeff_verify              ),
+    .w_VectorM_Coeff_valid_verify   (w_VectorM_Coeff_valid_verify        ),
+    .w_VectorM_Coeff_addr_verify    (w_VectorM_Coeff_addr_verify         ),
+    .r_VectorM_Coeff_verify         (r_VectorM_Coeff_verify              ),
+    .r_VectorM_Coeff_addr_verify    (r_VectorM_Coeff_addr_verify         ),
 
 	.r_EncodePK_Coeff_verify       	( r_EncodePK_Coeff_verify            ),
 	.r_EncodePK_Coeff_addr_verify  	( r_EncodePK_Coeff_addr_verify       ),
@@ -1275,13 +1310,21 @@ GlobalComputeArbitration #(
     .st_64bit2_verify               (st_64bit2_verify                          ), 
     .st_64bit_valid2_verify         (st_64bit_valid2_verify                    ),
 
+    .coeffModq_init_verify                 (coeffModq_init_verify                      ),
     .CoeffModq_ram_rd_en_verify            (CoeffModq_ram_rd_en_verify                 ),       
     .CoeffModq_ori_coeff_verify            (CoeffModq_ori_coeff_verify                 ),       
     .CoeffModq_ori_coeff_valid_verify      (CoeffModq_ori_coeff_valid_verify           ), 
     .CoeffModq_coeff_type_verify           (CoeffModq_coeff_type_verify                ),     
     .CoeffModq_poly_start_pulse_verify     (CoeffModq_poly_start_pulse_verify          ), 
     .CoeffModq_modq_coeff_verify           (CoeffModq_modq_coeff_verify                ),      
-    .CoeffModq_modq_coeff_valid_verify     (CoeffModq_modq_coeff_valid_verify          )
+    .CoeffModq_modq_coeff_valid_verify     (CoeffModq_modq_coeff_valid_verify          ),
+
+    .mac_valid_in_verify               ( mac_valid_in_verify            ),
+    .mac_data_in1_verify               ( mac_data_in1_verify            ),
+    .mac_data_in2_verify               ( mac_data_in2_verify            ),
+    .mac_data_in3_verify               ( mac_data_in3_verify            ),
+    .mac_valid_out_verify              ( mac_valid_out_verify           ),
+    .mac_data_out_verify               ( mac_data_out_verify            )
 );
 
 endmodule
