@@ -457,6 +457,14 @@ logic                       done_out2_verify;
 logic           [63 : 0]    st_64bit2_verify;
 logic                       st_64bit_valid2_verify;
 
+logic                       CoeffModq_ram_rd_en_verify;       
+logic           [63 : 0]    CoeffModq_ori_coeff_verify;       
+logic                       CoeffModq_ori_coeff_valid_verify; 
+logic           [2 : 0]     CoeffModq_coeff_type_verify;     
+logic                       CoeffModq_poly_start_pulse_verify; 
+logic           [91 : 0]    CoeffModq_modq_coeff_verify;      
+logic                       CoeffModq_modq_coeff_valid_verify;
+
 // ==========================================================
 // 模块例化区
 // ==========================================================
@@ -781,14 +789,6 @@ verify_internal u_verify_internal(
 	.r_EncodeSig_Coeff         	    ( r_EncodeSig_Coeff_verify           ),
 	.r_EncodeSig_Coeff_addr    	    ( r_EncodeSig_Coeff_addr_verify      ),
 
-	.CoeffModq_ram_rd_en        	( CoeffModq_ram_rd_en_verify         ),
-	.CoeffModq_ori_coeff        	( CoeffModq_ori_coeff_verify         ),
-	.CoeffModq_ori_coeff_valid  	( CoeffModq_ori_coeff_valid_verify   ),
-	.CoeffModq_coeff_type       	( CoeffModq_coeff_type_verify        ),
-	.CoeffModq_poly_start_pulse 	( CoeffModq_poly_start_pulse_verify  ),
-	.CoeffModq_modq_coeff       	( CoeffModq_modq_coeff_verify        ),
-	.CoeffModq_modq_coeff_valid 	( CoeffModq_modq_coeff_valid_verify  ),
-
     .rho_ExpandA                    (rho_ExpandA_verify                 ),
     .start_expand_ExpandA           (start_expand_ExpandA_verify        ),
     .coeff_ExpandA                  (coeff_ExpandA_verify               ),
@@ -869,7 +869,15 @@ verify_internal u_verify_internal(
     .out_len2                       (out_len2_verify                           ), 
     .done_out2                      (done_out2_verify                          ), 
     .st_64bit2                      (st_64bit2_verify                          ), 
-    .st_64bit_valid2                (st_64bit_valid2_verify                    )
+    .st_64bit_valid2                (st_64bit_valid2_verify                    ),
+
+    .CoeffModq_ram_rd_en            (CoeffModq_ram_rd_en_verify                 ),       
+    .CoeffModq_ori_coeff            (CoeffModq_ori_coeff_verify                 ),       
+    .CoeffModq_ori_coeff_valid      (CoeffModq_ori_coeff_valid_verify           ), 
+    .CoeffModq_coeff_type           (CoeffModq_coeff_type_verify                ),     
+    .CoeffModq_poly_start_pulse     (CoeffModq_poly_start_pulse_verify          ), 
+    .CoeffModq_modq_coeff           (CoeffModq_modq_coeff_verify                ),      
+    .CoeffModq_modq_coeff_valid     (CoeffModq_modq_coeff_valid_verify          )
 );
 
 
@@ -1265,7 +1273,15 @@ GlobalComputeArbitration #(
     .out_len2_verify                (out_len2_verify                           ), 
     .done_out2_verify               (done_out2_verify                          ), 
     .st_64bit2_verify               (st_64bit2_verify                          ), 
-    .st_64bit_valid2_verify         (st_64bit_valid2_verify                    )
+    .st_64bit_valid2_verify         (st_64bit_valid2_verify                    ),
+
+    .CoeffModq_ram_rd_en_verify            (CoeffModq_ram_rd_en_verify                 ),       
+    .CoeffModq_ori_coeff_verify            (CoeffModq_ori_coeff_verify                 ),       
+    .CoeffModq_ori_coeff_valid_verify      (CoeffModq_ori_coeff_valid_verify           ), 
+    .CoeffModq_coeff_type_verify           (CoeffModq_coeff_type_verify                ),     
+    .CoeffModq_poly_start_pulse_verify     (CoeffModq_poly_start_pulse_verify          ), 
+    .CoeffModq_modq_coeff_verify           (CoeffModq_modq_coeff_verify                ),      
+    .CoeffModq_modq_coeff_valid_verify     (CoeffModq_modq_coeff_valid_verify          )
 );
 
 endmodule

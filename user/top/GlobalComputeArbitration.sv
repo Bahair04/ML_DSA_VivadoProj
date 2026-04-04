@@ -320,7 +320,16 @@ module GlobalComputeArbitration
     input       logic           [31 : 0]    out_len2_verify, 
     output      logic                       done_out2_verify, 
     output      logic           [63 : 0]    st_64bit2_verify, 
-    output      logic                       st_64bit_valid2_verify
+    output      logic                       st_64bit_valid2_verify,
+
+    // --- CoeffModq ---
+    output      logic                       CoeffModq_ram_rd_en_verify,       
+    input       logic           [63 : 0]    CoeffModq_ori_coeff_verify,       
+    input       logic                       CoeffModq_ori_coeff_valid_verify, 
+    input       logic           [2 : 0]     CoeffModq_coeff_type_verify,     
+    input       logic                       CoeffModq_poly_start_pulse_verify, 
+    output      logic           [91 : 0]    CoeffModq_modq_coeff_verify,      
+    output      logic                       CoeffModq_modq_coeff_valid_verify
 );
 
 // ==========================================
@@ -594,6 +603,10 @@ assign done_out2_verify                = done_out2;
 assign st_64bit2_verify                = st_64bit2;
 assign st_64bit_valid2_verify          = st_64bit_valid2;
 
+assign CoeffModq_ram_rd_en_verify      = CoeffModq_ram_rd_en;
+assign CoeffModq_modq_coeff_verify     = CoeffModq_modq_coeff;
+assign CoeffModq_modq_coeff_valid_verify = CoeffModq_modq_coeff_valid;
+
 // ==========================================
 // 2. 指令与数据下发：多合一 (MUX仲裁)
 // ==========================================
@@ -845,6 +858,11 @@ always_comb begin
             start2                      = start2_verify;
             start_out2                  = start_out2_verify;
             out_len2                    = out_len2_verify;
+
+            CoeffModq_ori_coeff = CoeffModq_ori_coeff_verify;
+            CoeffModq_ori_coeff_valid = CoeffModq_ori_coeff_valid_verify;
+            CoeffModq_coeff_type = CoeffModq_coeff_type_verify;
+            CoeffModq_poly_start_pulse = CoeffModq_poly_start_pulse_verify;
 
         end
         default: ; // 默认所有控制信号为0，保持空闲

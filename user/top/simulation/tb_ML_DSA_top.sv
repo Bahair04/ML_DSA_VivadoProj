@@ -188,6 +188,29 @@ always_ff @(posedge clk) begin
     end
 end
 
+integer fid5;
+initial begin
+    fid5 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_ori_coeff.txt", "w");
+    $fwrite(fid5, "[");
+end
+integer i6 = 0;
+always_ff @(posedge clk) begin
+    if (u_ML_DSA_top.u_verify_internal.ori_coeff_valid) begin
+        $fwrite(fid5, "%d, %d, %d, %d", u_ML_DSA_top.u_verify_internal.ori_coeff[23 * 0 +: 23],
+                                        u_ML_DSA_top.u_verify_internal.ori_coeff[23 * 1 +: 23],
+                                        u_ML_DSA_top.u_verify_internal.ori_coeff[23 * 2 +: 23],
+                                        u_ML_DSA_top.u_verify_internal.ori_coeff[23 * 3 +: 23]);
+        i6 = i6 + 1;
+        if (i6 % 64 == 0) begin
+            $fwrite(fid5, "]\n\n[");
+        end
+        else begin
+            $fwrite(fid5, ", ");
+        end
+        $fflush(fid5);
+    end
+end
+
 ML_DSA_top #(
     .K ( K ),
     .L ( L ))

@@ -60,7 +60,7 @@ always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         add <= 'd0;
     else if (t_valid)
-        add <= t + 'd4096;          // 先加4096 便于后面移位以后的四舍五入
+        add <= t + 'd4095;          // 先加4095 便于后面移位以后的四舍五入
     else 
         add <= 'd0;
 end
