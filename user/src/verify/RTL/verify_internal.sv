@@ -148,12 +148,14 @@ localparam  Z_IN_SIG_ADDR_LEN = `l * 256 * Z_BIT_LEN / 64;
 localparam  H_IN_SIG_ADDR_START = Z_IN_SIG_ADDR_START + Z_IN_SIG_ADDR_LEN;
 localparam  H_IN_SIG_ADDR_LEN = ((`omega + `k) * 8 + 32) / 64;
 
-typedef enum logic [2 : 0] { 
+typedef enum logic [3 : 0] { 
     S_IDLE,
     S_INIT,
     S_STAGE1,
     S_STAGE2, 
-    S_STAGE3 
+    S_STAGE3,
+    S_STAGE4,
+    S_STAGE_ERROR 
 }state_t;
 
 state_t                             state, state_d;
@@ -173,13 +175,6 @@ logic                                           read_c_tilde_start;
 logic           [`c_tilde_bytes * 8 - 1 : 0]    c_tilde;
 logic           [9 : 0]                         read_c_tilde_from_sig_addr;
 logic                                           read_c_tilde_done;
-// 转载MU
-logic                                           load_mu_start;
-logic           [2 : 0]                         load_mu_start_d;
-logic           [511 : 0]                       load_mu;
-logic           [8 : 0]                         load_mu_cnt;
-logic                                           load_process;
-logic                                           load_mu_done;
 
 // --- STAGE2 ---
 // ExpandA
@@ -212,8 +207,21 @@ logic        	                                hint_valid;
 logic           [7 : 0]  	                    hint_valid_cnt;
 logic        	                                unpack_done;
 logic       	                                decode_err;
+logic                                           decode_err_flag;
 logic           [9 : 0]                         read_h_from_sig_addr;
 logic                                           read_h_done;
+
+// --- STAGE3 ---
+// load mu 后续扩展c_tilde
+logic                                           init_expand_c_tilde;
+logic                                           start_expand_c_tilde;
+logic                                           start_out_expand_c_tilde;
+logic                                           load_mu_start;
+logic           [2 : 0]                         load_mu_start_d;
+logic           [511 : 0]                       load_mu;
+logic           [8 : 0]                         load_mu_cnt;
+logic                                           load_process;
+logic                                           load_mu_done;
 
 //* ==========================================================
 //* 3. 状态机
@@ -224,9 +232,9 @@ always_ff @(posedge clk) begin
         state <= S_IDLE;
         read_rho_start <= 1'b0;
         read_c_tilde_start <= 1'b0;
-        // load_mu_start <= 1'b0;
         ExpandA_start <= 1'b0;
         ExpandC_start <= 1'b0;
+        load_mu_start <= 1'b0;
     end
     else begin
         case (state)
@@ -239,13 +247,12 @@ always_ff @(posedge clk) begin
             S_INIT : begin
                 read_rho_start <= 1'b1;
                 read_c_tilde_start <= 1'b1;
-                // load_mu_start <= 1'b1;
+
                 state <= S_STAGE1;
             end
             S_STAGE1 : begin
                 read_rho_start <= 1'b0;
                 read_c_tilde_start <= 1'b0;
-                // load_mu_start <= 1'b0;
                 if (read_rho_done && read_c_tilde_done) begin
                     ExpandA_start <= 1'b1;
                     ExpandC_start <= 1'b1;
@@ -259,14 +266,28 @@ always_ff @(posedge clk) begin
                 ExpandA_start <= 1'b0;
                 ExpandC_start <= 1'b0;
                 read_h_start <= 1'b0;
-                if (ExpandA_done && ExpandC_done && read_h_done) begin
+                if (decode_err_flag)
+                    state <= S_STAGE_ERROR;
+                else if (ExpandA_done && ExpandC_done && read_h_done) begin                
+                    load_mu_start <= 1'b1;
                     state <= S_STAGE3;
                 end                
                 else
                     state <= S_STAGE2;
             end
             S_STAGE3: begin
-                state <= S_STAGE3;
+                load_mu_start <= 1'b0;
+                if (load_mu_done) begin
+                    state <= S_STAGE4;
+                end
+                else 
+                    state <= S_STAGE3;
+            end
+            S_STAGE4 : begin
+                state <= S_STAGE4;
+            end
+            S_STAGE_ERROR : begin
+                state <= S_STAGE_ERROR;
             end
             default : begin
                 state <= S_IDLE;
@@ -339,13 +360,13 @@ initial begin
 end
 always_ff @(posedge clk) begin
     if (hint_valid) begin
-        logic [1 : 0] current_poly = hint_valid_cnt[7 : 6]; 
-        logic [5 : 0] current_group = hint_valid_cnt[5 : 0];
+        automatic logic [1 : 0] current_poly = hint_valid_cnt[7 : 6]; 
+        automatic logic [5 : 0] current_group = hint_valid_cnt[5 : 0];
         
-        logic coeff_0 = hint_out[0];
-        logic coeff_1 = hint_out[1];
-        logic coeff_2 = hint_out[2];
-        logic coeff_3 = hint_out[3];
+        automatic logic coeff_0 = hint_out[0];
+        automatic logic coeff_1 = hint_out[1];
+        automatic logic coeff_2 = hint_out[2];
+        automatic logic coeff_3 = hint_out[3];
         
         hint[current_poly][current_group] <= hint_out;
     end
@@ -354,14 +375,6 @@ end
 //* ==========================================================
 //* 5. SHA3 & Poly_PAU
 //* ==========================================================
-// always_comb begin
-//     dout1 = 'd0;
-//     dout_valid1 = 1'b0;
-//     if (state == S_STAGE1) begin
-//         dout1 = load_mu[511 : 504];
-//         dout_valid1 = load_process;
-//     end
-// end
 always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用端口 此处对端口进行分配 分配依据为状态机变量
     dout1 = 'd0; dout_valid1 = 'd0; dout_len1 = 'd0; mdlen1 = 'd0;
     init1 = 'd0; start1 = 'd0; start_out1 = 'd0; out_len1 = 'd0;
@@ -402,6 +415,17 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         done_out_ExpandC       = done_out2;
         st_64bit_ExpandC       = st_64bit2;
         st_64bit_valid_ExpandC = st_64bit_valid2;   
+    end
+
+    if (state == S_STAGE3) begin
+        dout1       = load_mu[511 : 504];
+        dout_valid1 = load_process;
+        dout_len1   = 'd64;
+        mdlen1      = 'd32;
+        init1       = init_expand_c_tilde;
+        start1      = start_expand_c_tilde;
+        start_out1  = start_out_expand_c_tilde;
+        out_len1    =   `c_tilde_bytes;
     end
 end
 
@@ -506,85 +530,6 @@ always_ff @(posedge clk) begin
     else 
         c_tilde <= c_tilde;
 end
-
-// --------------------------------
-// 装载MU
-// --------------------------------
-// assign              dout_len1   =   'd64;
-// assign              mdlen1      =   'd32;
-// assign              out_len1    =   `c_tilde_bytes;
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         load_mu <= 'd0;
-//     else if (state == S_INIT)
-//         load_mu <= mu;
-//     else if (load_process)
-//         load_mu <= load_mu << 8;
-//     else 
-//         load_mu <= load_mu;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         load_mu_cnt <= 'd0;
-//     else if (state == S_INIT)
-//         load_mu_cnt <= 'd0;
-//     else if (load_process) begin
-//         if (load_mu_cnt == 'd63)
-//             load_mu_cnt <= 'd0;
-//         else
-//             load_mu_cnt <= load_mu_cnt + 1'b1;
-//     end
-//     else 
-//         load_mu_cnt <= load_mu_cnt;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         load_mu_done <= 1'b0;
-//     else if (state == S_INIT)
-//         load_mu_done <= 1'b0;
-//     else if (load_mu_cnt == 'd63)
-//         load_mu_done <= 1'b1;
-//     else if (state == S_STAGE2)
-//         load_mu_done <= 1'b0;
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn) begin
-//         load_process <= 1'b0;
-//         init1 <= 1'b0;
-//         start1 <= 1'b0;
-//     end
-//     else if (load_mu_start) begin
-//         load_process <= 1'b0;
-//         init1 <= 1'b1;
-//         start1 <= 1'b0;
-//     end
-//     else if (load_mu_start_d[0]) begin
-//         load_process <= 1'b0;
-//         init1 <= 1'b0;
-//         start1 <= 1'b1;
-//     end
-//     else if (load_mu_start_d[1]) begin
-//         load_process <= 1'b1;
-//         init1 <= 1'b0;
-//         start1 <= 1'b0;
-//     end
-//     else if (load_mu_cnt == 'd63) begin
-//         load_process <= 1'b0;
-//         init1 <= 1'b0;
-//         start1 <= 1'b0;
-//     end
-//     else begin
-//         load_process <= load_process;
-//         init1 <= init1;
-//         start1 <= start1;
-//     end 
-// end
-// always_ff @(posedge clk) begin
-//     if (!rstn)
-//         load_mu_start_d <= 'd0;
-//     else 
-//         load_mu_start_d <= {load_mu_start_d[1 : 0], load_mu_start};
-// end
 
 //* ==========================================================
 //* 7. STAGE2
@@ -775,18 +720,6 @@ always_ff @(posedge clk) begin
 end
 
 // 获得h
-
-// logic                                           read_h_start;
-// (* ram_style = "distributed" *) logic [255 : 0] hint [0 : K - 1];
-// logic           [63 : 0]                        unpack_in;
-// logic                                           unpack_valid;
-// logic           [3 : 0]  	                    hint_out;
-// logic        	                                hint_valid;
-// logic           [7 : 0]  	                    hint_valid_cnt;
-// logic        	                                unpack_done;
-// wire        	                                decode_err;
-// logic           [9 : 0]                         read_h_from_sig_addr;
-// logic                                           read_h_done;
 always_ff @(posedge clk) begin
     if (!rstn)
         init <= 1'b0;
@@ -825,11 +758,21 @@ always_ff @(posedge clk) begin
     else if (state == S_INIT)
         read_h_done <= 1'b0;
     else if (hint_valid && hint_valid_cnt[7 : 6] == `k - 1 && hint_valid_cnt[5 : 0] == 'd63)
-        read_h_done <= 1'b1;
-    else if (decode_err)
         read_h_done <= 1'b1; 
-    else 
+    else if (state == S_STAGE3)
         read_h_done <= 1'b0;
+    else 
+        read_h_done <= read_h_done;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        decode_err_flag <= 1'b0;
+    else if (state == S_INIT)
+        decode_err_flag <= 1'b0;
+    else if (decode_err)
+        decode_err_flag <= 1'b1;
+    else 
+        decode_err_flag <= decode_err_flag;
 end
 HintBitUnpack_64bit u_HintBitUnpack_64bit(
 	.clk            	( clk             ),
@@ -844,4 +787,81 @@ HintBitUnpack_64bit u_HintBitUnpack_64bit(
 	.decode_err     	( decode_err      )
 );
 
+
+//* ==========================================================
+//* 8. STAGE3
+//* ==========================================================
+// load_mu 后续扩展c_tilde
+always_ff @(posedge clk) begin
+    if (!rstn)
+        load_mu <= 'd0;
+    else if (state == S_INIT)
+        load_mu <= mu;
+    else if (load_process)
+        load_mu <= load_mu << 8;
+    else 
+        load_mu <= load_mu;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        load_mu_cnt <= 'd0;
+    else if (state == S_INIT)
+        load_mu_cnt <= 'd0;
+    else if (load_process) begin
+        if (load_mu_cnt == 'd63)
+            load_mu_cnt <= 'd0;
+        else
+            load_mu_cnt <= load_mu_cnt + 1'b1;
+    end
+    else 
+        load_mu_cnt <= load_mu_cnt;
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        load_mu_done <= 1'b0;
+    else if (state == S_INIT)
+        load_mu_done <= 1'b0;
+    else if (load_mu_cnt == 'd63)
+        load_mu_done <= 1'b1;
+    else if (state == S_STAGE2)
+        load_mu_done <= 1'b0;
+end
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        load_process <= 1'b0;
+        init_expand_c_tilde <= 1'b0;
+        start_expand_c_tilde <= 1'b0;
+    end
+    else if (load_mu_start) begin
+        load_process <= 1'b0;
+        init_expand_c_tilde <= 1'b1;
+        start_expand_c_tilde <= 1'b0;
+    end
+    else if (load_mu_start_d[0]) begin
+        load_process <= 1'b0;
+        init_expand_c_tilde <= 1'b0;
+        start_expand_c_tilde <= 1'b1;
+    end
+    else if (load_mu_start_d[1]) begin
+        load_process <= 1'b1;
+        init_expand_c_tilde <= 1'b0;
+        start_expand_c_tilde <= 1'b0;
+    end
+    else if (load_mu_cnt == 'd63) begin
+        load_process <= 1'b0;
+        init_expand_c_tilde <= 1'b0;
+        start_expand_c_tilde <= 1'b0;
+    end
+    else begin
+        load_process <= load_process;
+        init_expand_c_tilde <= init_expand_c_tilde;
+        start_expand_c_tilde <= start_expand_c_tilde;
+    end 
+end
+always_ff @(posedge clk) begin
+    if (!rstn)
+        load_mu_start_d <= 'd0;
+    else 
+        load_mu_start_d <= {load_mu_start_d[1 : 0], load_mu_start};
+end
 endmodule
