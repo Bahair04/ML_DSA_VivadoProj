@@ -14,33 +14,28 @@ module use_hint(
     output      logic               o_valid     
 );
 
-// ==========================================================
-// 参数定义
-// ==========================================================
-localparam      M = (`q - 1) / (2 * `gamma_2);          // 95232 : 44, 261888 : 16
+localparam      M = (`q - 1) / (2 * `gamma_2);
 
-logic               [7 : 0]  	            t1_raw;
-logic        	                            t1_valid;
-logic   signed      [18 : 0] 	            t0;
-logic        	                            t0_valid;
+logic               [7 : 0]                 t1_raw;
+logic                                       t1_valid;
+logic   signed      [18 : 0]                t0;
+logic                                       t0_valid;
 
-logic               [7 : 0]                 h_d;
+logic               [8 : 0]                 h_d;
 logic   signed      [8 : 0]                 t1_prime;
 logic                                       valid_d;
 
-// ==========================================================
-// 具体逻辑实现
-// ==========================================================
 always_ff @(posedge clk or negedge rstn) begin
     if (!rstn)
         h_d <= 'd0;
     else 
-        h_d <= {h_d[6 : 0], h};
+        h_d <= {h_d[7 : 0], h}; 
 end
+
 always_comb begin
     t1_prime = $signed({1'b0, t1_raw});
-    if (t1_valid && h_d[7]) begin
-        if (t0 > 0) // t0 > 0
+    if (t1_valid && h_d[8]) begin 
+        if (t0 > 0) 
             t1_prime = t1_prime + 1'b1;
         else 
             t1_prime = t1_prime - 1'b1;
@@ -69,17 +64,31 @@ end
 
 assign o_valid = valid_d;
 
-// ==========================================================
-// 模块例化
-// ==========================================================
-decompose u_decompose(
-	.clk      	( clk       ),
-	.rstn     	( rstn      ),
-	.t        	( t         ),
-	.t_valid  	( i_valid   ),
-	.o_t1     	( t1_raw    ),
-	.t1_valid 	( t1_valid  ),
-	.o_t0     	( t0        ),
-	.t0_valid 	( t0_valid  )
-);
+generate
+    if (`gamma_2 == 95232) begin
+        Decomposes u_Decomposes_r(
+            .clk        ( clk       ),
+            .rstn       ( rstn      ),
+            .r          ( {2'b0, t} ),
+            .r_valid    ( i_valid   ),
+            .r1         ( t1_raw    ),
+            .r1_valid   ( t1_valid  ),
+            .r0         ( t0        ),
+            .r0_valid   ( t0_valid  ) 
+        );
+    end
+    else begin
+        Decomposes2 u_Decomposes2_r(
+            .clk        ( clk       ),
+            .rstn       ( rstn      ),
+            .r          ( {2'b0, t} ),
+            .r_valid    ( i_valid   ),
+            .r1         ( t1_raw    ),
+            .r1_valid   ( t1_valid  ),
+            .r0         ( t0        ),
+            .r0_valid   ( t0_valid  )
+        );
+    end
+endgenerate
+
 endmodule

@@ -20,9 +20,7 @@ module ML_DSA_top
     input       logic                       start_keygen,          
     output      logic                       key_ready_keygen,      
     output      logic                       done_keygen,           
-    input       logic           [255 : 0]   zeta_keygen,           
-    output      logic           [7 : 0]     pk_keygen,             
-    output      logic           [7 : 0]     sk_keygen,             
+    input       logic           [255 : 0]   zeta_keygen,              
 
     // --- Sign 接口 ---
     input       logic                       start_sign,          
@@ -31,10 +29,11 @@ module ML_DSA_top
     input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
     input       logic           [255 : 0]   rnd,            // 32字节 随机数
 
-    // --- 控制标志位 ---
+    // --- Verify 接口---
     input       logic                       start_verify,          // 启动标志
     output      logic                       verify_ready,          // 准备标志
     output      logic                       done_verify,           // 完成标志
+    output      logic                       verify_flag,
     input       logic           [511 : 0]   mu_verify              // 64字节 预哈希消息
 );
 
@@ -782,6 +781,7 @@ verify_internal u_verify_internal(
 	.rstn                       	( rstn                               ),
 	.start                      	( start_verify                       ),
 	.verify_ready               	( verify_ready                       ),
+    .verify_flag                    ( verify_flag                        ),
 	.done                       	( done_verify                        ),
 	.mu                         	( mu_verify                          ),
 	

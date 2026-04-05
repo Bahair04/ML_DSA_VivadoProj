@@ -118,8 +118,26 @@ always_ff @(posedge clk) begin
     end
 end
 assign rp_mult1 = ((rp_con1_clip_p1 << 3) + rp_con1_clip_p2) << 11;
-assign rp_sub1 = (rp_d[1] - {1'b0, rp_mult1[22 : 0]} > 2 * `gamma_2) ? (rp_d[1] - {1'b0, rp_mult1[22 : 0]} - 2 * `gamma_2):
-                    rp_d[1] - {1'b0, rp_mult1[22 : 0]};
+logic signed [24 : 0] true_rem;
+
+always_comb begin
+    // 1. 强制转换为有符号数相减，保留负余数（Underflow）的真实面目
+    true_rem = $signed({1'b0, rp_d[1]}) - $signed({2'b0, rp_mult1[22:0]});
+    
+    // 2. 双向模约简校准：
+    if (true_rem >= $signed(2 * `gamma_2)) begin
+        // 商被低估，余数偏大
+        rp_sub1 = true_rem - $signed(2 * `gamma_2);
+    end 
+    else if (true_rem < 0) begin
+        // 商被高估，余数为负，必须加回来！(修复 +1 误差的核心)
+        rp_sub1 = true_rem + $signed(2 * `gamma_2);
+    end 
+    else begin
+        // 余数合法
+        rp_sub1 = true_rem[23:0];
+    end
+end
 
 //* 1-latency
 always_ff @(posedge clk) begin

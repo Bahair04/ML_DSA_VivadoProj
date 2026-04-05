@@ -17,9 +17,7 @@ logic           [255 : 0]   zeta_keygen = 0 ;
 // ML_DSA_top Outputs
 logic                       key_ready_keygen ;
 logic                       done_keygen ;
-logic           [7 : 0]     pk_keygen ;
-logic           [7 : 0]     sk_keygen ;
-
+logic                       verify_flag;
 logic                       start_sign = 1'b0;       
 logic                       sign_ready;      
 logic                       done_sign;
@@ -211,6 +209,29 @@ always_ff @(posedge clk) begin
     end
 end
 
+integer fid6;
+initial begin
+    fid6 = $fopen("D:/University/ML_DSA/vivado_proj/proj/user/top/output/tb_res.txt", "w");
+    $fwrite(fid6, "[");
+end
+integer i7 = 0;
+always_ff @(posedge clk) begin
+    if (u_ML_DSA_top.u_verify_internal.res_valid) begin
+        $fwrite(fid6, "%d, %d, %d, %d", u_ML_DSA_top.u_verify_internal.res[0],
+                                        u_ML_DSA_top.u_verify_internal.res[1],
+                                        u_ML_DSA_top.u_verify_internal.res[2],
+                                        u_ML_DSA_top.u_verify_internal.res[3]);
+        i7 = i7 + 1;
+        if (i7 % 64 == 0) begin
+            $fwrite(fid6, "]\n\n[");
+        end
+        else begin
+            $fwrite(fid6, ", ");
+        end
+        $fflush(fid6);
+    end
+end
+
 ML_DSA_top #(
     .K ( K ),
     .L ( L ))
@@ -222,8 +243,6 @@ ML_DSA_top #(
 
     .key_ready_keygen  ( key_ready_keygen   ),
     .done_keygen       ( done_keygen        ),
-    .pk_keygen         ( pk_keygen          ),
-    .sk_keygen         ( sk_keygen          ),
     .start_sign        (start_sign),
     .sign_ready        (sign_ready),
     .done_sign         (done_sign),
@@ -233,6 +252,7 @@ ML_DSA_top #(
     .start_verify       (start_verify),
     .verify_ready       (verify_ready),
     .done_verify        (done_verify),
+    .verify_flag        ( verify_flag),
     .mu_verify          (mu_verify)
 );
 

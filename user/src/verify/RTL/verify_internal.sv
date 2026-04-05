@@ -19,6 +19,7 @@ module verify_internal
     output      logic                       done,           // 完成标志
 
     input       logic           [511 : 0]   mu,             // 64字节 预哈希消息
+    output      logic                       verify_flag,
 
     // --- BRAM 总线信号 ---
     output      logic           [91 : 0]    w_MatrixA_Coeff,
@@ -314,6 +315,20 @@ logic           [8 : 0]                         final_ntt_cnt;
 logic           [91 : 0]                        m_data_d [0 : 6];
 logic           [91 : 0]                        load_ntt_data;
 logic                                           load_ntt_data_valid;
+
+// use_hint
+logic           [8 : 0]                         r_hint_addr;
+logic           [3 : 0]                         r_hint;
+logic           [91 : 0]                        load_ntt_data_d;
+logic                                           load_ntt_data_valid_d;
+
+logic           [5 : 0]                         res [0 : 3];
+logic                                           res_valid;
+logic           [7 : 0] 	                    w_out;
+logic       	                                w_out_valid;
+logic           [2 : 0]                         c_tilde_prime_cnt;
+logic           [`c_tilde_bytes * 8 - 1 : 0]    c_tilde_prime;
+
 //* ==========================================================
 //* 3. 状态机
 //* ==========================================================
@@ -325,10 +340,12 @@ always_ff @(posedge clk) begin
         read_c_tilde_start <= 1'b0;
         ExpandA_start <= 1'b0;
         ExpandC_start <= 1'b0;
+        read_h_start <= 1'b0;
         load_mu_start <= 1'b0;
         read_t1_start <= 1'b0;
         read_z_start <= 1'b0;
         load_start <= 1'b0;
+        done <= 1'b0;
     end
     else begin
         case (state)
@@ -337,6 +354,7 @@ always_ff @(posedge clk) begin
                     state <= S_INIT;
                 else
                     state <= S_IDLE;
+                done <= 1'b0;
             end
             S_INIT : begin
                 read_rho_start <= 1'b1;
@@ -396,6 +414,10 @@ always_ff @(posedge clk) begin
                 end
                 else 
                     state <= S_STAGE5;
+            end
+            S_STAGE6 : begin 
+                done <= 1'b1;
+                state <= S_IDLE;
             end
             S_STAGE_ERROR : begin
                 state <= S_STAGE_ERROR;
@@ -623,6 +645,7 @@ always_ff @(posedge clk) begin
         
         hint[current_poly][current_group] <= hint_out;
     end
+    r_hint <= hint[r_hint_addr[8 : 6]][r_hint_addr[5 : 0]];
 end
 
 always_comb begin
@@ -728,10 +751,21 @@ always_comb begin						// 扩展种子、矩阵A、向量S1、S2可能会复用�
         st_64bit_valid_ExpandC = st_64bit_valid2;   
     end
 
-    if (state == S_STAGE3) begin
+    if (state == S_STAGE3 || state == S_STAGE4) begin
         dout1       = load_mu[511 : 504];
         dout_valid1 = load_process;
-        dout_len1   = 'd64;
+        dout_len1   = 'd64 + (`input_width / 4) * `l * 256 / 8;
+        mdlen1      = 'd32;
+        init1       = init_expand_c_tilde;
+        start1      = start_expand_c_tilde;
+        start_out1  = start_out_expand_c_tilde;
+        out_len1    =   `c_tilde_bytes;
+    end
+
+    if (state == S_STAGE5) begin
+        dout1       = w_out;
+        dout_valid1 = w_out_valid;
+        dout_len1   = 'd64 + (`input_width / 4) * `l * 256 / 8;
         mdlen1      = 'd32;
         init1       = init_expand_c_tilde;
         start1      = start_expand_c_tilde;
@@ -1624,5 +1658,121 @@ generate
     end
 endgenerate
 
+always_ff @(posedge clk) begin
+    if (!rstn)
+        r_hint_addr <= 'd0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        r_hint_addr <= 'd0;
+    else if (state == S_STAGE5 && con_coeff_valid && (state == S_STAGE5)) begin
+        if (r_hint_addr == `k * 64 - 1)
+            r_hint_addr <= 'd0;
+        else
+            r_hint_addr <= r_hint_addr + 1'b1;
+    end
+end
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        load_ntt_data_d <= 'd0;
+        load_ntt_data_valid_d <= 1'b0;
+    end
+    else begin
+        load_ntt_data_d <= con_coeff;
+        load_ntt_data_valid_d <= con_coeff_valid && (state == S_STAGE5);
+    end
+end
+
+generate
+    for (genvar i = 0 ; i < 4 ; i = i + 1) begin
+        wire    [22 : 0]        Az_minus_ct1 = load_ntt_data_d[i * 23 +: 23];
+        wire                    h = r_hint[i];
+        wire                    i_valid = load_ntt_data_valid_d;
+        wire    [7 : 0]         t1;
+        wire                    o_valid;
+        use_hint u_use_hint(
+            .clk     	( clk                   ),
+            .rstn    	( rstn                  ),
+            .h       	( h                     ),
+            .t       	( Az_minus_ct1          ),
+            .i_valid 	( i_valid               ),
+            .t1      	( t1                    ),
+            .o_valid 	( o_valid               )
+        );
+        assign res[i] = t1;
+        if (i == 0)
+            assign res_valid = o_valid;
+    end
+endgenerate
+
+Serializer u_Serializer(
+	.clk         	( clk          ),
+	.rstn        	( rstn         ),
+	.w_in_0      	( res[0]       ),
+	.w_in_1      	( res[1]       ),
+	.w_in_2      	( res[2]       ),
+	.w_in_3      	( res[3]       ),
+	.w_in_valid  	( res_valid    ),
+	.w_out       	( w_out        ),
+	.w_out_valid 	( w_out_valid  )
+);
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        start_out_expand_c_tilde <= 1'b0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        start_out_expand_c_tilde <= 1'b0;
+    else if (state == S_STAGE5 && done1)
+        start_out_expand_c_tilde <= 1'b1;
+    else
+        start_out_expand_c_tilde <= 1'b0;
+end
+
+always_ff @(posedge clk) begin
+    if (!rstn)
+        load_done <= 1'b0;
+    else if (final_ntt_state == S_FINAL_INIT)
+        load_done <= 1'b0;
+    else if (state == S_STAGE5 && done_out1)
+        load_done <= 1'b1;
+    else if (state == S_STAGE6)
+        load_done <= 1'b0; 
+    else 
+        load_done <= load_done;
+end
+
+logic                               temp;
+always_ff @(posedge clk) begin
+    if (!rstn) begin
+        temp <= 1'b0;
+        verify_flag <= 1'b0;
+        c_tilde_prime <= 'd0;
+        c_tilde_prime_cnt <= 'd0;
+    end
+    else if (state == S_INIT) begin
+        temp <= 1'b0;
+        verify_flag <= 1'b0;
+        c_tilde_prime <= 'd0;
+        c_tilde_prime_cnt <= 'd0;
+    end
+    else if (state == S_STAGE4) 
+        c_tilde_prime <= c_tilde;
+    else if (state == S_STAGE5) begin
+        if (st_64bit_valid1) begin
+            if (c_tilde_prime_cnt == (`c_tilde_bytes >> 3) - 1) begin
+                c_tilde_prime_cnt <= 'd0;
+                if (temp == 1'b0)
+                    verify_flag <= 1'b1;
+                else 
+                    verify_flag <= 1'b0;
+                temp <= 1'b0;
+            end
+            else begin
+                if (c_tilde_prime[255 : 192] != st_64bit1)
+                    temp <= 1'b1;
+                c_tilde_prime_cnt <= c_tilde_prime_cnt + 'd1;
+                c_tilde_prime <= c_tilde_prime << 64;
+            end
+        end
+    end
+end
 
 endmodule
