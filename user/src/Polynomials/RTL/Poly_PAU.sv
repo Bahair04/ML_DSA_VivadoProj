@@ -85,14 +85,14 @@ always_ff @(posedge clk) begin
         
         if (state == CONV) begin
             if (rd_done == 1'b0) begin
-                conv_cnt <= conv_cnt + 1;       // 自然溢出回 0
+                conv_cnt <= conv_cnt + 1;      
                 if (conv_cnt == 'd63)
                     rd_done <= 1'b1;
             end
             if (ReconfigCompute_valid_out) begin
                 wr_cnt <= wr_cnt + 1;
                 if (wr_cnt == 'd63) begin
-                    rd_done <= 1'b0;            // 准备开启下一个阶段的狂奔
+                    rd_done <= 1'b0;            
                     stage_cnt <= stage_cnt + 1; // 阶段 +1 (溢出回0)
                 end
             end
@@ -119,9 +119,8 @@ logic   [1 : 0]     rd_offset;
 
 // --- INTT OUTPUT 阶段专用的乱序还原网络 ---
 // 在最后输出时，跨行跨Bank精准抓取数据，拼成自然顺序！
-// === 1. 地址乱序修复：直接按 bit-reverse 顺序读取 ===
+// 由于输入时进行了一次行位bit反转，因此输出时也必须进行一次然后再输出
 wire [5:0] out_t = (state == OUTPUT) ? bram_row_cnt : 'd0;
-// INTT CONV 结束后，自然顺序 4k ~ 4k+3 被完整保存在 bit_reverse(k) 行中
 wire [5:0] out_row_bit_rev = {out_t[0], out_t[1], out_t[2], out_t[3], out_t[4], out_t[5]};
 
 always_comb begin
@@ -267,18 +266,27 @@ ZetaRaw_ROM Zeta3_ROM (
 // ==========================================================
 
 // 7.1 NTT 模式下输入写逻辑 
+// 位bit反转输入 第一行存储 a[0] a[64] a[128] a[192]
+//             第二行存储 a[193] a[1] a[65】 a[129]
+//             第三行存储 a[130] a[194] a[2] a[66] 
+// 由于输入时是按照位bit反转输入的（通过一次等价shuffle实现，后续转换过程中只进行了3次shuffle，这样共计一个周期的置换） 
+// 因此输出时是严格的自然顺序
 wire [1:0] in_offset = (bram_row_cnt[5:4] + bram_row_cnt[3:2] + bram_row_cnt[1:0]) % 4;
-wire [5:0] in_row_0 = {bram_row_cnt[3:0], 2'd0};
-wire [5:0] in_row_1 = {bram_row_cnt[3:0], 2'd1};
-wire [5:0] in_row_2 = {bram_row_cnt[3:0], 2'd2};
-wire [5:0] in_row_3 = {bram_row_cnt[3:0], 2'd3};
+wire [5:0] in_row_0 = {bram_row_cnt[3:0], 2'b00};
+wire [5:0] in_row_1 = {bram_row_cnt[3:0], 2'b01};
+wire [5:0] in_row_2 = {bram_row_cnt[3:0], 2'b10};
+wire [5:0] in_row_3 = {bram_row_cnt[3:0], 2'b11};
 
-// 7.2 INTT 模式：神级优化！(BR散布 + 1次Shuffle 的等效融合)
-// 直接把 t 和 c 位反转。等效于在 INPUT 时瞬间完成了你说的“加一次 shuffle”！
+// 7.2 INTT 模式输入写逻辑
+// 行位bit反转输入 第一行存储 a[0] a[1] a[2] a[3]
+//               第二行存储 a[128] a[129] a[130] a[131]
+//               第三行存储 a[64] a[65] a[66] a[67]
+// 行位bit反转本身不是必须的，但是位反转后可以使得zeta的递增更有规律
+// 如果输入时进行了位反转，转换时经过1个周期（4轮）的shuffle以后，则必须在输出时也进行一次行位bit反转，才能保证输出是按自然顺序输出的
 wire [5:0] in_row_intt = {bram_row_cnt[0], bram_row_cnt[1], bram_row_cnt[2], bram_row_cnt[3], bram_row_cnt[4], bram_row_cnt[5]};
 wire [1:0] in_offset_intt = (in_row_intt[5:4] + in_row_intt[3:2] + in_row_intt[1:0]) % 4;
 
-// 7.3 CONV 状态的洗牌写逻辑 
+// 7.3 CONV 状态的洗牌写逻辑  Shuffle过程！
 wire [5:0] wr_row_c0 = {wr_cnt[3:0], 2'b00}; 
 wire [5:0] wr_row_c1 = {wr_cnt[3:0], 2'b01};
 wire [5:0] wr_row_c2 = {wr_cnt[3:0], 2'b10};
